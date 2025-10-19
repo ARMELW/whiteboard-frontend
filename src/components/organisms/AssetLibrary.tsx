@@ -42,7 +42,9 @@ const AssetLibrary: React.FC = () => {
     viewMode,
     setViewMode,
     showCropModal,
-    pendingImageData
+    setShowCropModal,
+    pendingImageData,
+    setPendingImageData
   } = useAssetLibraryStore();
 
 
@@ -129,7 +131,10 @@ const AssetLibrary: React.FC = () => {
             />
             {/* Assets Grid */}
             <div className="flex-1 overflow-y-auto p-2 bg-white">
-              <AssetGrid assets={assets} />
+              <AssetGrid assets={assets} onAssetChanged={() => {
+                loadAssets();
+                refreshTagsAndStats();
+              }} />
             </div>
           </div>
         </div>

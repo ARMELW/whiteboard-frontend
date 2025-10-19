@@ -36,7 +36,7 @@ interface AssetLibraryState {
   setPendingImageData: (d: any) => void;
 }
 
-export const useAssetLibraryStore = create<AssetLibraryState>((set) => ({
+export const useAssetLibraryStore = create<AssetLibraryState>((set, get) => ({
   // Asset selection/editing
   selectedAssetId: null,
   editingAssetId: null,
@@ -61,7 +61,7 @@ export const useAssetLibraryStore = create<AssetLibraryState>((set) => ({
   },
   handleSaveEdit: (assetId, e, onComplete) => {
     e.stopPropagation();
-    const { editName, editTags } = useAssetLibraryStore.getState();
+    const { editName, editTags } = get();
     const tags = editTags.split(',').map(t => t.trim()).filter(t => t.length > 0);
     const updatedAsset = updateAsset(assetId, { name: editName, tags });
     if (updatedAsset) {

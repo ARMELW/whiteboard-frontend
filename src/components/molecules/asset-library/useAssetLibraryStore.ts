@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Asset } from './types';
+import { deleteAsset, updateAsset } from '../../../utils/assetManager';
 
 interface AssetLibraryState {
   // Asset selection/editing (already present)
@@ -9,8 +10,8 @@ interface AssetLibraryState {
   editTags: string;
   handleSelectAsset: (asset: Asset) => void;
   handleEditAsset: (asset: Asset, e: React.MouseEvent) => void;
-  handleDeleteAsset: (assetId: string, e: React.MouseEvent) => void;
-  handleSaveEdit: (assetId: string, e: React.MouseEvent) => void;
+  handleDeleteAsset: (assetId: string, e: React.MouseEvent, onComplete?: () => void) => void;
+  handleSaveEdit: (assetId: string, e: React.MouseEvent, onComplete?: () => void) => void;
   handleCancelEdit: (e: React.MouseEvent) => void;
   setEditName: (name: string) => void;
   setEditTags: (tags: string) => void;
@@ -35,7 +36,7 @@ interface AssetLibraryState {
   setPendingImageData: (d: any) => void;
 }
 
-export const useAssetLibraryStore = create<AssetLibraryState>((set) => ({
+export const useAssetLibraryStore = create<AssetLibraryState>((set, get) => ({
   // Asset selection/editing
   selectedAssetId: null,
   editingAssetId: null,
@@ -46,16 +47,29 @@ export const useAssetLibraryStore = create<AssetLibraryState>((set) => ({
     e.stopPropagation();
     set({ editingAssetId: asset.id, editName: asset.name, editTags: asset.tags.join(', ') });
   },
-  handleDeleteAsset: (_assetId, e) => {
+  handleDeleteAsset: (assetId, e, onComplete) => {
     e.stopPropagation();
-    // TODO: Implement delete logic, e.g. call a service and update state
-    // This should be handled in the parent and trigger a reload
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet asset ?')) {
+      const success = deleteAsset(assetId);
+      if (success) {
+        set({ selectedAssetId: null });
+        onComplete?.();
+      } else {
+        alert('Erreur lors de la suppression de l\'asset');
+      }
+    }
   },
-  handleSaveEdit: (_assetId, e) => {
+  handleSaveEdit: (assetId, e, onComplete) => {
     e.stopPropagation();
-    // TODO: Implement save logic, e.g. call a service and update state
-    // This should be handled in the parent and trigger a reload
-    set({ editingAssetId: null });
+    const { editName, editTags } = get();
+    const tags = editTags.split(',').map(t => t.trim()).filter(t => t.length > 0);
+    const updatedAsset = updateAsset(assetId, { name: editName, tags });
+    if (updatedAsset) {
+      set({ editingAssetId: null });
+      onComplete?.();
+    } else {
+      alert('Erreur lors de la mise à jour de l\'asset');
+    }
   },
   handleCancelEdit: (e) => {
     e.stopPropagation();

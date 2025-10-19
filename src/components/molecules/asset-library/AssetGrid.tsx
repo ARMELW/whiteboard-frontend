@@ -8,9 +8,10 @@ import type { Asset } from './types';
 
 interface AssetGridProps {
     assets: Asset[];
+    onAssetChanged?: () => void;
 }
 
-const AssetGrid: React.FC<AssetGridProps> = ({ assets }) => {
+const AssetGrid: React.FC<AssetGridProps> = ({ assets, onAssetChanged }) => {
     const {
         selectedAssetId,
         editingAssetId,
@@ -74,7 +75,7 @@ const AssetGrid: React.FC<AssetGridProps> = ({ assets }) => {
                                 />
                                 <div className="flex gap-1">
                                     <button
-                                        onClick={(e) => handleSaveEdit(asset.id, e)}
+                                        onClick={(e) => handleSaveEdit(asset.id, e, onAssetChanged)}
                                         className="flex-1 bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs"
                                     >
                                         ✔
@@ -126,7 +127,7 @@ const AssetGrid: React.FC<AssetGridProps> = ({ assets }) => {
                                         ✎
                                     </button>
                                     <button
-                                        onClick={(e) => handleDeleteAsset(asset.id, e)}
+                                        onClick={(e) => handleDeleteAsset(asset.id, e, onAssetChanged)}
                                         className="flex-1 bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs flex items-center justify-center gap-1"
                                     >
                                         🗑

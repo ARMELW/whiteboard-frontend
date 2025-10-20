@@ -91,10 +91,10 @@ finalImageUrl = canvas.toDataURL('image/png');
 
 ### Scenario 2: Upload and Apply Default Crop
 1. Upload an image
-2. Don't interact with the crop box (shows default 50% centered crop)
+2. Don't interact with the crop box (shows default crop: 50% width/height, centered at 25% x, 25% y)
 3. Click "Apply Crop"
-4. **Expected**: The 50% centered crop is saved
-5. **Verification**: Saved image should be 50% of original dimensions
+4. **Expected**: The centered 50% crop is saved
+5. **Verification**: Saved image should be 50% of original dimensions (centered portion)
 
 ### Scenario 3: Upload and Use Full Image
 1. Upload an image

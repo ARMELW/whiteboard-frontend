@@ -17,7 +17,7 @@ const ContextTabs: React.FC = () => {
   const setShowAssetLibrary = useSceneStore((state) => state.setShowAssetLibrary);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const { updateLayer, deleteLayer, moveLayer, duplicateLayer, addLayer } = useScenesActions();
+  const { deleteLayer, moveLayer, duplicateLayer, addLayer } = useScenesActions();
   const { createTextLayer, createImageLayer } = useLayerCreation({
     sceneWidth: 1920,
     sceneHeight: 1080,
@@ -35,7 +35,7 @@ const ContextTabs: React.FC = () => {
     if (!scene?.id) return;
     try {
       const newTextLayer = createTextLayer(scene.layers?.length || 0);
-      await addLayer({ sceneId: scene.id, layer: newTextLayer });
+      await addLayer({ sceneId: scene.id, layer: newTextLayer as any });
       setSelectedLayerId(newTextLayer.id);
     } catch (error) {
       console.error('Error adding text layer:', error);
@@ -63,7 +63,7 @@ const ContextTabs: React.FC = () => {
           });
 
           const newLayer = createImageLayer(result, file.name, null, scene.layers?.length || 0);
-          await addLayer({ sceneId: scene.id, layer: newLayer });
+          await addLayer({ sceneId: scene.id, layer: newLayer as any });
         } catch (error) {
           console.error('Error adding image:', error);
         }
@@ -116,8 +116,17 @@ const ContextTabs: React.FC = () => {
               onSelectAsset={async (asset) => {
                 if (!scene?.id) return;
                 try {
-                  const newLayer = createImageLayer(asset.dataUrl, asset.name, null, scene.layers?.length || 0);
-                  await addLayer({ sceneId: scene.id, layer: newLayer });
+                  const newLayer = createImageLayer(
+                    asset.dataUrl,
+                    asset.name,
+                    { width: asset.width, height: asset.height },
+                    scene.layers?.length || 0
+                  );
+                  // Correction du typage pour 'type'
+                  await addLayer({
+                    sceneId: scene.id,
+                    layer: { ...newLayer, type: 'image' as any, mode: 'draw' as any }
+                  });
                 } catch (error) {
                   console.error('Error adding image layer:', error);
                 }
@@ -145,7 +154,11 @@ const ContextTabs: React.FC = () => {
                 if (!scene?.id) return;
                 try {
                   const newLayer = createImageLayer(asset.dataUrl, asset.name, null, scene.layers?.length || 0);
-                  await addLayer({ sceneId: scene.id, layer: newLayer });
+                  // Correction du typage pour 'type'
+                  await addLayer({
+                    sceneId: scene.id,
+                    layer: { ...newLayer, type: 'image' as any, mode: 'draw' as any }
+                  });
                 } catch (error) {
                   console.error('Error adding image layer:', error);
                 }

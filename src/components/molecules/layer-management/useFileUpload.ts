@@ -76,7 +76,7 @@ export const useFileUpload = (): FileUploadHandlers => {
     try {
       await addAsset({
         name: pendingImageData.fileName,
-        dataUrl: pendingImageData.originalUrl,
+        dataUrl: croppedImageUrl,
         type: pendingImageData.fileType,
         tags: []
       });

@@ -8,59 +8,120 @@ export const useScenesActions = () => {
   const queryClient = useQueryClient();
 
   const invalidateScenes = () => {
+    // Maintenu pour compatibilité mais évité autant que possible.
     return queryClient.invalidateQueries({
       queryKey: scenesKeys.lists(),
       refetchType: 'all'
     });
   };
 
-  const updateSceneThumbnail = async (scene: Scene) => {
+  const updateSceneThumbnail = async (scene: Scene): Promise<Scene | null> => {
     try {
       const thumbnail = await generateSceneThumbnail(scene);
       if (thumbnail) {
-        await scenesService.update(scene.id, { sceneImage: thumbnail });
+        const updated = await scenesService.update(scene.id, { sceneImage: thumbnail });
+        return updated;
       }
+      return null;
     } catch (error) {
       console.error('Failed to generate scene thumbnail:', error);
+      return null;
     }
   };
 
   const createScene = useMutation({
     mutationFn: (payload: ScenePayload = {}) => scenesService.create(payload),
     onSuccess: async (scene) => {
-      await updateSceneThumbnail(scene);
-      invalidateScenes();
+      // Ajouter la nouvelle scène au cache s'il existe
+      queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+        if (!old) return [scene];
+        return [...old, scene];
+      });
+
+      const updated = await updateSceneThumbnail(scene);
+      if (updated) {
+        queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+          if (!old) return old;
+          return old.map(s => s.id === updated.id ? updated : s);
+        });
+      }
     },
   });
 
   const updateScene = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Scene> }) => 
-      scenesService.update(id, data),
-    onSuccess: async (scene) => {
-      await updateSceneThumbnail(scene);
-      invalidateScenes();
+    mutationFn: (variables: { id: string; data: Partial<Scene>; skipCacheUpdate?: boolean }) => 
+      scenesService.update(variables.id, variables.data),
+    // Optimistic update (skipped when skipCacheUpdate is true)
+    onMutate: async (variables: { id: string; data: Partial<Scene>; skipCacheUpdate?: boolean }) => {
+      const { id, data, skipCacheUpdate } = variables;
+      if (skipCacheUpdate) {
+        return { skipped: true };
+      }
+      await queryClient.cancelQueries({ queryKey: scenesKeys.lists() });
+      const previous = queryClient.getQueryData<Scene[] | undefined>(scenesKeys.lists());
+      queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+        if (!old) return old;
+        return old.map(s => s.id === id ? { ...s, ...data } : s);
+      });
+      return { previous };
+    },
+    onError: (_err, _variables, context: any) => {
+      if (context?.previous) {
+        queryClient.setQueryData(scenesKeys.lists(), context.previous);
+      }
+    },
+    onSuccess: async (scene, variables: { id: string; data: Partial<Scene>; skipCacheUpdate?: boolean }) => {
+      if ((variables as any)?.skipCacheUpdate) return;
+      // Mettre à jour le cache avec la version renvoyée par le service
+      queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+        if (!old) return old;
+        return old.map(s => s.id === scene.id ? scene : s);
+      });
+
+      // Mettre à jour la miniature et le cache si nécessaire
+      const updated = await updateSceneThumbnail(scene);
+      if (updated) {
+        queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+          if (!old) return old;
+          return old.map(s => s.id === updated.id ? updated : s);
+        });
+      }
     },
   });
 
   const deleteScene = useMutation({
     mutationFn: (id: string) => scenesService.delete(id),
-    onSuccess: () => {
-      invalidateScenes();
+    onSuccess: async (resp: any) => {
+      // retirer du cache
+      queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+        if (!old) return old;
+        return old.filter(s => s.id !== resp.id);
+      });
     },
   });
 
   const duplicateScene = useMutation({
     mutationFn: (id: string) => scenesService.duplicate(id),
     onSuccess: async (scene) => {
-      await updateSceneThumbnail(scene);
-      invalidateScenes();
+      queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+        if (!old) return [scene];
+        return [...old, scene];
+      });
+      const updated = await updateSceneThumbnail(scene);
+      if (updated) {
+        queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+          if (!old) return old;
+          return old.map(s => s.id === updated.id ? updated : s);
+        });
+      }
     },
   });
 
   const reorderScenes = useMutation({
     mutationFn: (sceneIds: string[]) => scenesService.reorder(sceneIds),
-    onSuccess: () => {
-      invalidateScenes();
+    onSuccess: async (scenes) => {
+      // scenesService.reorder renvoie la nouvelle liste
+      queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), () => scenes as Scene[]);
     },
   });
 
@@ -68,8 +129,17 @@ export const useScenesActions = () => {
     mutationFn: ({ sceneId, layer }: { sceneId: string; layer: Layer }) => 
       scenesService.addLayer(sceneId, layer),
     onSuccess: async (scene) => {
-      await updateSceneThumbnail(scene);
-      invalidateScenes();
+      queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+        if (!old) return [scene];
+        return old.map(s => s.id === scene.id ? scene : s);
+      });
+      const updated = await updateSceneThumbnail(scene);
+      if (updated) {
+        queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+          if (!old) return old;
+          return old.map(s => s.id === updated.id ? updated : s);
+        });
+      }
     },
   });
 
@@ -77,25 +147,46 @@ export const useScenesActions = () => {
     mutationFn: ({ sceneId, layerId, data }: { sceneId: string; layerId: string; data: Partial<Layer> }) => 
       scenesService.updateLayer(sceneId, layerId, data),
     onSuccess: async (scene) => {
-      await updateSceneThumbnail(scene);
-      invalidateScenes();
+      queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+        if (!old) return [scene];
+        return old.map(s => s.id === scene.id ? scene : s);
+      });
+      const updated = await updateSceneThumbnail(scene);
+      if (updated) {
+        queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+          if (!old) return old;
+          return old.map(s => s.id === updated.id ? updated : s);
+        });
+      }
     },
   });
 
   const deleteLayer = useMutation({
     mutationFn: ({ sceneId, layerId }: { sceneId: string; layerId: string }) => 
       scenesService.deleteLayer(sceneId, layerId),
-    onSuccess: async (scene, variables) => {
-      await updateSceneThumbnail(scene);
-      invalidateScenes();
+    onSuccess: async (scene) => {
+      queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+        if (!old) return [scene];
+        return old.map(s => s.id === scene.id ? scene : s);
+      });
+      const updated = await updateSceneThumbnail(scene);
+      if (updated) {
+        queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+          if (!old) return old;
+          return old.map(s => s.id === updated.id ? updated : s);
+        });
+      }
     },
   });
 
   const addCamera = useMutation({
     mutationFn: ({ sceneId, camera }: { sceneId: string; camera: Camera }) => 
       scenesService.addCamera(sceneId, camera),
-    onSuccess: () => {
-      invalidateScenes();
+    onSuccess: async (scene) => {
+      queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+        if (!old) return [scene];
+        return old.map(s => s.id === scene.id ? scene : s);
+      });
     },
   });
 
@@ -123,8 +214,17 @@ export const useScenesActions = () => {
       return scenesService.update(sceneId, { ...scene, layers });
     },
     onSuccess: async (scene) => {
-      await updateSceneThumbnail(scene);
-      invalidateScenes();
+      queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+        if (!old) return [scene];
+        return old.map(s => s.id === scene.id ? scene : s);
+      });
+      const updated = await updateSceneThumbnail(scene);
+      if (updated) {
+        queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+          if (!old) return old;
+          return old.map(s => s.id === updated.id ? updated : s);
+        });
+      }
     },
   });
 
@@ -149,8 +249,17 @@ export const useScenesActions = () => {
       });
     },
     onSuccess: async (scene) => {
-      await updateSceneThumbnail(scene);
-      invalidateScenes();
+      queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+        if (!old) return [scene];
+        return old.map(s => s.id === scene.id ? scene : s);
+      });
+      const updated = await updateSceneThumbnail(scene);
+      if (updated) {
+        queryClient.setQueryData<Scene[] | undefined>(scenesKeys.lists(), (old) => {
+          if (!old) return old;
+          return old.map(s => s.id === updated.id ? updated : s);
+        });
+      }
     },
   });
 

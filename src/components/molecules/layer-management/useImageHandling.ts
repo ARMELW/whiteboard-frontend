@@ -17,7 +17,7 @@ export const useImageHandling = (options: LayerCreationOptions) => {
       console.debug('[useImageHandling] handleCropComplete called', { croppedImageUrl, imageDimensions, pendingImageData, layersLength });
       await addAsset({
         name: pendingImageData.fileName,
-        dataUrl: pendingImageData.originalUrl,
+        dataUrl: croppedImageUrl,
         type: pendingImageData.fileType,
         tags: []
       });

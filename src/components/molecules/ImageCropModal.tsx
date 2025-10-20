@@ -43,18 +43,22 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageUrl, onCropComplet
         return;
       }
 
-      // Use completedCrop if available, otherwise use the current crop state
+      // Use completedCrop if available (user interacted with crop box),
+      // otherwise use the current crop state (initial 50% crop shown in modal)
       const cropToUse = completedCrop || crop;
       
       // Convert percentage crop to pixel crop if needed
+      // Note: We use displayed image dimensions (image.width/height) for conversion,
+      // then scale to natural dimensions later
       let pixelCrop: PixelCrop;
       if (cropToUse.unit === '%') {
+        const percentCrop = cropToUse as PercentCrop;
         pixelCrop = {
           unit: 'px',
-          x: (cropToUse.x / 100) * image.width,
-          y: (cropToUse.y / 100) * image.height,
-          width: (cropToUse.width / 100) * image.width,
-          height: (cropToUse.height / 100) * image.height
+          x: (percentCrop.x / 100) * image.width,
+          y: (percentCrop.y / 100) * image.height,
+          width: (percentCrop.width / 100) * image.width,
+          height: (percentCrop.height / 100) * image.height
         };
       } else {
         pixelCrop = cropToUse as PixelCrop;

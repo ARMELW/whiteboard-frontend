@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { LayersList } from '../molecules';
 import LayerEditor from './LayerEditor';
 import PropertiesPanel from './PropertiesPanel';
@@ -12,6 +12,11 @@ const AnimationContainer: React.FC = () => {
   const currentScene = useCurrentScene();
   const showShapeToolbar = useSceneStore((state: any) => state.showShapeToolbar);
   const showAssetLibrary = useSceneStore((state: any) => state.showAssetLibrary);
+  const [editedScene, setEditedScene] = useState<any>(null);
+
+  const handleEditedSceneChange = useCallback((scene: any) => {
+    setEditedScene(scene);
+  }, []);
 
   return (
     <div className="animation-container">
@@ -27,12 +32,12 @@ const AnimationContainer: React.FC = () => {
           
           {/* Center: Layer Editor */}
           <div className="flex-1 overflow-y-auto">
-            {currentScene && <LayerEditor />}
+            {currentScene && <LayerEditor onEditedSceneChange={handleEditedSceneChange} />}
           </div>
           
           {/* Right: Properties Panel */}
           <div className="w-80 flex-shrink-0">
-            {currentScene && <PropertiesPanel />}
+            {currentScene && <PropertiesPanel editedScene={editedScene} />}
           </div>
         </div>
         

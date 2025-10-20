@@ -38,14 +38,22 @@ export const useLayerEditor = ({
   }, [externalOnSelectLayer]);
 
   useEffect(() => {
+    const currentSelectedLayerId = externalSelectedLayerId !== undefined ? externalSelectedLayerId : internalSelectedLayerId;
+    const layerStillExists = scene.layers?.some((l: any) => l.id === currentSelectedLayerId);
+    
     setEditedScene({
       ...scene,
       layers: scene.layers || [],
       sceneCameras: scene.sceneCameras || []
     });
-    setSelectedLayerId(null);
-    setSelectedCamera(null);
-  }, [scene]);
+    
+    // Only reset selection if the selected layer no longer exists
+    if (currentSelectedLayerId && !layerStillExists) {
+      setSelectedLayerId(null);
+    }
+    
+    // Don't reset camera selection unnecessarily
+  }, [scene, externalSelectedLayerId, internalSelectedLayerId, setSelectedLayerId]);
 
   const handleChange = useCallback((field: string, value: any) => {
     setEditedScene((prev: any) => ({ ...prev, [field]: value }));

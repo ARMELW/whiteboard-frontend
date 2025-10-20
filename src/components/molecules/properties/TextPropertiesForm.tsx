@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import {
   Select,
   SelectContent,
@@ -12,7 +12,7 @@ export interface TextPropertiesFormProps {
   onPropertyChange: (layerId: string, property: string, value: any) => void;
 }
 
-export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = ({
+export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = memo(({
   layer,
   onPropertyChange
 }) => {
@@ -174,4 +174,6 @@ export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = ({
       </div>
     </div>
   );
-};
+});
+
+TextPropertiesForm.displayName = 'TextPropertiesForm';

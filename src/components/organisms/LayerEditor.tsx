@@ -10,7 +10,11 @@ import LayerEditorCanvas from './LayerEditorCanvas';
 import { useCurrentScene } from '@/app/scenes';
 import { createDefaultCamera } from '@/utils/cameraAnimator';
 
-const LayerEditor: React.FC = () => {
+interface LayerEditorProps {
+  onEditedSceneChange?: (editedScene: any) => void;
+}
+
+const LayerEditor: React.FC<LayerEditorProps> = ({ onEditedSceneChange }) => {
   const scene = useCurrentScene();
   const showShapeToolbar = useSceneStore((state) => state.showShapeToolbar);
   const setShowShapeToolbar = useSceneStore((state) => state.setShowShapeToolbar);
@@ -112,7 +116,8 @@ const LayerEditor: React.FC = () => {
           animation: editedScene.animation,
           multiTimeline: editedScene.multiTimeline,
           audio: editedScene.audio,
-        }
+        },
+        skipCacheUpdate: true
       });
 
       // Mettre à jour l'état sauvegardé après une sauvegarde réussie
@@ -139,6 +144,11 @@ const LayerEditor: React.FC = () => {
       return;
     }
 
+    // Notify parent of edited scene changes
+    if (onEditedSceneChange) {
+      onEditedSceneChange(editedScene);
+    }
+
     // Effacer le timeout précédent pour relancer le debounce
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
@@ -157,7 +167,7 @@ const LayerEditor: React.FC = () => {
         clearTimeout(autoSaveTimeoutRef.current);
       }
     };
-  }, [editedScene, scene?.id, handleSave, createStateHash]);
+  }, [editedScene, scene?.id, handleSave, createStateHash, onEditedSceneChange]);
 
   // Sauvegarder avant de quitter la page
   useEffect(() => {

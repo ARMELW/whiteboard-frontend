@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Music, Volume2, VolumeX, Upload, Plus, Trash2, Play, Pause } from 'lucide-react';
 import { AudioManager as AudioManagerClass, AudioTrackType, createAudioTrack } from '../../utils/audioManager';
 
@@ -75,6 +75,13 @@ const AudioManager: React.FC<AudioManagerProps> = ({ scene, onSceneUpdate, curre
       audioManagerRef.current.setMasterVolume(masterVolume);
     }
   }, [masterVolume]);
+
+  // Stable ref callback to avoid re-renders
+  const setFileInputRef = useCallback((el: HTMLInputElement | null, type: string) => {
+    if (el) {
+      fileInputRefs.current[type] = el;
+    }
+  }, []);
 
   const handleAddTrack = (type: string) => {
     const inputRef = fileInputRefs.current[type];
@@ -301,7 +308,7 @@ const AudioManager: React.FC<AudioManagerProps> = ({ scene, onSceneUpdate, curre
           {Object.values(AudioTrackType).map(type => (
             <input
               key={type}
-              ref={el => fileInputRefs.current[type] = el}
+              ref={(el) => setFileInputRef(el, type)}
               type="file"
               accept="audio/*"
               onChange={(e) => handleFileUpload(e, type)}

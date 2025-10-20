@@ -18,9 +18,7 @@ import { migrateFromLocalStorage } from './utils/assetDB'
 })();
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryProvider>
-      <App />
-    </QueryProvider>
-  </StrictMode>,
+  <QueryProvider>
+    <App />
+  </QueryProvider>,
 )

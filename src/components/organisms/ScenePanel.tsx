@@ -2,13 +2,6 @@ import React, { useRef } from 'react';
 import { Button, Card } from '../atoms';
 import { Plus, ArrowUp, ArrowDown, Copy, Trash2, Download, Upload, MoreVertical } from 'lucide-react';
 import { useScenes, useSceneStore, useScenesActions } from '@/app/scenes';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { THUMBNAIL_CONFIG } from '@/utils/sceneThumbnail';
 
 const SceneCard: React.FC<{
@@ -34,6 +27,22 @@ const SceneCard: React.FC<{
   canMoveUp,
   canMoveDown
 }) => {
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const menuRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isMenuOpen]);
+
   const formatSceneDuration = (duration: number): string => {
     const totalSeconds = Math.floor(duration);
     const minutes = Math.floor(totalSeconds / 60);
@@ -82,58 +91,74 @@ const SceneCard: React.FC<{
         </div>
 
         {/* Actions dropdown - top right, visible on hover or when selected */}
-        <div className={`absolute top-2 right-2 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              className="inline-flex items-center justify-center h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreVertical className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMoveUp();
-                }}
-                disabled={!canMoveUp}
-              >
-                <ArrowUp className="mr-2 h-4 w-4" />
-                Déplacer à gauche
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMoveDown();
-                }}
-                disabled={!canMoveDown}
-              >
-                <ArrowDown className="mr-2 h-4 w-4" />
-                Déplacer à droite
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDuplicate();
-                }}
-              >
-                <Copy className="mr-2 h-4 w-4" />
-                Dupliquer
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete();
-                }}
-                className="text-red-600"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Supprimer
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div 
+          ref={menuRef}
+          className={`absolute top-2 right-2 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}
+        >
+          <button
+            className="inline-flex items-center justify-center h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMenuOpen(!isMenuOpen);
+            }}
+          >
+            <MoreVertical className="h-4 w-4" />
+          </button>
+          
+          {isMenuOpen && (
+            <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-border z-50">
+              <div className="py-1">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMoveUp();
+                    setIsMenuOpen(false);
+                  }}
+                  disabled={!canMoveUp}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-secondary/50 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ArrowUp className="mr-2 h-4 w-4" />
+                  Déplacer à gauche
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMoveDown();
+                    setIsMenuOpen(false);
+                  }}
+                  disabled={!canMoveDown}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-secondary/50 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ArrowDown className="mr-2 h-4 w-4" />
+                  Déplacer à droite
+                </button>
+                <div className="my-1 h-px bg-border"></div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDuplicate();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-secondary/50 flex items-center"
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Dupliquer
+                </button>
+                <div className="my-1 h-px bg-border"></div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-red-100 flex items-center text-red-600"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Supprimer
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Card>

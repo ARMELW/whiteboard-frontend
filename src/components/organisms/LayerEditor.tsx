@@ -11,9 +11,6 @@ import { useCurrentScene } from '@/app/scenes';
 import { createDefaultCamera } from '@/utils/cameraAnimator';
 
 const LayerEditor: React.FC = () => {
-  // Référence pour mémoriser la liste précédente des layers
-  const prevLayersRef = React.useRef<any[]>([]);
-
   const scene = useCurrentScene();
   const showShapeToolbar = useSceneStore((state) => state.showShapeToolbar);
   const setShowShapeToolbar = useSceneStore((state) => state.setShowShapeToolbar);
@@ -91,10 +88,10 @@ const LayerEditor: React.FC = () => {
     
     try {
       isSavingRef.current = true;
-
+      
       // Créer un hash de l'état actuel
       const currentStateHash = createStateHash(editedScene);
-
+      
       // Vérifier si l'état a réellement changé
       if (currentStateHash === lastSavedStateRef.current) {
         console.log('[LayerEditor] No changes detected, skipping save');
@@ -102,7 +99,7 @@ const LayerEditor: React.FC = () => {
       }
 
       console.log('[LayerEditor] Auto-saving scene...');
-
+      
       await updateScene({ 
         id: scene.id, 
         data: {
@@ -115,19 +112,8 @@ const LayerEditor: React.FC = () => {
           animation: editedScene.animation,
           multiTimeline: editedScene.multiTimeline,
           audio: editedScene.audio,
-        },
-        skipCacheUpdate: true
-      });
-
-      // Vérifier la sélection du layer après sauvegarde
-      const selectedLayerStillExists = editedScene.layers?.some((l: any) => l.id === selectedLayerId);
-      if (!selectedLayerStillExists) {
-        if (editedScene.layers && editedScene.layers.length > 0) {
-          setSelectedLayerId(editedScene.layers[0].id);
-        } else {
-          setSelectedLayerId(null);
         }
-      }
+      });
 
       // Mettre à jour l'état sauvegardé après une sauvegarde réussie
       lastSavedStateRef.current = currentStateHash;
@@ -139,42 +125,6 @@ const LayerEditor: React.FC = () => {
     }
   }, [scene?.id, editedScene, updateScene, createStateHash]);
 
-    // Effet pour garder la sélection du layer cohérente après toute modification des layers
-  React.useEffect(() => {
-    if (!editedScene.layers) return;
-    const prevLayers = prevLayersRef.current;
-    const prevLength = prevLayers.length;
-    const currLength = editedScene.layers.length;
-    const exists = editedScene.layers.some((l: {id: string}) => l.id === selectedLayerId);
-
-    // Ajout : sélectionne le dernier layer
-    if (currLength > prevLength) {
-      setSelectedLayerId(editedScene.layers[editedScene.layers.length - 1].id);
-    }
-    // Suppression : sélectionne le voisin
-    else if (!exists && currLength > 0) {
-      // Cherche l'index du layer supprimé dans la liste précédente
-      const prevIdx = prevLayers.findIndex((l: {id: string}) => l.id === selectedLayerId);
-      // Si le layer déplacé existe, le sélectionner
-      const movedLayer = editedScene.layers.find((l: {id: string}) => prevLayers.some((pl: {id: string}) => pl.id === l.id));
-      if (movedLayer) {
-        setSelectedLayerId(movedLayer.id);
-      } else {
-        // Sélectionne le layer suivant ou précédent
-        const newIdx = Math.max(0, Math.min(prevIdx, currLength - 1));
-        setSelectedLayerId(editedScene.layers[newIdx].id);
-      }
-    }
-    // Liste vide
-    else if (currLength === 0) {
-      setSelectedLayerId(null);
-    }
-    // Déplacement ou modification : garde la sélection si le layer existe
-    // (rien à faire)
-
-    // Met à jour la référence
-    prevLayersRef.current = editedScene.layers;
-  }, [editedScene.layers, selectedLayerId, setSelectedLayerId]);
   // Gérer l'auto-sauvegarde avec debounce
   useEffect(() => {
     // Sauter à la première charge
@@ -211,7 +161,7 @@ const LayerEditor: React.FC = () => {
 
   // Sauvegarder avant de quitter la page
   useEffect(() => {
-    const handleBeforeUnload = () => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (autoSaveTimeoutRef.current) {
         // Exécuter immédiatement la sauvegarde avant de quitter
         handleSave();
@@ -224,7 +174,6 @@ const LayerEditor: React.FC = () => {
 
   const handleCropComplete = async (croppedImageUrl: string, imageDimensions?: { width: number; height: number }) => {
     const newLayer = await handleCropCompleteBase(croppedImageUrl, imageDimensions, pendingImageData, editedScene.layers.length);
-    console.log('image url',imageDimensions || (pendingImageData.originalWidth && pendingImageData.originalHeight ? { width: pendingImageData.originalWidth, height: pendingImageData.originalHeight } : null));
     if (!newLayer) {
       try {
         if (croppedImageUrl && pendingImageData) {

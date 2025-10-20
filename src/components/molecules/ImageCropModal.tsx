@@ -43,7 +43,28 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageUrl, onCropComplet
         return;
       }
 
-      if (!completedCrop || completedCrop.width === 0 || completedCrop.height === 0) {
+      // Use completedCrop if available (user interacted with crop box),
+      // otherwise use the current crop state (initial 50% crop shown in modal)
+      const cropToUse = completedCrop || crop;
+      
+      // Convert percentage crop to pixel crop if needed
+      // Note: We use displayed image dimensions (image.width/height) for conversion,
+      // then scale to natural dimensions later
+      let pixelCrop: PixelCrop;
+      if (cropToUse.unit === '%') {
+        const percentCrop = cropToUse as PercentCrop;
+        pixelCrop = {
+          unit: 'px',
+          x: (percentCrop.x / 100) * image.width,
+          y: (percentCrop.y / 100) * image.height,
+          width: (percentCrop.width / 100) * image.width,
+          height: (percentCrop.height / 100) * image.height
+        };
+      } else {
+        pixelCrop = cropToUse as PixelCrop;
+      }
+
+      if (!pixelCrop || pixelCrop.width === 0 || pixelCrop.height === 0) {
         imageDimensions = {
           width: image.naturalWidth,
           height: image.naturalHeight
@@ -53,8 +74,8 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageUrl, onCropComplet
         const canvas = document.createElement('canvas');
         const scaleX = image.naturalWidth / image.width;
         const scaleY = image.naturalHeight / image.height;
-        canvas.width = completedCrop.width * scaleX;
-        canvas.height = completedCrop.height * scaleY;
+        canvas.width = pixelCrop.width * scaleX;
+        canvas.height = pixelCrop.height * scaleY;
         imageDimensions = {
           width: canvas.width,
           height: canvas.height
@@ -63,10 +84,10 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageUrl, onCropComplet
         if (ctx) {
           ctx.drawImage(
             image,
-            completedCrop.x * scaleX,
-            completedCrop.y * scaleY,
-            completedCrop.width * scaleX,
-            completedCrop.height * scaleY,
+            pixelCrop.x * scaleX,
+            pixelCrop.y * scaleY,
+            pixelCrop.width * scaleX,
+            pixelCrop.height * scaleY,
             0,
             0,
             canvas.width,

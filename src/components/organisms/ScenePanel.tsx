@@ -2,14 +2,168 @@ import React, { useRef } from 'react';
 import { Button, Card } from '../atoms';
 import { Plus, ArrowUp, ArrowDown, Copy, Trash2, Download, Upload, MoreVertical } from 'lucide-react';
 import { useScenes, useSceneStore, useScenesActions } from '@/app/scenes';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { THUMBNAIL_CONFIG } from '@/utils/sceneThumbnail';
+
+const SceneCard: React.FC<{
+  scene: any;
+  index: number;
+  isSelected: boolean;
+  onSelect: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+}> = ({
+  scene,
+  index,
+  isSelected,
+  onSelect,
+  onMoveUp,
+  onMoveDown,
+  onDuplicate,
+  onDelete,
+  canMoveUp,
+  canMoveDown
+}) => {
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const menuRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isMenuOpen]);
+
+  const formatSceneDuration = (duration: number): string => {
+    const totalSeconds = Math.floor(duration);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <Card
+      className={`flex-shrink-0 w-64 cursor-pointer transition-all hover:shadow-md relative group ${isSelected
+          ? 'border-primary shadow-md ring-2 ring-primary/20'
+          : 'border-border hover:border-primary/50'
+        }`}
+      onClick={onSelect}
+    >
+      <div className="p-0 relative">
+        {/* Thumbnail - Full card */}
+        <div className="w-full aspect-video bg-secondary rounded-lg flex items-center justify-center text-muted-foreground text-xs overflow-hidden border border-border">
+          {scene.sceneImage ? (
+            <img
+              src={scene.sceneImage}
+              alt={`Scene ${index + 1}`}
+              className="w-full h-full object-contain"
+              style={{ backgroundColor: THUMBNAIL_CONFIG.BACKGROUND_COLOR }}
+            />
+          ) : scene.backgroundImage ? (
+            <img
+              src={scene.backgroundImage}
+              alt={`Scene ${index + 1}`}
+              className="w-full h-full object-contain"
+              style={{ backgroundColor: THUMBNAIL_CONFIG.BACKGROUND_COLOR }}
+            />
+          ) : (
+            <span className="text-4xl">📄</span>
+          )}
+        </div>
+
+        {/* Scene number badge - top left */}
+        <div className="absolute top-2 left-2 bg-black/70 text-white text-xs font-bold px-2 py-1 rounded">
+          {index + 1}
+        </div>
+
+        {/* Scene duration badge - bottom left */}
+        <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs font-medium px-2 py-1 rounded flex items-center gap-1">
+          <span>{formatSceneDuration(scene.duration)}</span>
+        </div>
+
+        {/* Actions dropdown - top right, visible on hover or when selected */}
+        <div 
+          ref={menuRef}
+          className={`absolute top-2 right-2 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}
+        >
+          <button
+            className="inline-flex items-center justify-center h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMenuOpen(!isMenuOpen);
+            }}
+          >
+            <MoreVertical className="h-4 w-4" />
+          </button>
+          
+          {isMenuOpen && (
+            <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-border z-50">
+              <div className="py-1">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMoveUp();
+                    setIsMenuOpen(false);
+                  }}
+                  disabled={!canMoveUp}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-secondary/50 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ArrowUp className="mr-2 h-4 w-4" />
+                  Déplacer à gauche
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMoveDown();
+                    setIsMenuOpen(false);
+                  }}
+                  disabled={!canMoveDown}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-secondary/50 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ArrowDown className="mr-2 h-4 w-4" />
+                  Déplacer à droite
+                </button>
+                <div className="my-1 h-px bg-border"></div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDuplicate();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-secondary/50 flex items-center"
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Dupliquer
+                </button>
+                <div className="my-1 h-px bg-border"></div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-red-100 flex items-center text-red-600"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Supprimer
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+};
 
 const ScenePanel: React.FC = () => {
   // Pour ouvrir asset library et shape toolbar
@@ -86,13 +240,6 @@ const ScenePanel: React.FC = () => {
     e.target.value = '';
   };
 
-  const formatSceneDuration = (duration: number): string => {
-    const totalSeconds = Math.floor(duration);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  };
-
   return (
     <div className="bg-white flex h-full shadow-sm">
       {/* Header - Now on the left side */}
@@ -164,106 +311,19 @@ const ScenePanel: React.FC = () => {
       <div className="flex-1 overflow-x-auto p-3">
         <div className="flex gap-3 h-full">
         {scenes.map((scene: any, index: number) => (
-          <Card
+          <SceneCard
             key={scene.id}
-            className={`flex-shrink-0 w-64 cursor-pointer transition-all hover:shadow-md relative group ${selectedSceneIndex === index
-                ? 'border-primary shadow-md ring-2 ring-primary/20'
-                : 'border-border hover:border-primary/50'
-              }`}
-            onClick={() => setSelectedSceneIndex(index)}
-          >
-            <div className="p-0 relative">
-              {/* Thumbnail - Full card */}
-              <div className="w-full aspect-video bg-secondary rounded-lg flex items-center justify-center text-muted-foreground text-xs overflow-hidden border border-border">
-                {scene.sceneImage ? (
-                  <img
-                    src={scene.sceneImage}
-                    alt={`Scene ${index + 1}`}
-                    className="w-full h-full object-contain"
-                    style={{ backgroundColor: THUMBNAIL_CONFIG.BACKGROUND_COLOR }}
-                  />
-                ) : scene.backgroundImage ? (
-                  <img
-                    src={scene.backgroundImage}
-                    alt={`Scene ${index + 1}`}
-                    className="w-full h-full object-contain"
-                    style={{ backgroundColor: THUMBNAIL_CONFIG.BACKGROUND_COLOR }}
-                  />
-                ) : (
-                  <span className="text-4xl">📄</span>
-                )}
-              </div>
-
-              {/* Scene number badge - top left */}
-              <div className="absolute top-2 left-2 bg-black/70 text-white text-xs font-bold px-2 py-1 rounded">
-                {index + 1}
-              </div>
-
-              {/* Scene duration badge - bottom left */}
-              <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs font-medium px-2 py-1 rounded flex items-center gap-1">
-                <span>{formatSceneDuration(scene.duration)}</span>
-              </div>
-
-              {/* Actions dropdown - top right, visible on hover or when selected */}
-              <div className={`absolute top-2 right-2 ${selectedSceneIndex === index ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMoveScene(index, 'up');
-                      }}
-                      disabled={index === 0}
-                    >
-                      <ArrowUp className="mr-2 h-4 w-4" />
-                      Déplacer à gauche
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMoveScene(index, 'down');
-                      }}
-                      disabled={index === scenes.length - 1}
-                    >
-                      <ArrowDown className="mr-2 h-4 w-4" />
-                      Déplacer à droite
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDuplicateScene(index);
-                      }}
-                    >
-                      <Copy className="mr-2 h-4 w-4" />
-                      Dupliquer
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteScene(index);
-                      }}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Supprimer
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-          </Card>
+            scene={scene}
+            index={index}
+            isSelected={selectedSceneIndex === index}
+            onSelect={() => setSelectedSceneIndex(index)}
+            onMoveUp={() => handleMoveScene(index, 'up')}
+            onMoveDown={() => handleMoveScene(index, 'down')}
+            onDuplicate={() => handleDuplicateScene(index)}
+            onDelete={() => handleDeleteScene(index)}
+            canMoveUp={index !== 0}
+            canMoveDown={index !== scenes.length - 1}
+          />
         ))}
         
         {/* Add Scene Card */}

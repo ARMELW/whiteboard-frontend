@@ -93,12 +93,8 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageUrl, onCropComplet
             canvas.width,
             canvas.height
           );
-          const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
-          if (!blob) {
-            console.error('Canvas is empty');
-          } else {
-            finalImageUrl = URL.createObjectURL(blob);
-          }
+          // Convert canvas to data URL instead of blob URL for proper persistence
+          finalImageUrl = canvas.toDataURL('image/png');
         }
       }
     } catch (error) {

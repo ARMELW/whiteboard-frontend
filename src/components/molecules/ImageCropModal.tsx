@@ -43,7 +43,24 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageUrl, onCropComplet
         return;
       }
 
-      if (!completedCrop || completedCrop.width === 0 || completedCrop.height === 0) {
+      // Use completedCrop if available, otherwise use the current crop state
+      const cropToUse = completedCrop || crop;
+      
+      // Convert percentage crop to pixel crop if needed
+      let pixelCrop: PixelCrop;
+      if (cropToUse.unit === '%') {
+        pixelCrop = {
+          unit: 'px',
+          x: (cropToUse.x / 100) * image.width,
+          y: (cropToUse.y / 100) * image.height,
+          width: (cropToUse.width / 100) * image.width,
+          height: (cropToUse.height / 100) * image.height
+        };
+      } else {
+        pixelCrop = cropToUse as PixelCrop;
+      }
+
+      if (!pixelCrop || pixelCrop.width === 0 || pixelCrop.height === 0) {
         imageDimensions = {
           width: image.naturalWidth,
           height: image.naturalHeight
@@ -53,8 +70,8 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageUrl, onCropComplet
         const canvas = document.createElement('canvas');
         const scaleX = image.naturalWidth / image.width;
         const scaleY = image.naturalHeight / image.height;
-        canvas.width = completedCrop.width * scaleX;
-        canvas.height = completedCrop.height * scaleY;
+        canvas.width = pixelCrop.width * scaleX;
+        canvas.height = pixelCrop.height * scaleY;
         imageDimensions = {
           width: canvas.width,
           height: canvas.height
@@ -63,10 +80,10 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageUrl, onCropComplet
         if (ctx) {
           ctx.drawImage(
             image,
-            completedCrop.x * scaleX,
-            completedCrop.y * scaleY,
-            completedCrop.width * scaleX,
-            completedCrop.height * scaleY,
+            pixelCrop.x * scaleX,
+            pixelCrop.y * scaleY,
+            pixelCrop.width * scaleX,
+            pixelCrop.height * scaleY,
             0,
             0,
             canvas.width,

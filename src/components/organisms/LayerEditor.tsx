@@ -205,6 +205,7 @@ const LayerEditor: React.FC = () => {
     handleAddShape(shapeLayer, editedScene.layers.length);
   };
 
+  console.log('[LayerEditor]');
   return (
     <div className="flex items-center justify-center w-full h-full">
       <LayerEditorModals

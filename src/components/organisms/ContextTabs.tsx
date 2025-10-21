@@ -23,7 +23,7 @@ const ContextTabs: React.FC = () => {
     sceneHeight: 1080,
     selectedCamera: null
   });
-
+  console.log('[ ContextTabs ]');
   const tabs = [
     { id: 'assets' as TabType, label: 'Assets', icon: Image },
     { id: 'props' as TabType, label: 'Props', icon: Shapes },

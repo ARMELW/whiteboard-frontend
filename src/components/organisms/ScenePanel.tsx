@@ -93,6 +93,7 @@ const ScenePanel: React.FC = () => {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  console.log('[ScenePanel]');
   return (
     <div className="bg-white flex h-full shadow-sm">
       {/* Header - Now on the left side */}

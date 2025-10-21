@@ -50,6 +50,7 @@ const PropertiesPanel: React.FC = () => {
     { id: 'layers' as TabType, label: 'Layers', icon: LayersIcon },
   ];
 
+  console.log('[PropertiesPanel]');
   return (
     <div className="bg-white flex flex-col border-l border-border overflow-hidden h-full">
       {/* Tabs Header */}

@@ -83,6 +83,7 @@ const AssetLibrary: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode, searchQuery, selectedTags, sortBy, sortOrder]);
 
+  console.log('[ AssetLibrary ]');
   return (
     <>
       {/* Image Crop Modal */}

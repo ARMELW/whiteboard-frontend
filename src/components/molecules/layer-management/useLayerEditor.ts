@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 export interface LayerEditorState {
   editedScene: any;
@@ -26,6 +26,9 @@ export const useLayerEditor = ({
   const [internalSelectedLayerId, setInternalSelectedLayerId] = useState<string | null>(null);
   const [selectedCamera, setSelectedCamera] = useState<any>(null);
   const [showThumbnailMaker, setShowThumbnailMaker] = useState(false);
+  
+  // Keep track of previous scene ID to detect real scene changes
+  const prevSceneIdRef = useRef<string | undefined>(scene?.id);
 
   const selectedLayerId = externalSelectedLayerId !== undefined ? externalSelectedLayerId : internalSelectedLayerId;
   
@@ -38,14 +41,32 @@ export const useLayerEditor = ({
   }, [externalOnSelectLayer]);
 
   useEffect(() => {
+    const isSceneChange = prevSceneIdRef.current !== scene?.id;
+    
     setEditedScene({
       ...scene,
       layers: scene.layers || [],
       sceneCameras: scene.sceneCameras || []
     });
-    setSelectedLayerId(null);
-    setSelectedCamera(null);
-  }, [scene]);
+    
+    // Only clear selection if we switched to a different scene
+    // or if the selected layer no longer exists in the updated scene
+    if (isSceneChange) {
+      // Different scene: clear selection
+      setSelectedLayerId(null);
+      setSelectedCamera(null);
+      prevSceneIdRef.current = scene?.id;
+    } else {
+      // Same scene (e.g., after save): preserve selection if layer still exists
+      if (selectedLayerId) {
+        const layerStillExists = scene.layers?.some((layer: any) => layer.id === selectedLayerId);
+        if (!layerStillExists) {
+          setSelectedLayerId(null);
+        }
+      }
+      setSelectedCamera(null);
+    }
+  }, [scene, selectedLayerId, setSelectedLayerId]);
 
   const handleChange = useCallback((field: string, value: any) => {
     setEditedScene((prev: any) => ({ ...prev, [field]: value }));

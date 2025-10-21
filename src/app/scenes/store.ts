@@ -3,7 +3,7 @@ import { create } from 'zustand';
 interface SceneState {
   // UI state only - no data operations
   selectedSceneIndex: number;
-  selectedLayerId: string | null;
+  selectedLayerIdByScene: Record<string, string | null>; // Map of sceneId -> selectedLayerId
   showAssetLibrary: boolean;
   showShapeToolbar: boolean;
   showCropModal: boolean;
@@ -11,7 +11,8 @@ interface SceneState {
   
   // UI Actions only
   setSelectedSceneIndex: (index: number) => void;
-  setSelectedLayerId: (id: string | null) => void;
+  setSelectedLayerId: (sceneId: string, layerId: string | null) => void;
+  getSelectedLayerId: (sceneId: string) => string | null;
   setShowAssetLibrary: (show: boolean) => void;
   setShowShapeToolbar: (show: boolean) => void;
   setShowCropModal: (show: boolean) => void;
@@ -23,19 +24,29 @@ interface SceneState {
 
 const initialState = {
   selectedSceneIndex: 0,
-  selectedLayerId: null,
+  selectedLayerIdByScene: {},
   showAssetLibrary: false,
   showShapeToolbar: false,
   showCropModal: false,
   pendingImageData: null,
 };
 
-export const useSceneStore = create<SceneState>((set) => ({
+export const useSceneStore = create<SceneState>((set, get) => ({
   ...initialState,
   
   // UI Actions only
   setSelectedSceneIndex: (index) => set({ selectedSceneIndex: index }),
-  setSelectedLayerId: (id) => set({ selectedLayerId: id }),
+  setSelectedLayerId: (sceneId, layerId) => 
+    set((state) => ({
+      selectedLayerIdByScene: {
+        ...state.selectedLayerIdByScene,
+        [sceneId]: layerId,
+      },
+    })),
+  getSelectedLayerId: (sceneId) => {
+    const state = get();
+    return state.selectedLayerIdByScene[sceneId] ?? null;
+  },
   setShowAssetLibrary: (show) => set({ showAssetLibrary: show }),
   setShowShapeToolbar: (show) => set({ showShapeToolbar: show }),
   setShowCropModal: (show) => set({ showCropModal: show }),

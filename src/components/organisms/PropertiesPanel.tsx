@@ -3,14 +3,13 @@ import { Settings, FolderKanban, Music, Hand, Layers as LayersIcon } from 'lucid
 import ScenePropertiesPanel from '../atoms/ScenePropertiesPanel';
 import AudioManager from '../audio/AudioManager';
 import { LayerPropertiesForm, LayersListPanel } from '../molecules';
-import { useCurrentScene, useSceneStore, useScenesActions } from '@/app/scenes';
+import { useCurrentScene, useScenesActions, useSelectedLayer } from '@/app/scenes';
 
 type TabType = 'properties' | 'project' | 'soundtrack' | 'hands' | 'layers';
 
 const PropertiesPanel: React.FC = () => {
   const scene = useCurrentScene();
-  const selectedLayerId = useSceneStore((state) => state.selectedLayerId);
-  const setSelectedLayerId = useSceneStore((state) => state.setSelectedLayerId);
+  const { selectedLayerId, setSelectedLayerId } = useSelectedLayer();
   const [activeTab, setActiveTab] = useState<TabType>('properties');
   
   const { updateScene, updateLayer, deleteLayer, moveLayer, duplicateLayer } = useScenesActions();

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useCallback } from 'react';
-import { useSceneStore, useScenesActions } from '../../app/scenes';
+import { useSceneStore, useScenesActions, useSelectedLayer } from '../../app/scenes';
 import {
   useLayerEditor,
   useLayerCreationHandlers
@@ -19,8 +19,7 @@ const LayerEditor: React.FC = () => {
   const setShowCropModal = useSceneStore((state) => state.setShowCropModal);
   const pendingImageData = useSceneStore((state) => state.pendingImageData);
   const setPendingImageData = useSceneStore((state) => state.setPendingImageData);
-  const selectedLayerId = useSceneStore((state) => state.selectedLayerId);
-  const setSelectedLayerId = useSceneStore((state) => state.setSelectedLayerId);
+  const { selectedLayerId, setSelectedLayerId } = useSelectedLayer();
 
   // Use actions from useScenesActions hook for persistence
   const { updateScene } = useScenesActions();

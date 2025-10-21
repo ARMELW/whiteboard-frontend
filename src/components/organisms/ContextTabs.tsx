@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '../atoms';
 import { Image, Type, Shapes, Layers as LayersIcon, Plus, Upload } from 'lucide-react';
-import { useCurrentScene, useSceneStore, useScenesActions } from '@/app/scenes';
+import { useCurrentScene, useSceneStore, useScenesActions, useSelectedLayer } from '@/app/scenes';
 import { LayersListPanel } from '../molecules/properties';
 import { useLayerCreation } from '../molecules/layer-management';
 import { addAsset } from '@/utils/assetManager';
@@ -12,8 +12,7 @@ type TabType = 'assets' | 'props' | 'layers' | 'text';
 const ContextTabs: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('layers');
   const scene = useCurrentScene();
-  const selectedLayerId = useSceneStore((state) => state.selectedLayerId);
-  const setSelectedLayerId = useSceneStore((state) => state.setSelectedLayerId);
+  const { selectedLayerId, setSelectedLayerId } = useSelectedLayer();
   const setShowAssetLibrary = useSceneStore((state) => state.setShowAssetLibrary);
   const fileInputRef = useRef<HTMLInputElement>(null);
   

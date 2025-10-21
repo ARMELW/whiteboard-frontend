@@ -341,4 +341,4 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   );
 };
 
-export default SceneCanvas;
+export default React.memo(SceneCanvas);

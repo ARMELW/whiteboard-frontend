@@ -1,72 +1,63 @@
 import { useCallback } from 'react';
-import { Scene, Layer } from '../scenes';
+import { Scene } from '../scenes';
+import { useSceneStore } from '../scenes/store';
 
 interface UseSceneActionsProps {
   scenes: Scene[];
-  invalidate: () => Promise<void>;
-  createScene: (scene: Partial<Scene>, scenes: Scene[]) => Promise<void>;
-  updateSceneAction: (sceneId: string, updates: Partial<Scene>) => Promise<void>;
-  deleteSceneAction: (sceneId: string, scenes: Scene[]) => Promise<void>;
-  duplicateSceneAction: (sceneId: string) => Promise<void>;
-  reorderScenesAction: (sceneIds: string[]) => Promise<void>;
   setSelectedSceneIndex: (index: number) => void;
 }
 
 export function useSceneActions({
   scenes,
-  invalidate,
-  createScene,
-  updateSceneAction,
-  deleteSceneAction,
-  duplicateSceneAction,
-  reorderScenesAction,
   setSelectedSceneIndex,
 }: UseSceneActionsProps) {
+  const createScene = useSceneStore((state) => state.createScene);
+  const updateScene = useSceneStore((state) => state.updateScene);
+  const deleteScene = useSceneStore((state) => state.deleteScene);
+  const duplicateScene = useSceneStore((state) => state.duplicateScene);
+  const reorderScenes = useSceneStore((state) => state.reorderScenes);
+
   // Ajout d'une scène
   const addScene = useCallback(async () => {
     try {
-      await createScene({ duration: 10, layers: [], sceneCameras: [] }, scenes);
-      await invalidate();
+      await createScene({ duration: 10, layers: [], sceneCameras: [] });
     } catch (error: any) {
       alert('Erreur lors de la création de la scène: ' + error.message);
     }
-  }, [createScene, scenes, invalidate]);
+  }, [createScene]);
 
   // Suppression d'une scène
-  const deleteScene = useCallback(async (index: number) => {
+  const deleteSceneAction = useCallback(async (index: number) => {
     const sceneId = scenes[index]?.id;
     if (!sceneId) return;
     try {
-      await deleteSceneAction(sceneId, scenes);
-      await invalidate();
+      await deleteScene(sceneId);
     } catch (error: any) {
       alert(error.message);
     }
-  }, [deleteSceneAction, scenes, invalidate]);
+  }, [deleteScene, scenes]);
 
   // Duplication d'une scène
-  const duplicateScene = useCallback(async (index: number) => {
+  const duplicateSceneAction = useCallback(async (index: number) => {
     const sceneId = scenes[index]?.id;
     if (!sceneId) return;
     try {
-      await duplicateSceneAction(sceneId);
-      await invalidate();
+      await duplicateScene(sceneId);
     } catch (error: any) {
       alert('Erreur lors de la duplication: ' + error.message);
     }
-  }, [duplicateSceneAction, scenes, invalidate]);
+  }, [duplicateScene, scenes]);
 
   // Mise à jour d'une scène
-  const updateScene = useCallback(async (index: number, updatedScene: Partial<Scene>) => {
+  const updateSceneAction = useCallback(async (index: number, updatedScene: Partial<Scene>) => {
     const sceneId = scenes[index]?.id;
     if (!sceneId) return;
     try {
-      await updateSceneAction(sceneId, updatedScene);
-      await invalidate();
+      await updateScene(sceneId, updatedScene);
     } catch (error) {
       console.error('Error updating scene:', error);
     }
-  }, [updateSceneAction, scenes, invalidate]);
+  }, [updateScene, scenes]);
 
   // Déplacement d'une scène
   const moveScene = useCallback(async (index: number, direction: 'up' | 'down') => {
@@ -78,19 +69,18 @@ export function useSceneActions({
     [newScenes[index], newScenes[targetIndex]] = [newScenes[targetIndex], newScenes[index]];
     const sceneIds = newScenes.map((scene) => scene.id);
     try {
-      await reorderScenesAction(sceneIds);
+      await reorderScenes(sceneIds);
       setSelectedSceneIndex(targetIndex);
-      await invalidate();
     } catch (error) {
       console.error('Error reordering scenes:', error);
     }
-  }, [reorderScenesAction, scenes, setSelectedSceneIndex, invalidate]);
+  }, [reorderScenes, scenes, setSelectedSceneIndex]);
 
   return {
     addScene,
-    deleteScene,
-    duplicateScene,
-    updateScene,
+    deleteScene: deleteSceneAction,
+    duplicateScene: duplicateSceneAction,
+    updateScene: updateSceneAction,
     moveScene,
   };
 }

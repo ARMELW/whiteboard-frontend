@@ -1,7 +1,11 @@
 import { useCallback } from 'react';
 import { Scene } from '../scenes';
+import scenesService from '../scenes/api/scenesService';
+import { useSceneStore } from '../scenes/store';
 
 export function useImportConfig() {
+  const loadScenes = useSceneStore((state) => state.loadScenes);
+  
   // Importe une configuration JSON de scènes
   const handleImportConfig = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -11,9 +15,8 @@ export function useImportConfig() {
       try {
         const config = JSON.parse(event.target?.result as string);
         if (config.scenes && Array.isArray(config.scenes)) {
-          const scenesService = (await import('../../app/scenes')).scenesService;
           await scenesService.bulkUpdate(config.scenes);
-          window.location.reload();
+          await loadScenes();
         } else {
           alert('Format de fichier invalide. Le fichier doit contenir un tableau "scenes".');
         }
@@ -22,7 +25,7 @@ export function useImportConfig() {
       }
     };
     reader.readAsText(file);
-  }, []);
+  }, [loadScenes]);
 
   return { handleImportConfig };
 }

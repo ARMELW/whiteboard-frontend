@@ -1,42 +1,23 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import scenesService from '../api/scenesService';
-import sampleStory from '../../../data/scenes';
-import { scenesKeys } from '../config';
-import { Scene } from '../types';
+import { useEffect } from 'react';
+import { useSceneStore } from '../store';
 
 export const useScenes = () => {
-  const queryClient = useQueryClient();
+  const scenes = useSceneStore((state) => state.scenes);
+  const loading = useSceneStore((state) => state.loading);
+  const error = useSceneStore((state) => state.error);
+  const loadScenes = useSceneStore((state) => state.loadScenes);
 
-  const query = useQuery({
-    queryKey: scenesKeys.lists(),
-    queryFn: async () => {
-      const result = await scenesService.list({ page: 1, limit: 1000 });
-      
-      if (result.data.length === 0) {
-        const initialScenes = sampleStory || [];
-        await scenesService.bulkUpdate(initialScenes);
-        return initialScenes;
-      }
-      
-      return result.data;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh longer
-    refetchOnMount: false, // Don't refetch on component mount
-    refetchOnWindowFocus: false, // Don't refetch when window regains focus
-  });
-
-  const invalidate = () => {
-    return queryClient.invalidateQueries({
-      queryKey: scenesKeys.lists(),
-      refetchType: 'all'
-    });
-  };
+  // Load scenes on mount if not already loaded
+  useEffect(() => {
+    if (scenes.length === 0 && !loading) {
+      loadScenes();
+    }
+  }, []); // Only run once on mount
 
   return {
-    scenes: query.data || [],
-    loading: query.isLoading,
-    error: query.error,
-    refetch: query.refetch,
-    invalidate,
+    scenes,
+    loading,
+    error,
+    refetch: loadScenes,
   };
 };

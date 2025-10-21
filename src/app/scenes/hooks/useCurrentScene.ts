@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { useScenes } from './useScenes';
 import { useSceneStore } from '../store';
 
 /**
@@ -7,7 +6,7 @@ import { useSceneStore } from '../store';
  * @returns The currently selected scene or null if no scene is selected
  */
 export const useCurrentScene = () => {
-  const { scenes } = useScenes();
+  const scenes = useSceneStore((state) => state.scenes);
   const selectedSceneIndex = useSceneStore((state) => state.selectedSceneIndex);
   
   // Memoize the current scene to prevent unnecessary re-renders

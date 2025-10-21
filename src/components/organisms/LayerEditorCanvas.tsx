@@ -44,4 +44,4 @@ const LayerEditorCanvas: React.FC<LayerEditorCanvasProps> = ({
   );
 };
 
-export default LayerEditorCanvas;
+export default React.memo(LayerEditorCanvas);

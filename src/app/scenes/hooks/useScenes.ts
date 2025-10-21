@@ -20,9 +20,9 @@ export const useScenes = () => {
       
       return result.data;
     },
-    staleTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh longer
+    refetchOnMount: false, // Don't refetch on component mount
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
   });
 
   const invalidate = () => {

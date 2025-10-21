@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Settings, FolderKanban, Music, Hand, Layers as LayersIcon } from 'lucide-react';
 import ScenePropertiesPanel from '../atoms/ScenePropertiesPanel';
 import AudioManager from '../audio/AudioManager';
@@ -30,17 +30,20 @@ const PropertiesPanel: React.FC = () => {
     );
   }
 
-  const selectedLayer = scene.layers?.find((layer: any) => layer.id === selectedLayerId);
+  const selectedLayer = useMemo(() => 
+    scene.layers?.find((layer: any) => layer.id === selectedLayerId),
+    [scene.layers, selectedLayerId]
+  );
 
-  const handleSceneChange = (field: string, value: any) => {
+  const handleSceneChange = useCallback((field: string, value: any) => {
     if (!scene.id) return;
     updateScene({ id: scene.id, data: { [field]: value } });
-  };
+  }, [scene.id, updateScene]);
 
-  const handleLayerPropertyChange = (layerId: string, property: string, value: any) => {
+  const handleLayerPropertyChange = useCallback((layerId: string, property: string, value: any) => {
     if (!scene.id) return;
     updateLayer({ sceneId: scene.id, layerId, data: { [property]: value } });
-  };
+  }, [scene.id, updateLayer]);
 
   const tabs = [
     { id: 'properties' as TabType, label: 'Properties', icon: Settings },
@@ -50,7 +53,6 @@ const PropertiesPanel: React.FC = () => {
     { id: 'layers' as TabType, label: 'Layers', icon: LayersIcon },
   ];
 
-  console.log('[PropertiesPanel]');
   return (
     <div className="bg-white flex flex-col border-l border-border overflow-hidden h-full">
       {/* Tabs Header */}
@@ -169,4 +171,4 @@ const PropertiesPanel: React.FC = () => {
   );
 };
 
-export default PropertiesPanel;
+export default React.memo(PropertiesPanel);

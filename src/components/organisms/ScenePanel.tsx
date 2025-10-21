@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useCallback } from 'react';
 import { Button, Card } from '../atoms';
 import { Plus, ArrowUp, ArrowDown, Copy, Trash2, Download, Upload, MoreVertical } from 'lucide-react';
 import { useScenes, useSceneStore, useScenesActions } from '@/app/scenes';
@@ -26,16 +26,16 @@ const ScenePanel: React.FC = () => {
   // Use actions from useScenesActions hook
   const { createScene, deleteScene, duplicateScene, reorderScenes } = useScenesActions();
 
-  const handleAddScene = async () => {
+  const handleAddScene = useCallback(async () => {
     const currentLength = scenes.length;
     await createScene({});
     // After creation, the new scene will be at the end of the array
     // React Query will refetch and scenes array will have +1 length
     // So we set to currentLength which will be the new scene's index
     setSelectedSceneIndex(currentLength);
-  };
+  }, [scenes.length, createScene, setSelectedSceneIndex]);
 
-  const handleMoveScene = async (index: number, direction: 'up' | 'down') => {
+  const handleMoveScene = useCallback(async (index: number, direction: 'up' | 'down') => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= scenes.length) return;
 
@@ -45,17 +45,17 @@ const ScenePanel: React.FC = () => {
 
     await reorderScenes(reorderedScenes.map(s => s.id));
     setSelectedSceneIndex(newIndex);
-  };
+  }, [scenes, reorderScenes, setSelectedSceneIndex]);
 
-  const handleDuplicateScene = async (index: number) => {
+  const handleDuplicateScene = useCallback(async (index: number) => {
     const scene = scenes[index];
     const currentLength = scenes.length;
     await duplicateScene(scene.id);
     // After duplication, the new scene will be at the end of the array
     setSelectedSceneIndex(currentLength);
-  };
+  }, [scenes, duplicateScene, setSelectedSceneIndex]);
 
-  const handleDeleteScene = async (index: number) => {
+  const handleDeleteScene = useCallback(async (index: number) => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette scène ?')) return;
     
     const scene = scenes[index];
@@ -65,10 +65,10 @@ const ScenePanel: React.FC = () => {
     if (selectedSceneIndex >= scenes.length - 1) {
       setSelectedSceneIndex(Math.max(0, scenes.length - 2));
     }
-  };
+  }, [scenes, selectedSceneIndex, deleteScene, setSelectedSceneIndex]);
 
   // Handle image file selection for direct upload/crop
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -84,7 +84,7 @@ const ScenePanel: React.FC = () => {
     reader.readAsDataURL(file);
     // Reset input so same file can be selected again
     e.target.value = '';
-  };
+  }, [setPendingImageData, setShowCropModal]);
 
   const formatSceneDuration = (duration: number): string => {
     const totalSeconds = Math.floor(duration);
@@ -93,7 +93,6 @@ const ScenePanel: React.FC = () => {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  console.log('[ScenePanel]');
   return (
     <div className="bg-white flex h-full shadow-sm">
       {/* Header - Now on the left side */}
@@ -285,4 +284,4 @@ const ScenePanel: React.FC = () => {
   );
 };
 
-export default ScenePanel;
+export default React.memo(ScenePanel);

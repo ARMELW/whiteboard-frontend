@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '../atoms';
 import { Image, Type, Shapes, Layers as LayersIcon, Plus, Upload } from 'lucide-react';
 import { useCurrentScene, useSceneStore, useScenesActions } from '@/app/scenes';
@@ -23,7 +23,7 @@ const ContextTabs: React.FC = () => {
     sceneHeight: 1080,
     selectedCamera: null
   });
-  console.log('[ ContextTabs ]');
+  
   const tabs = [
     { id: 'assets' as TabType, label: 'Assets', icon: Image },
     { id: 'props' as TabType, label: 'Props', icon: Shapes },
@@ -31,7 +31,7 @@ const ContextTabs: React.FC = () => {
     { id: 'text' as TabType, label: 'Text', icon: Type },
   ];
 
-  const handleAddText = async () => {
+  const handleAddText = useCallback(async () => {
     if (!scene?.id) return;
     try {
       const newTextLayer = createTextLayer(scene.layers?.length || 0);
@@ -40,9 +40,9 @@ const ContextTabs: React.FC = () => {
     } catch (error) {
       console.error('Error adding text layer:', error);
     }
-  };
+  }, [scene?.id, scene?.layers?.length, createTextLayer, addLayer, setSelectedLayerId]);
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !scene?.id) return;
     if (!file.type.startsWith('image/')) {
@@ -71,7 +71,7 @@ const ContextTabs: React.FC = () => {
     };
     reader.readAsDataURL(file);
     e.target.value = '';
-  };
+  }, [scene?.id, scene?.layers?.length, createImageLayer, addLayer]);
 
   return (
     <div className="bg-white border-r border-border flex flex-col h-full shadow-sm">
@@ -258,4 +258,4 @@ const ContextTabs: React.FC = () => {
   );
 };
 
-export default ContextTabs;
+export default React.memo(ContextTabs);

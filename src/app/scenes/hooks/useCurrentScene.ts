@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useScenes } from './useScenes';
 import { useSceneStore } from '../store';
 
@@ -9,5 +10,9 @@ export const useCurrentScene = () => {
   const { scenes } = useScenes();
   const selectedSceneIndex = useSceneStore((state) => state.selectedSceneIndex);
   
-  return scenes[selectedSceneIndex] || null;
+  // Memoize the current scene to prevent unnecessary re-renders
+  // Only re-compute when scenes array or selectedSceneIndex changes
+  return useMemo(() => {
+    return scenes[selectedSceneIndex] || null;
+  }, [scenes, selectedSceneIndex]);
 };

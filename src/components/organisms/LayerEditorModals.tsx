@@ -62,4 +62,4 @@ const LayerEditorModals: React.FC<LayerEditorModalsProps> = ({
   );
 };
 
-export default LayerEditorModals;
+export default React.memo(LayerEditorModals);

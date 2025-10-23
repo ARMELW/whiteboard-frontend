@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useCallback } from 'react';
 import { Stage, Layer as KonvaLayer } from 'react-konva';
-import { CameraToolbar, KonvaCamera, LayerImage, LayerText } from '../molecules';
+import { CameraToolbar, KonvaCamera, LayerImage, LayerText, FloatingToolbar } from '../molecules';
 import { useScenesActions } from '@/app/scenes';
 import CameraManagerModal from './CameraManagerModal';
 import { createDefaultCamera } from '../../utils/cameraAnimator';
@@ -29,6 +29,10 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   onSelectLayer,
   onSelectCamera,
 }) => {
+  const [isEditingText, setIsEditingText] = useState(false);
+  const [editingTextValue, setEditingTextValue] = useState('');
+  const [editingLayerId, setEditingLayerId] = useState<string | null>(null);
+
   const ensureCamera = (cam: Partial<Camera>): Camera => ({
     id: cam.id ?? 'default-camera',
     name: cam.name ?? 'Camera',
@@ -301,6 +305,11 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                             setSelectedCameraId('default-camera');
                           }}
                           onChange={onUpdateLayer as (layer: any) => void}
+                          onStartEditing={() => {
+                            setIsEditingText(true);
+                            setEditingLayerId(layer.id);
+                            setEditingTextValue(layer.text_config?.text || '');
+                          }}
                         />
                       );
                     } else if (layer.type === 'shape') {
@@ -337,6 +346,123 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Text Editing Modal */}
+      {isEditingText && editingLayerId && (() => {
+        const editingLayer = sortedLayers.find((l: Layer) => l.id === editingLayerId);
+        if (!editingLayer || editingLayer.type !== 'text') return null;
+        
+        const textConfig = editingLayer.text_config || {};
+        const fontSize = textConfig.size || 48;
+        const fontFamily = textConfig.font || 'Arial';
+        let fontStyle = 'normal';
+        if (textConfig.style === 'bold') fontStyle = 'bold';
+        else if (textConfig.style === 'italic') fontStyle = 'italic';
+        else if (textConfig.style === 'bold_italic') fontStyle = 'bold italic';
+        
+        let fill = '#000000';
+        if (Array.isArray(textConfig.color)) {
+          fill = `#${textConfig.color.map((c: number) => c.toString(16).padStart(2, '0')).join('')}`;
+        } else if (typeof textConfig.color === 'string') {
+          fill = textConfig.color;
+        }
+
+        return (
+          <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000]"
+            onClick={() => setIsEditingText(false)}
+          >
+            <div
+              className="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold mb-4">Modifier le texte</h3>
+              <textarea
+                value={editingTextValue}
+                onChange={(e) => setEditingTextValue(e.target.value)}
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                style={{
+                  fontSize: `${Math.min(fontSize, 24)}px`,
+                  fontFamily: fontFamily,
+                  fontStyle: fontStyle,
+                  color: fill,
+                  minHeight: '150px',
+                }}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setIsEditingText(false);
+                    setEditingTextValue('');
+                    setEditingLayerId(null);
+                  }
+                }}
+              />
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => {
+                    setIsEditingText(false);
+                    setEditingTextValue('');
+                    setEditingLayerId(null);
+                  }}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-sm font-medium transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={() => {
+                    if (editingLayer) {
+                      onUpdateLayer({
+                        ...editingLayer,
+                        text_config: {
+                          ...editingLayer.text_config,
+                          text: editingTextValue
+                        }
+                      });
+                    }
+                    setIsEditingText(false);
+                    setEditingTextValue('');
+                    setEditingLayerId(null);
+                  }}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium transition-colors"
+                >
+                  Valider
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Floating Toolbar */}
+      {selectedLayerId && !isEditingText && (() => {
+        const selectedLayer = sortedLayers.find((l: Layer) => l.id === selectedLayerId);
+        if (!selectedLayer || (selectedLayer.type !== 'text' && selectedLayer.type !== 'image')) return null;
+
+        // Calculate position based on layer position and zoom
+        const layerX = (selectedLayer.position?.x || 0) * sceneZoom;
+        const layerY = (selectedLayer.position?.y || 0) * sceneZoom;
+        
+        // Adjust for canvas position in viewport
+        const canvasContainer = scrollContainerRef.current;
+        if (!canvasContainer) return null;
+        
+        const containerRect = canvasContainer.getBoundingClientRect();
+        const toolbarX = containerRect.left + layerX + (containerRect.width - scaledSceneWidth) / 2;
+        const toolbarY = containerRect.top + layerY + (containerRect.height - scaledSceneHeight) / 2;
+
+        return (
+          <FloatingToolbar
+            layer={selectedLayer}
+            position={{ x: toolbarX, y: toolbarY }}
+            onPropertyChange={(property: string, value: any) => {
+              onUpdateLayer({
+                ...selectedLayer,
+                [property]: value
+              });
+            }}
+          />
+        );
+      })()}
     </div>
   );
 };

@@ -1,8 +1,7 @@
 
 import React, { useState, useRef, useCallback } from 'react';
 import { Stage, Layer as KonvaLayer } from 'react-konva';
-import { CameraToolbar, KonvaCamera, LayerImage, LayerText } from '../molecules';
-import { FloatingToolbar } from '../molecules/FloatingToolbar';
+import { CameraToolbar, KonvaCamera, LayerImage, LayerText, FloatingToolbar } from '../molecules';
 import { useScenesActions } from '@/app/scenes';
 import CameraManagerModal from './CameraManagerModal';
 import { createDefaultCamera } from '../../utils/cameraAnimator';

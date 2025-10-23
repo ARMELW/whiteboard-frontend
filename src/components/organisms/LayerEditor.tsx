@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useRef, useCallback } from 'react';
 import { useSceneStore, useScenesActions } from '../../app/scenes';
 import {
   useLayerEditor,
@@ -64,8 +64,7 @@ const LayerEditor: React.FC = () => {
 
   // Référence pour tracker l'état précédent et éviter les sauvegardes inutiles
   const lastSavedStateRef = useRef<string>('');
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const initialLoadRef = useRef(true);
+  // autoSaveTimeoutRef and initialLoadRef removed (no auto-save)
   const isSavingRef = useRef(false);
 
   // Fonction pour créer un hash simple de l'état (pour détecter les changements)
@@ -125,42 +124,10 @@ const LayerEditor: React.FC = () => {
     }
   }, [scene?.id, editedScene, updateScene, createStateHash]);
 
-  // Gérer l'auto-sauvegarde avec debounce
-  useEffect(() => {
-    // Sauter à la première charge
-    if (initialLoadRef.current) {
-      initialLoadRef.current = false;
-      // Initialiser le hash de l'état sauvegardé
-      lastSavedStateRef.current = createStateHash(editedScene);
-      return;
-    }
-
-    if (!scene?.id) {
-      return;
-    }
-
-    // Effacer le timeout précédent pour relancer le debounce
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
-
-    // Créer un nouveau timeout pour l'auto-save
-    // Délai de 3 secondes après la DERNIÈRE modification (debounce)
-    // La sauvegarde ne se fera que quand l'utilisateur arrête d'interagir
-    autoSaveTimeoutRef.current = setTimeout(() => {
-      handleSave();
-    }, 3000);
-
-    // Cleanup lors du démontage
-    return () => {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-    };
-  }, [editedScene, scene?.id, handleSave, createStateHash]);
+  // Auto-save removed: user must save manually
 
   // Sauvegarder avant de quitter la page
-  useEffect(() => {
+  /**useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (autoSaveTimeoutRef.current) {
         // Exécuter immédiatement la sauvegarde avant de quitter
@@ -171,6 +138,7 @@ const LayerEditor: React.FC = () => {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [handleSave]);
+  **/
 
   const handleCropComplete = async (croppedImageUrl: string, imageDimensions?: { width: number; height: number }) => {
     const newLayer = await handleCropCompleteBase(croppedImageUrl, imageDimensions, pendingImageData, editedScene.layers.length);

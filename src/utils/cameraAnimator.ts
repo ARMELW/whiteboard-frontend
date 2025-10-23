@@ -4,8 +4,7 @@
  */
 
 import { interpolate, interpolatePosition, type Position } from './easingFunctions';
-
-export interface Camera {
+type Camera = {
   id?: string;
   name?: string;
   zoom: number;
@@ -19,6 +18,7 @@ export interface Camera {
   isDefault: boolean;
   pauseDuration: number;
   movementType: string;
+  scale?: number;
 }
 
 export interface CameraState {
@@ -109,10 +109,11 @@ export const createDefaultCamera = (aspectRatio: string = '16:9'): Camera => {
     easing: 'ease_out',
     width: cameraWidth,
     height: cameraHeight,
-    locked: true,
+  locked: true,
     isDefault: true,
     pauseDuration: 0,
     movementType: 'ease_out',
+    scale: 1,
   };
 };
 

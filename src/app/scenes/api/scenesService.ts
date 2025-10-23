@@ -20,6 +20,8 @@ function createDefaultCamera(): Camera {
     height: 450,
     position: { x: 0.5, y: 0.5 },
     zoom: 0.8,
+    locked: true, // Camera par défaut non redimensionnable
+    scale: 1,
   });
 }
 

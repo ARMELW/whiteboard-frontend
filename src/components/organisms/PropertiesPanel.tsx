@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Settings, FolderKanban, Music, Hand, Layers as LayersIcon } from 'lucide-react';
 import ScenePropertiesPanel from '../atoms/ScenePropertiesPanel';
 import AudioManager from '../audio/AudioManager';
@@ -11,8 +11,9 @@ const PropertiesPanel: React.FC = () => {
   const scene = useCurrentScene();
   const selectedLayerId = useSceneStore((state) => state.selectedLayerId);
   const setSelectedLayerId = useSceneStore((state) => state.setSelectedLayerId);
-  const [activeTab, setActiveTab] = useState<TabType>('properties');
-  
+  const activeTab = useSceneStore((state) => state.activeTab) as TabType;
+  const setActiveTab = useSceneStore((state) => state.setActiveTab);
+
   const { updateScene, updateLayer, deleteLayer, moveLayer, duplicateLayer } = useScenesActions();
 
   if (!scene) {

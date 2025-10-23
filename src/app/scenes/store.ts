@@ -1,7 +1,6 @@
 import { create } from 'zustand';
-import scenesService from './api/scenesService';
-import sampleStory from '../../data/scenes';
-import { Scene, ScenePayload, Layer, Camera } from './types';
+// scenesService calls removed from store. Consumers must call API and update store via setters.
+import { Scene, Layer, Camera } from './types';
 import { generateSceneThumbnail } from '../../utils/sceneThumbnail';
 
 interface SceneState {
@@ -17,20 +16,21 @@ interface SceneState {
   showShapeToolbar: boolean;
   showCropModal: boolean;
   pendingImageData: any | null;
+  activeTab: string; // Ajout onglet actif pour PropertiesPanel
   
   // Data Actions
-  loadScenes: () => Promise<void>;
-  createScene: (payload?: ScenePayload) => Promise<Scene>;
-  updateScene: (id: string, data: Partial<Scene>, skipThumbnail?: boolean) => Promise<Scene>;
-  deleteScene: (id: string) => Promise<void>;
-  duplicateScene: (id: string) => Promise<Scene>;
-  reorderScenes: (sceneIds: string[]) => Promise<void>;
-  addLayer: (sceneId: string, layer: Layer) => Promise<Scene>;
-  updateLayer: (sceneId: string, layerId: string, data: Partial<Layer>) => Promise<Scene>;
-  deleteLayer: (sceneId: string, layerId: string) => Promise<Scene>;
-  addCamera: (sceneId: string, camera: Camera) => Promise<Scene>;
-  moveLayer: (sceneId: string, layerId: string, direction: 'up' | 'down') => Promise<Scene>;
-  duplicateLayer: (sceneId: string, layerId: string) => Promise<Scene>;
+  setScenes: (scenes: Scene[]) => void;
+  addScene: (scene: Scene) => void;
+  updateScene: (scene: Scene) => void;
+  deleteScene: (id: string) => void;
+  reorderScenes: (sceneIds: string[]) => void;
+  addLayer: (sceneId: string, layer: Layer) => void;
+  updateLayer: (sceneId: string, layer: Layer) => void;
+  deleteLayer: (sceneId: string, layerId: string) => void;
+  addCamera: (sceneId: string, camera: Camera) => void;
+  moveLayer: (sceneId: string, from: number, to: number) => void;
+  duplicateLayer: (sceneId: string, layer: Layer) => void;
+  updateSceneThumbnail: (sceneId: string) => Promise<void>;
   
   // UI Actions
   setSelectedSceneIndex: (index: number) => void;
@@ -39,6 +39,7 @@ interface SceneState {
   setShowShapeToolbar: (show: boolean) => void;
   setShowCropModal: (show: boolean) => void;
   setPendingImageData: (data: any | null) => void;
+  setActiveTab: (tab: string) => void; // Ajout setter onglet actif
   
   // Reset all state
   reset: () => void;
@@ -51,6 +52,7 @@ const initialUIState = {
   showShapeToolbar: false,
   showCropModal: false,
   pendingImageData: null,
+  activeTab: 'properties',
 };
 
 const initialDataState = {
@@ -59,305 +61,95 @@ const initialDataState = {
   error: null,
 };
 
-export const useSceneStore = create<SceneState>((set, get) => ({
+export const useSceneStore = create<SceneState>((set) => ({
   ...initialDataState,
   ...initialUIState,
-  
+
+  // UI Action pour l'onglet actif
+  setActiveTab: (tab: string) => set({ activeTab: tab }),
+
   // Data Actions
-  loadScenes: async () => {
-    set({ loading: true, error: null });
-    try {
-      const result = await scenesService.list({ page: 1, limit: 1000 });
-      
-      if (result.data.length === 0) {
-        const initialScenes = sampleStory || [];
-        await scenesService.bulkUpdate(initialScenes);
-        set({ scenes: initialScenes, loading: false });
-      } else {
-        set({ scenes: result.data, loading: false });
-      }
-    } catch (error) {
-      set({ error: error as Error, loading: false });
-    }
+  setScenes: (scenes: Scene[]) => set({ scenes }),
+  addScene: (scene: Scene) => {
+    set(state => ({ scenes: [...state.scenes, scene] }));
+    // Do NOT generate thumbnail on scene creation; wait for content.
   },
-  
-  createScene: async (payload: ScenePayload = {}) => {
-    set({ loading: true, error: null });
-    try {
-      const scene = await scenesService.create(payload);
-      const scenes = [...get().scenes, scene];
-      set({ scenes, loading: false });
-      
-      // Generate thumbnail asynchronously
-      generateSceneThumbnail(scene).then(async (thumbnail) => {
-        if (thumbnail) {
-          const updated = await scenesService.update(scene.id, { sceneImage: thumbnail });
-          set(state => ({
-            scenes: state.scenes.map(s => s.id === updated.id ? updated : s)
-          }));
-        }
+  updateScene: (scene: Scene) => {
+    set(state => ({ scenes: state.scenes.map(s => s.id === scene.id ? scene : s) }));
+    setTimeout(() => useSceneStore.getState().updateSceneThumbnail(scene.id), 0);
+  },
+  deleteScene: (id: string) => set(state => ({ scenes: state.scenes.filter(s => s.id !== id) })),
+  reorderScenes: (sceneIds: string[]) => {
+    set(state => ({
+      scenes: sceneIds.map(id => state.scenes.find(s => s.id === id)).filter(Boolean) as Scene[]
+    }));
+    // Update thumbnails for all scenes after reorder
+    setTimeout(() => {
+      sceneIds.forEach(id => useSceneStore.getState().updateSceneThumbnail(id));
+    }, 0);
+  },
+  addLayer: (sceneId: string, layer: Layer) => {
+    set(state => ({
+      scenes: state.scenes.map(s => s.id === sceneId ? { ...s, layers: [...(s.layers || []), layer] } : s)
+    }));
+    setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+  },
+  updateLayer: (sceneId: string, layer: Layer) => {
+    set(state => ({
+      scenes: state.scenes.map(s => s.id === sceneId ? {
+        ...s,
+        layers: (s.layers || []).map(l => l.id === layer.id ? layer : l)
+      } : s)
+    }));
+    setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+  },
+  deleteLayer: (sceneId: string, layerId: string) => {
+    set(state => ({
+      scenes: state.scenes.map(s => s.id === sceneId ? {
+        ...s,
+        layers: (s.layers || []).filter(l => l.id !== layerId)
+      } : s)
+    }));
+    setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+  },
+  addCamera: (sceneId: string, camera: Camera) => set(state => ({
+    scenes: state.scenes.map(s => s.id === sceneId ? {
+      ...s,
+      cameras: [...(s.cameras || []), camera]
+    } : s)
+  })),
+  moveLayer: (sceneId: string, from: number, to: number) => {
+    set(state => ({
+      scenes: state.scenes.map(s => {
+        if (s.id !== sceneId || !(s.layers && s.layers.length > 0)) return s;
+        const layers = [...s.layers];
+        const [moved] = layers.splice(from, 1);
+        layers.splice(to, 0, moved);
+        return { ...s, layers };
+      })
+    }));
+    setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+  },
+  duplicateLayer: (sceneId: string, layer: Layer) => {
+    set(state => ({
+      scenes: state.scenes.map(s => s.id === sceneId ? {
+        ...s,
+        layers: [...(s.layers || []), layer]
+      } : s)
+    }));
+    setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+  },
+
+  // Generate and update the scene thumbnail in real time (async, does not block UI)
+  updateSceneThumbnail: async (sceneId: string) => {
+    const state = useSceneStore.getState();
+    const scene = state.scenes.find(s => s.id === sceneId);
+    if (!scene) return;
+    const thumbnail = await generateSceneThumbnail(scene);
+    if (thumbnail) {
+      useSceneStore.setState({
+        scenes: state.scenes.map(s => s.id === sceneId ? { ...s, sceneImage: thumbnail } : s)
       });
-      
-      return scene;
-    } catch (error) {
-      set({ error: error as Error, loading: false });
-      throw error;
-    }
-  },
-  
-  updateScene: async (id: string, data: Partial<Scene>, skipThumbnail = false) => {
-    set({ loading: true, error: null });
-    try {
-      const scene = await scenesService.update(id, data);
-      set(state => ({
-        scenes: state.scenes.map(s => s.id === id ? scene : s),
-        loading: false
-      }));
-      
-      // Generate thumbnail asynchronously if not skipped
-      if (!skipThumbnail) {
-        generateSceneThumbnail(scene).then(async (thumbnail) => {
-          if (thumbnail) {
-            const updated = await scenesService.update(scene.id, { sceneImage: thumbnail });
-            set(state => ({
-              scenes: state.scenes.map(s => s.id === updated.id ? updated : s)
-            }));
-          }
-        });
-      }
-      
-      return scene;
-    } catch (error) {
-      set({ error: error as Error, loading: false });
-      throw error;
-    }
-  },
-  
-  deleteScene: async (id: string) => {
-    set({ loading: true, error: null });
-    try {
-      await scenesService.delete(id);
-      set(state => ({
-        scenes: state.scenes.filter(s => s.id !== id),
-        loading: false
-      }));
-    } catch (error) {
-      set({ error: error as Error, loading: false });
-      throw error;
-    }
-  },
-  
-  duplicateScene: async (id: string) => {
-    set({ loading: true, error: null });
-    try {
-      const scene = await scenesService.duplicate(id);
-      const scenes = [...get().scenes, scene];
-      set({ scenes, loading: false });
-      
-      // Generate thumbnail asynchronously
-      generateSceneThumbnail(scene).then(async (thumbnail) => {
-        if (thumbnail) {
-          const updated = await scenesService.update(scene.id, { sceneImage: thumbnail });
-          set(state => ({
-            scenes: state.scenes.map(s => s.id === updated.id ? updated : s)
-          }));
-        }
-      });
-      
-      return scene;
-    } catch (error) {
-      set({ error: error as Error, loading: false });
-      throw error;
-    }
-  },
-  
-  reorderScenes: async (sceneIds: string[]) => {
-    set({ loading: true, error: null });
-    try {
-      const scenes = await scenesService.reorder(sceneIds);
-      set({ scenes, loading: false });
-    } catch (error) {
-      set({ error: error as Error, loading: false });
-      throw error;
-    }
-  },
-  
-  addLayer: async (sceneId: string, layer: Layer) => {
-    set({ loading: true, error: null });
-    try {
-      const scene = await scenesService.addLayer(sceneId, layer);
-      set(state => ({
-        scenes: state.scenes.map(s => s.id === sceneId ? scene : s),
-        loading: false
-      }));
-      
-      // Generate thumbnail asynchronously
-      generateSceneThumbnail(scene).then(async (thumbnail) => {
-        if (thumbnail) {
-          const updated = await scenesService.update(scene.id, { sceneImage: thumbnail });
-          set(state => ({
-            scenes: state.scenes.map(s => s.id === updated.id ? updated : s)
-          }));
-        }
-      });
-      
-      return scene;
-    } catch (error) {
-      set({ error: error as Error, loading: false });
-      throw error;
-    }
-  },
-  
-  updateLayer: async (sceneId: string, layerId: string, data: Partial<Layer>) => {
-    set({ loading: true, error: null });
-    try {
-      const scene = await scenesService.updateLayer(sceneId, layerId, data);
-      set(state => ({
-        scenes: state.scenes.map(s => s.id === sceneId ? scene : s),
-        loading: false
-      }));
-      
-      // Generate thumbnail asynchronously
-      generateSceneThumbnail(scene).then(async (thumbnail) => {
-        if (thumbnail) {
-          const updated = await scenesService.update(scene.id, { sceneImage: thumbnail });
-          set(state => ({
-            scenes: state.scenes.map(s => s.id === updated.id ? updated : s)
-          }));
-        }
-      });
-      
-      return scene;
-    } catch (error) {
-      set({ error: error as Error, loading: false });
-      throw error;
-    }
-  },
-  
-  deleteLayer: async (sceneId: string, layerId: string) => {
-    set({ loading: true, error: null });
-    try {
-      const scene = await scenesService.deleteLayer(sceneId, layerId);
-      set(state => ({
-        scenes: state.scenes.map(s => s.id === sceneId ? scene : s),
-        loading: false
-      }));
-      
-      // Generate thumbnail asynchronously
-      generateSceneThumbnail(scene).then(async (thumbnail) => {
-        if (thumbnail) {
-          const updated = await scenesService.update(scene.id, { sceneImage: thumbnail });
-          set(state => ({
-            scenes: state.scenes.map(s => s.id === updated.id ? updated : s)
-          }));
-        }
-      });
-      
-      return scene;
-    } catch (error) {
-      set({ error: error as Error, loading: false });
-      throw error;
-    }
-  },
-  
-  addCamera: async (sceneId: string, camera: Camera) => {
-    set({ loading: true, error: null });
-    try {
-      const scene = await scenesService.addCamera(sceneId, camera);
-      set(state => ({
-        scenes: state.scenes.map(s => s.id === sceneId ? scene : s),
-        loading: false
-      }));
-      return scene;
-    } catch (error) {
-      set({ error: error as Error, loading: false });
-      throw error;
-    }
-  },
-  
-  moveLayer: async (sceneId: string, layerId: string, direction: 'up' | 'down') => {
-    set({ loading: true, error: null });
-    try {
-      const scene = await scenesService.detail(sceneId);
-      if (!scene || !scene.layers) return scene;
-      
-      const layers = [...scene.layers];
-      const idx = layers.findIndex(l => l.id === layerId);
-      if (idx === -1) return scene;
-      
-      const newIdx = direction === 'up' ? Math.max(0, idx - 1) : Math.min(layers.length - 1, idx + 1);
-      if (newIdx === idx) return scene;
-      
-      const [moved] = layers.splice(idx, 1);
-      layers.splice(newIdx, 0, moved);
-      
-      layers.forEach((l, i) => {
-        l.z_index = i + 1;
-      });
-      
-      const updated = await scenesService.update(sceneId, { ...scene, layers });
-      set(state => ({
-        scenes: state.scenes.map(s => s.id === sceneId ? updated : s),
-        loading: false
-      }));
-      
-      // Generate thumbnail asynchronously
-      generateSceneThumbnail(updated).then(async (thumbnail) => {
-        if (thumbnail) {
-          const withThumbnail = await scenesService.update(updated.id, { sceneImage: thumbnail });
-          set(state => ({
-            scenes: state.scenes.map(s => s.id === withThumbnail.id ? withThumbnail : s)
-          }));
-        }
-      });
-      
-      return updated;
-    } catch (error) {
-      set({ error: error as Error, loading: false });
-      throw error;
-    }
-  },
-  
-  duplicateLayer: async (sceneId: string, layerId: string) => {
-    set({ loading: true, error: null });
-    try {
-      const scene = await scenesService.detail(sceneId);
-      if (!scene || !scene.layers) return scene;
-      
-      const layer = scene.layers.find(l => l.id === layerId);
-      if (!layer) return scene;
-      
-      const newLayer = {
-        ...layer,
-        id: `layer-${Date.now()}`,
-        name: `${layer.name || 'Layer'} (Copie)`,
-        z_index: scene.layers.length + 1,
-      };
-      
-      const updated = await scenesService.update(sceneId, {
-        ...scene,
-        layers: [...scene.layers, newLayer],
-      });
-      
-      set(state => ({
-        scenes: state.scenes.map(s => s.id === sceneId ? updated : s),
-        loading: false
-      }));
-      
-      // Generate thumbnail asynchronously
-      generateSceneThumbnail(updated).then(async (thumbnail) => {
-        if (thumbnail) {
-          const withThumbnail = await scenesService.update(updated.id, { sceneImage: thumbnail });
-          set(state => ({
-            scenes: state.scenes.map(s => s.id === withThumbnail.id ? withThumbnail : s)
-          }));
-        }
-      });
-      
-      return updated;
-    } catch (error) {
-      set({ error: error as Error, loading: false });
-      throw error;
     }
   },
   

@@ -47,11 +47,18 @@ export interface Camera {
   id: string;
   name: string;
   position: Position;
-  scale: number;
+  scale?: number;
   zoom?: number;
   width?: number;
   height?: number;
   animation?: CameraAnimation;
+  locked?: boolean;
+  isDefault?: boolean;
+  duration?: number;
+  transition_duration?: number;
+  easing?: string;
+  pauseDuration?: number;
+  movementType?: string;
   [key: string]: any;
 }
 

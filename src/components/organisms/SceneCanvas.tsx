@@ -41,7 +41,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
     easing: (cam as any).easing ?? 'ease_out',
     width: (cam as any).width ?? 800,
     height: (cam as any).height ?? 450,
-    locked: (cam as any).locked ?? false,
+  locked: (cam as any).locked ?? ((cam as any).isDefault ? true : false),
     isDefault: (cam as any).isDefault ?? false,
     pauseDuration: (cam as any).pauseDuration ?? 0,
     movementType: (cam as any).movementType ?? 'ease_out',

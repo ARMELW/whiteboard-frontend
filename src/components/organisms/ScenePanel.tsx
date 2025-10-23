@@ -87,6 +87,9 @@ const ScenePanel: React.FC = () => {
   }, [setPendingImageData, setShowCropModal]);
 
   const formatSceneDuration = (duration: number): string => {
+    if (typeof duration !== 'number' || isNaN(duration) || !isFinite(duration)) {
+      return '--:--';
+    }
     const totalSeconds = Math.floor(duration);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
@@ -166,7 +169,7 @@ const ScenePanel: React.FC = () => {
         {scenes.map((scene: any, index: number) => (
           <Card
             key={scene.id}
-            className={`flex-shrink-0 w-64 cursor-pointer transition-all hover:shadow-md relative group ${selectedSceneIndex === index
+            className={`aspect-video flex-shrink-0 w-64 cursor-pointer transition-all hover:shadow-md relative group ${selectedSceneIndex === index
                 ? 'border-primary shadow-md ring-2 ring-primary/20'
                 : 'border-border hover:border-primary/50'
               }`}
@@ -190,7 +193,7 @@ const ScenePanel: React.FC = () => {
                     style={{ backgroundColor: THUMBNAIL_CONFIG.BACKGROUND_COLOR }}
                   />
                 ) : (
-                  <span className="text-4xl">📄</span>
+                  <span className="w-full h-full block" style={{ background: '#fff' }}></span>
                 )}
               </div>
 

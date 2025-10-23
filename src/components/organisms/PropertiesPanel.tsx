@@ -1,11 +1,12 @@
 import React, { useCallback, useMemo } from 'react';
-import { Settings, FolderKanban, Music, Hand, Layers as LayersIcon } from 'lucide-react';
+import { Settings, FolderKanban, Music, Hand, Layers as LayersIcon, Film } from 'lucide-react';
 import ScenePropertiesPanel from '../atoms/ScenePropertiesPanel';
 import AudioManager from '../audio/AudioManager';
 import { LayerPropertiesForm, LayersListPanel } from '../molecules';
 import { useCurrentScene, useSceneStore, useScenesActions } from '@/app/scenes';
+import VideoGenerationPanel from './VideoGenerationPanel';
 
-type TabType = 'properties' | 'project' | 'soundtrack' | 'hands' | 'layers';
+type TabType = 'properties' | 'project' | 'soundtrack' | 'hands' | 'layers' | 'export';
 
 const PropertiesPanel: React.FC = () => {
   const scene = useCurrentScene();
@@ -48,6 +49,7 @@ const PropertiesPanel: React.FC = () => {
 
   const tabs = [
     { id: 'properties' as TabType, label: 'Properties', icon: Settings },
+    { id: 'export' as TabType, label: 'Export', icon: Film },
     { id: 'project' as TabType, label: 'Project', icon: FolderKanban },
     { id: 'soundtrack' as TabType, label: 'Soundtrack', icon: Music },
     { id: 'hands' as TabType, label: 'Hands', icon: Hand },
@@ -103,6 +105,12 @@ const PropertiesPanel: React.FC = () => {
                 />
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'export' && (
+          <div className="space-y-4">
+            <VideoGenerationPanel />
           </div>
         )}
 

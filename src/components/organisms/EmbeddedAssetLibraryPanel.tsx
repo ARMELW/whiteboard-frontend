@@ -38,26 +38,41 @@ const EmbeddedAssetLibraryPanel: React.FC = () => {
   const handleSelectAsset = (asset: any) => {
     const scene = scenes[selectedSceneIndex];
     if (!scene) return;
+    
     // Find default camera
     const defaultCamera = (scene.sceneCameras || []).find((c) => c.isDefault) || (scene.cameras || []).find((c) => c.isDefault);
-    // Default to center if no camera
+    
+    // Calculate position based on default camera center
     let position = { x: 0.5, y: 0.5 };
+    
     if (defaultCamera) {
-      // If camera uses normalized coordinates, use as is
-      if (
-        typeof defaultCamera.position.x === 'number' &&
-        defaultCamera.position.x <= 1 &&
-        defaultCamera.position.y <= 1
-      ) {
-        position = { x: defaultCamera.position.x, y: defaultCamera.position.y };
-      } else if (defaultCamera.width && defaultCamera.height) {
-        // If absolute, convert to center
-        position = {
-          x: defaultCamera.position.x * defaultCamera.width,
-          y: defaultCamera.position.y * defaultCamera.height,
-        };
+      // Center the image at the camera's center position
+      if (defaultCamera.position) {
+        // If camera uses normalized coordinates (0-1), use as is
+        if (
+          typeof defaultCamera.position.x === 'number' &&
+          defaultCamera.position.x >= 0 &&
+          defaultCamera.position.x <= 1 &&
+          defaultCamera.position.y >= 0 &&
+          defaultCamera.position.y <= 1
+        ) {
+          position = { 
+            x: defaultCamera.position.x, 
+            y: defaultCamera.position.y 
+          };
+        } else {
+          // If absolute coordinates, normalize them
+          // Assuming canvas dimensions or use default
+          const canvasWidth = 1920;
+          const canvasHeight = 1080;
+          position = {
+            x: defaultCamera.position.x / canvasWidth,
+            y: defaultCamera.position.y / canvasHeight,
+          };
+        }
       }
     }
+    
     const newLayer = {
       id: uuidv4(),
       name: asset.name || 'Image',

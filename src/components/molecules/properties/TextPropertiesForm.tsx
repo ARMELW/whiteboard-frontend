@@ -6,6 +6,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { Type, Palette, AlignLeft } from 'lucide-react';
 
 export interface TextPropertiesFormProps {
   layer: any;
@@ -41,112 +48,144 @@ export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = ({
   };
 
   return (
-    <div className="bg-secondary/30 rounded-lg p-4 border border-border">
-      <h3 className="text-foreground font-semibold mb-3 text-sm">
-        Propriétés du Texte
-      </h3>
+    <Accordion type="multiple" defaultValue={["content", "typography", "style"]} className="w-full">
       {/* Text Content */}
-      <div className="mb-3">
-        <label className="block text-foreground text-xs mb-1.5">
-          Texte
-        </label>
-        <textarea
-          value={textConfig.text || ''}
-          onChange={(e) => handleTextConfigChange('text', e.target.value)}
-          className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm h-20 resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-          placeholder="Entrez votre texte ici..."
-        />
-      </div>
-      {/* Font Family */}
-      <div className="mb-3">
-        <label className="block text-foreground text-xs mb-1.5">
-          Police
-        </label>
-        <Select
-          value={textConfig.font || 'Arial'}
-          onValueChange={(value) => handleTextConfigChange('font', value)}
-        >
-          <SelectTrigger className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-            <SelectValue placeholder="Sélectionner une police" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Arial">Arial</SelectItem>
-            <SelectItem value="Arial Black">Arial Black</SelectItem>
-            <SelectItem value="Verdana">Verdana</SelectItem>
-            <SelectItem value="Times New Roman">Times New Roman</SelectItem>
-            <SelectItem value="Georgia">Georgia</SelectItem>
-            <SelectItem value="Courier New">Courier New</SelectItem>
-            <SelectItem value="Comic Sans MS">Comic Sans MS</SelectItem>
-            <SelectItem value="Impact">Impact</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      {/* Font Size */}
-      <div className="mb-3">
-        <label className="block text-foreground text-xs mb-1.5">
-          Taille
-        </label>
-        <input
-          type="range"
-          min="12"
-          max="120"
-          step="1"
-          value={textConfig.size || 48}
-          onChange={(e) => handleTextConfigChange('size', Number(e.target.value))}
-          className="w-full"
-        />
-      </div>
-      {/* Font Style */}
-      <div className="mb-3">
-        <label className="block text-foreground text-xs mb-1.5">
-          Style
-        </label>
-        <Select
-          value={textConfig.style || 'normal'}
-          onValueChange={(value) => handleTextConfigChange('style', value)}
-        >
-          <SelectTrigger className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-            <SelectValue placeholder="Sélectionner un style" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="normal">Normal</SelectItem>
-            <SelectItem value="bold">Gras</SelectItem>
-            <SelectItem value="italic">Italique</SelectItem>
-            <SelectItem value="bold_italic">Gras Italique</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      {/* Text Color */}
-      <div className="mb-3">
-        <label className="block text-foreground text-xs mb-1.5">
-          Couleur du texte
-        </label>
-        <input
-          type="color"
-          value={getColorHex(textConfig.color)}
-          onChange={(e) => handleColorChange(e.target.value)}
-          className="w-full h-10 rounded cursor-pointer border border-border"
-        />
-      </div>
-      {/* Text Alignment */}
-      <div className="mb-3">
-        <label className="block text-foreground text-xs mb-1.5">
-          Alignement
-        </label>
-        <Select
-          value={textConfig.align || 'left'}
-          onValueChange={(value) => handleTextConfigChange('align', value)}
-        >
-          <SelectTrigger className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-            <SelectValue placeholder="Sélectionner l'alignement" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="left">Gauche</SelectItem>
-            <SelectItem value="center">Centre</SelectItem>
-            <SelectItem value="right">Droite</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
+      <AccordionItem value="content">
+        <AccordionTrigger>
+          <div className="flex items-center gap-2">
+            <Type className="w-4 h-4" />
+            <span>Text Content</span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-foreground text-xs mb-1.5">
+                Texte
+              </label>
+              <textarea
+                value={textConfig.text || ''}
+                onChange={(e) => handleTextConfigChange('text', e.target.value)}
+                className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm h-20 resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Entrez votre texte ici..."
+              />
+            </div>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+
+      {/* Typography */}
+      <AccordionItem value="typography">
+        <AccordionTrigger>
+          <div className="flex items-center gap-2">
+            <Type className="w-4 h-4" />
+            <span>Typography</span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-foreground text-xs mb-1.5">
+                Police
+              </label>
+              <Select
+                value={textConfig.font || 'Arial'}
+                onValueChange={(value) => handleTextConfigChange('font', value)}
+              >
+                <SelectTrigger className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                  <SelectValue placeholder="Sélectionner une police" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Arial">Arial</SelectItem>
+                  <SelectItem value="Arial Black">Arial Black</SelectItem>
+                  <SelectItem value="Verdana">Verdana</SelectItem>
+                  <SelectItem value="Times New Roman">Times New Roman</SelectItem>
+                  <SelectItem value="Georgia">Georgia</SelectItem>
+                  <SelectItem value="Courier New">Courier New</SelectItem>
+                  <SelectItem value="Comic Sans MS">Comic Sans MS</SelectItem>
+                  <SelectItem value="Impact">Impact</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-foreground text-xs mb-1.5">
+                Taille: <span className="font-mono">{textConfig.size || 48}px</span>
+              </label>
+              <input
+                type="range"
+                min="12"
+                max="120"
+                step="1"
+                value={textConfig.size || 48}
+                onChange={(e) => handleTextConfigChange('size', Number(e.target.value))}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-foreground text-xs mb-1.5">
+                Style
+              </label>
+              <Select
+                value={textConfig.style || 'normal'}
+                onValueChange={(value) => handleTextConfigChange('style', value)}
+              >
+                <SelectTrigger className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                  <SelectValue placeholder="Sélectionner un style" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="bold">Gras</SelectItem>
+                  <SelectItem value="italic">Italique</SelectItem>
+                  <SelectItem value="bold_italic">Gras Italique</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+
+      {/* Style */}
+      <AccordionItem value="style">
+        <AccordionTrigger>
+          <div className="flex items-center gap-2">
+            <Palette className="w-4 h-4" />
+            <span>Style</span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-foreground text-xs mb-1.5">
+                Couleur du texte
+              </label>
+              <input
+                type="color"
+                value={getColorHex(textConfig.color)}
+                onChange={(e) => handleColorChange(e.target.value)}
+                className="w-full h-10 rounded cursor-pointer border border-border"
+              />
+            </div>
+            <div>
+              <label className="block text-foreground text-xs mb-1.5">
+                Alignement
+              </label>
+              <Select
+                value={textConfig.align || 'left'}
+                onValueChange={(value) => handleTextConfigChange('align', value)}
+              >
+                <SelectTrigger className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                  <SelectValue placeholder="Sélectionner l'alignement" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="left">Gauche</SelectItem>
+                  <SelectItem value="center">Centre</SelectItem>
+                  <SelectItem value="right">Droite</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 };

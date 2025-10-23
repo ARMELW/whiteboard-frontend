@@ -433,7 +433,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
         );
       })()}
 
-      {/* Floating Toolbar */}
+      {/* Floating Toolbar
       {selectedLayerId && !isEditingText && (() => {
         const selectedLayer = sortedLayers.find((l: Layer) => l.id === selectedLayerId);
         if (!selectedLayer || (selectedLayer.type !== 'text' && selectedLayer.type !== 'image')) return null;
@@ -463,6 +463,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
           />
         );
       })()}
+         */}
     </div>
   );
 };

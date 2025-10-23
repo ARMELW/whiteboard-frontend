@@ -92,7 +92,19 @@ export const useSceneStore = create<SceneState>((set) => ({
     set(state => ({
       scenes: state.scenes.map(s => s.id === sceneId ? { ...s, layers: [...(s.layers || []), layer] } : s)
     }));
-    setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+    // If it's an image layer, wait for the image to load before updating the thumbnail
+    if (layer.type === 'image' && layer.image_path) {
+      const img = new window.Image();
+      img.onload = () => {
+        setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+      };
+      img.onerror = () => {
+        setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+      };
+      img.src = layer.image_path;
+    } else {
+      setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+    }
   },
   updateLayer: (sceneId: string, layer: Layer) => {
     set(state => ({

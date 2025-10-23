@@ -117,9 +117,7 @@ export const LayerText: React.FC<LayerTextProps> = ({
         onTransformEnd={() => {
           const node = textRef.current;
           if (!node) return;
-          
           const scaleX = node.scaleX();
-
           onChange({
             ...layer,
             position: {
@@ -129,9 +127,10 @@ export const LayerText: React.FC<LayerTextProps> = ({
             scale: scaleX,
             rotation: node.rotation(),
           });
-          
           node.scaleX(1);
           node.scaleY(1);
+          // Keep selection after transform
+          if (typeof onSelect === 'function') onSelect();
         }}
       />
       {isSelected && (

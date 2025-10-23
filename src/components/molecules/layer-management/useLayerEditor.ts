@@ -1,9 +1,8 @@
+import { useSceneStore } from '@/app/scenes';
 import { useState, useCallback, useEffect } from 'react';
 
 export interface LayerEditorState {
   editedScene: any;
-  selectedLayerId: string | null;
-  selectedCamera: any | null;
   showThumbnailMaker: boolean;
 }
 
@@ -18,13 +17,8 @@ export const useLayerEditor = ({
   selectedLayerId: externalSelectedLayerId,
   onSelectLayer: externalOnSelectLayer 
 }: LayerEditorOptions) => {
-  const [editedScene, setEditedScene] = useState({ 
-    ...scene,
-    layers: scene.layers || [],
-    sceneCameras: scene.sceneCameras || []
-  });
+  const [editedScene, setEditedScene] = useState(scene);
   const [internalSelectedLayerId, setInternalSelectedLayerId] = useState<string | null>(null);
-  const [selectedCamera, setSelectedCamera] = useState<any>(null);
   const [showThumbnailMaker, setShowThumbnailMaker] = useState(false);
 
   const selectedLayerId = externalSelectedLayerId !== undefined ? externalSelectedLayerId : internalSelectedLayerId;
@@ -38,14 +32,12 @@ export const useLayerEditor = ({
   }, [externalOnSelectLayer]);
 
   useEffect(() => {
-    setEditedScene({
-      ...scene,
-      layers: scene.layers || [],
-      sceneCameras: scene.sceneCameras || []
-    });
-    setSelectedLayerId(null);
-    setSelectedCamera(null);
-  }, [scene]);
+    setEditedScene(scene);
+    // If the selected layer is no longer in the scene, deselect it.
+    if (selectedLayerId && !scene?.layers?.some((l: any) => l.id === selectedLayerId)) {
+      setSelectedLayerId(null);
+    }
+  }, [scene, selectedLayerId, setSelectedLayerId]);
 
   const handleChange = useCallback((field: string, value: any) => {
     setEditedScene((prev: any) => ({ ...prev, [field]: value }));
@@ -56,16 +48,21 @@ export const useLayerEditor = ({
   }, []);
 
   const handleUpdateLayer = useCallback((updatedLayer: any) => {
-    setEditedScene((prev: any) => ({
-      ...prev,
-      layers: prev.layers.map((layer: any) =>
+    setEditedScene((prev: any) => {
+      const newLayers = prev.layers.map((layer: any) =>
         layer.id === updatedLayer.id ? updatedLayer : layer
-      )
-    }));
+      );
+      const newScene = { ...prev, layers: newLayers };
+      
+      if (prev.id) {
+        useSceneStore.getState().updateLayer(prev.id, updatedLayer);
+      }
+      
+      return newScene;
+    });
   }, []);
 
   const handleAddLayer = useCallback((newLayer: any) => {
-    console.debug('[useLayerEditor] Adding new layer', newLayer);
     setEditedScene((prev: any) => ({
       ...prev,
       layers: [...prev.layers, newLayer]
@@ -129,23 +126,30 @@ export const useLayerEditor = ({
   }, []);
 
   const handleLayerPropertyChange = useCallback((layerId: string, property: string, value: any) => {
-    setEditedScene((prev: any) => ({
-      ...prev,
-      layers: prev.layers.map((layer: any) =>
+    setEditedScene((prev: any) => {
+      const newLayers = prev.layers.map((layer: any) =>
         layer.id === layerId ? { ...layer, [property]: value } : layer
-      )
-    }));
+      );
+      const newScene = { ...prev, layers: newLayers };
+
+      if (prev.id) {
+        const updatedLayer = newLayers.find((l: any) => l.id === layerId);
+        if (updatedLayer) {
+          useSceneStore.getState().updateLayer(prev.id, updatedLayer);
+        }
+      }
+      
+      return newScene;
+    });
   }, []);
 
-  const selectedLayer = editedScene.layers.find((layer: any) => layer.id === selectedLayerId);
+  const selectedLayer = editedScene?.layers?.find((layer: any) => layer.id === selectedLayerId);
 
   return {
     editedScene,
     setEditedScene,
     selectedLayerId,
     setSelectedLayerId,
-    selectedCamera,
-    setSelectedCamera,
     selectedLayer,
     showThumbnailMaker,
     setShowThumbnailMaker,

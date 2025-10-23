@@ -44,7 +44,16 @@ export const useLayerEditor = ({
   }, []);
 
   const handleUpdateScene = useCallback((updates: any) => {
-    setEditedScene((prev: any) => ({ ...prev, ...updates }));
+    setEditedScene((prev: any) => {
+      const newScene = { ...prev, ...updates };
+      
+      // Persist sceneCameras to store if they are updated
+      if (updates.sceneCameras && prev.id) {
+        useSceneStore.getState().updateSceneProperty(prev.id, 'sceneCameras', updates.sceneCameras);
+      }
+      
+      return newScene;
+    });
   }, []);
 
   const handleUpdateLayer = useCallback((updatedLayer: any) => {

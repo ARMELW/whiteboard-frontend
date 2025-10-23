@@ -18,10 +18,10 @@ addCamera: (sceneId: string, camera: Camera) => set(state => ({
 ```
 
 The Scene type has two camera-related fields:
-- `cameras: Camera[]` - Legacy/unused field
+- `cameras: Camera[]` - **Legacy/unused field** (should be removed via migration)
 - `sceneCameras: Camera[]` - Actual field used by the UI
 
-All camera operations in the UI read from `sceneCameras`, but the store was writing to `cameras`.
+All camera operations in the UI read from `sceneCameras`, but the store was writing to `cameras`. This duplication of similar fields is the root cause of this bug and should be cleaned up in a follow-up PR.
 
 ### Issue 2: No Persistence to Store
 In `src/components/molecules/layer-management/useLayerEditor.ts`, the `handleUpdateScene` function was only updating local state:
@@ -159,6 +159,19 @@ LocalStorage (via BaseService)
 
 ## Future Improvements
 
+### Critical - Data Migration
+1. **Remove unused `cameras` field**: The `cameras` field in Scene type is legacy and unused
+   - Current: Scene has both `cameras` and `sceneCameras` fields
+   - Problem: This duplication caused the bug fixed in this PR
+   - Solution: Create migration to merge any data from `cameras` into `sceneCameras`
+   - Impact: Prevents similar bugs in the future
+   - Steps:
+     1. Create migration script to check localStorage
+     2. Merge any `cameras` data into `sceneCameras`
+     3. Remove `cameras` field from Scene interface
+     4. Update scenesService to not initialize `cameras: []`
+     5. Run migration in app initialization
+
 ### Potential Enhancements
 1. **Undo/Redo for Cameras**: Add camera operations to history stack
 2. **Camera Presets**: Save and load camera configurations
@@ -166,11 +179,11 @@ LocalStorage (via BaseService)
 4. **Camera Templates**: Predefined camera layouts for common scenarios
 5. **Keyboard Shortcuts**: Quick camera switching (e.g., 1-9 for cameras)
 
-### Code Cleanup
-1. Consider removing the unused `cameras` field from Scene type
-2. Add TypeScript strict null checks for camera operations
-3. Add unit tests for camera CRUD operations
-4. Improve error handling for camera persistence failures
+### Code Quality
+1. Add TypeScript strict null checks for camera operations
+2. Add unit tests for camera CRUD operations
+3. Improve error handling for camera persistence failures
+4. Add JSDoc comments to camera utility functions
 
 ## Related Documentation
 - Scene Camera System: `src/utils/cameraAnimator.ts`

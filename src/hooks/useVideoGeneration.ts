@@ -71,7 +71,7 @@ export function useVideoGeneration() {
       // Download the video
       const link = document.createElement('a');
       link.href = currentJob.videoUrl;
-      link.download = `whiteboard-video-${currentJob.id}.png`;
+      link.download = `whiteboard-video-${currentJob.id}.mp4`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { Save, Download, Undo, Redo, FileVideo, Play } from 'lucide-react';
 import { useSceneStore } from '@/app/scenes';
 import { useHistory } from '@/app/hooks/useHistory';
@@ -10,19 +10,19 @@ const AnimationHeader: React.FC = () => {
   
   const { undo, redo, canUndo, canRedo } = useHistory(scenes, 10);
 
-  const handleUndo = () => {
+  const handleUndo = useCallback(() => {
     const previousState = undo();
     if (previousState) {
       setScenes(previousState);
     }
-  };
+  }, [undo, setScenes]);
 
-  const handleRedo = () => {
+  const handleRedo = useCallback(() => {
     const nextState = redo();
     if (nextState) {
       setScenes(nextState);
     }
-  };
+  }, [redo, setScenes]);
 
   const handleExportClick = () => {
     // Switch to export tab in properties panel
@@ -46,7 +46,7 @@ const AnimationHeader: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canUndo, canRedo]);
+  }, [handleUndo, handleRedo]);
 
   return (
     <header className="border-b border-gray-200 px-6 py-3 flex items-center justify-between flex-shrink-0">

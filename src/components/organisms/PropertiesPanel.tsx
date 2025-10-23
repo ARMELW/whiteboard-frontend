@@ -14,7 +14,7 @@ const PropertiesPanel: React.FC = () => {
   const activeTab = useSceneStore((state) => state.activeTab) as TabType;
   const setActiveTab = useSceneStore((state) => state.setActiveTab);
 
-  const { updateScene, updateLayer, deleteLayer, moveLayer, duplicateLayer } = useScenesActions();
+  const { updateScene, updateSceneProperty, updateLayerProperty, deleteLayer, moveLayer, duplicateLayer } = useScenesActions();
 
   if (!scene) {
     return (
@@ -38,13 +38,13 @@ const PropertiesPanel: React.FC = () => {
 
   const handleSceneChange = useCallback((field: string, value: any) => {
     if (!scene.id) return;
-    updateScene({ id: scene.id, data: { [field]: value } });
-  }, [scene.id, updateScene]);
+    updateSceneProperty(scene.id, field, value);
+  }, [scene.id, updateSceneProperty]);
 
   const handleLayerPropertyChange = useCallback((layerId: string, property: string, value: any) => {
     if (!scene.id) return;
-    updateLayer({ sceneId: scene.id, layerId, data: { [property]: value } });
-  }, [scene.id, updateLayer]);
+    updateLayerProperty(scene.id, layerId, property, value);
+  }, [scene.id, updateLayerProperty]);
 
   const tabs = [
     { id: 'properties' as TabType, label: 'Properties', icon: Settings },

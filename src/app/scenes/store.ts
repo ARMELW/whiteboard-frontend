@@ -22,10 +22,12 @@ interface SceneState {
   setScenes: (scenes: Scene[]) => void;
   addScene: (scene: Scene) => void;
   updateScene: (scene: Scene) => void;
+  updateSceneProperty: (sceneId: string, property: string, value: any) => void;
   deleteScene: (id: string) => void;
   reorderScenes: (sceneIds: string[]) => void;
   addLayer: (sceneId: string, layer: Layer) => void;
   updateLayer: (sceneId: string, layer: Layer) => void;
+  updateLayerProperty: (sceneId: string, layerId: string, property: string, value: any) => void;
   deleteLayer: (sceneId: string, layerId: string) => void;
   addCamera: (sceneId: string, camera: Camera) => void;
   moveLayer: (sceneId: string, from: number, to: number) => void;
@@ -78,6 +80,12 @@ export const useSceneStore = create<SceneState>((set) => ({
     set(state => ({ scenes: state.scenes.map(s => s.id === scene.id ? scene : s) }));
     setTimeout(() => useSceneStore.getState().updateSceneThumbnail(scene.id), 0);
   },
+  updateSceneProperty: (sceneId: string, property: string, value: any) => {
+    set(state => ({
+      scenes: state.scenes.map(s => s.id === sceneId ? { ...s, [property]: value } : s)
+    }));
+    setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+  },
   deleteScene: (id: string) => set(state => ({ scenes: state.scenes.filter(s => s.id !== id) })),
   reorderScenes: (sceneIds: string[]) => {
     set(state => ({
@@ -111,6 +119,15 @@ export const useSceneStore = create<SceneState>((set) => ({
       scenes: state.scenes.map(s => s.id === sceneId ? {
         ...s,
         layers: (s.layers || []).map(l => l.id === layer.id ? layer : l)
+      } : s)
+    }));
+    setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+  },
+  updateLayerProperty: (sceneId: string, layerId: string, property: string, value: any) => {
+    set(state => ({
+      scenes: state.scenes.map(s => s.id === sceneId ? {
+        ...s,
+        layers: (s.layers || []).map(l => l.id === layerId ? { ...l, [property]: value } : l)
       } : s)
     }));
     setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);

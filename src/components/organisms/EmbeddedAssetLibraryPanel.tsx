@@ -1,6 +1,7 @@
 
 import React, { useRef, useCallback } from 'react';
 import EmbeddedAssetLibrary from '../molecules/EmbeddedAssetLibrary';
+import { ImageCropModal } from '../molecules';
 import { v4 as uuidv4 } from 'uuid';
 import { useSceneStore } from '@/app/scenes';
 import { LayerType, LayerMode } from '@/app/scenes/types';
@@ -8,7 +9,9 @@ import { ImagePlus } from 'lucide-react';
 
 const EmbeddedAssetLibraryPanel: React.FC = () => {
 
+  const showCropModal = useSceneStore((state) => state.showCropModal);
   const setShowCropModal = useSceneStore((state) => state.setShowCropModal);
+  const pendingImageData = useSceneStore((state) => state.pendingImageData);
   const setPendingImageData = useSceneStore((state) => state.setPendingImageData);
   const addLayer = useSceneStore((state) => state.addLayer);
   const selectedSceneIndex = useSceneStore((state) => state.selectedSceneIndex);
@@ -34,8 +37,21 @@ const EmbeddedAssetLibraryPanel: React.FC = () => {
     e.target.value = '';
   }, [setPendingImageData, setShowCropModal]);
 
-  // Handler to add asset as image layer
+  // Handler to show crop modal for selected asset
   const handleSelectAsset = (asset: any) => {
+    // Open the crop modal with the selected asset's data
+    setPendingImageData({
+      imageUrl: asset.dataUrl,
+      fileName: asset.name || 'Image',
+      originalUrl: asset.dataUrl,
+      fileType: 'image/png',
+      assetId: asset.id
+    });
+    setShowCropModal(true);
+  };
+
+  // Handler for crop completion - adds the cropped image to the scene
+  const handleCropComplete = useCallback((croppedImageUrl: string, imageDimensions?: { width: number; height: number }, tags?: string[]) => {
     const scene = scenes[selectedSceneIndex];
     if (!scene) return;
     
@@ -62,7 +78,6 @@ const EmbeddedAssetLibraryPanel: React.FC = () => {
           };
         } else {
           // If absolute coordinates, normalize them
-          // Assuming canvas dimensions or use default
           const canvasWidth = 1920;
           const canvasHeight = 1080;
           position = {
@@ -75,40 +90,60 @@ const EmbeddedAssetLibraryPanel: React.FC = () => {
     
     const newLayer = {
       id: uuidv4(),
-      name: asset.name || 'Image',
+      name: pendingImageData?.fileName || 'Image',
       type: LayerType.IMAGE,
       mode: LayerMode.STATIC,
       position,
       z_index: (scene.layers?.length || 0) + 1,
       scale: 1,
       opacity: 1,
-      image_path: asset.dataUrl,
+      image_path: croppedImageUrl,
     };
+    
     addLayer(scene.id, newLayer);
-  };
+    setShowCropModal(false);
+    setPendingImageData(null);
+  }, [scenes, selectedSceneIndex, pendingImageData, addLayer, setShowCropModal, setPendingImageData]);
+
+  // Handler for crop cancellation
+  const handleCropCancel = useCallback(() => {
+    setShowCropModal(false);
+    setPendingImageData(null);
+  }, [setShowCropModal, setPendingImageData]);
 
   return (
-    <div className="relative px-2">
-      <EmbeddedAssetLibrary onSelectAsset={handleSelectAsset} />
-      <input
-        ref={imageInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleImageFileChange}
-        className="hidden"
-      />
-      {/* Floating upload bar at bottom */}
-      <div className="absolute bottom-0 right-0 z-20 px-4 py-2">
-        <button
-          onClick={() => imageInputRef.current?.click()}
-          className="w-12 h-12 flex items-center justify-center rounded-full border border-border bg-purple-400 shadow-lg hover:bg-secondary/30 hover:scale-105 transition-all pointer-events-auto"
-          style={{ boxShadow: '0 2px 16px 0 rgba(0,0,0,0.08)' }}
-          aria-label="Ajouter une image"
-        >
-          <ImagePlus className="w-5 h-5 text-gray-700" />
-        </button>
+    <>
+      {/* Image Crop Modal */}
+      {showCropModal && pendingImageData && (
+        <ImageCropModal
+          imageUrl={pendingImageData.imageUrl}
+          onCropComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+        />
+      )}
+      
+      <div className="relative px-2">
+        <EmbeddedAssetLibrary onSelectAsset={handleSelectAsset} />
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageFileChange}
+          className="hidden"
+        />
+        {/* Floating upload bar at bottom */}
+        <div className="absolute bottom-0 right-0 z-20 px-4 py-2">
+          <button
+            onClick={() => imageInputRef.current?.click()}
+            className="w-12 h-12 flex items-center justify-center rounded-full border border-border bg-purple-400 shadow-lg hover:bg-secondary/30 hover:scale-105 transition-all pointer-events-auto"
+            style={{ boxShadow: '0 2px 16px 0 rgba(0,0,0,0.08)' }}
+            aria-label="Ajouter une image"
+          >
+            <ImagePlus className="w-5 h-5 text-gray-700" />
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

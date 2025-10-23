@@ -51,7 +51,7 @@ const EmbeddedAssetLibraryPanel: React.FC = () => {
   };
 
   // Handler for crop completion - adds the cropped image to the scene
-  const handleCropComplete = useCallback((croppedImageUrl: string, imageDimensions?: { width: number; height: number }) => {
+  const handleCropComplete = useCallback((croppedImageUrl: string, imageDimensions?: { width: number; height: number }, tags?: string[]) => {
     const scene = scenes[selectedSceneIndex];
     if (!scene) return;
     

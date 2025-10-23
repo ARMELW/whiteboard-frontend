@@ -144,7 +144,7 @@ export const useSceneStore = create<SceneState>((set) => ({
   addCamera: (sceneId: string, camera: Camera) => set(state => ({
     scenes: state.scenes.map(s => s.id === sceneId ? {
       ...s,
-      cameras: [...(s.cameras || []), camera]
+      sceneCameras: [...(s.sceneCameras || []), camera]
     } : s)
   })),
   moveLayer: (sceneId: string, from: number, to: number) => {

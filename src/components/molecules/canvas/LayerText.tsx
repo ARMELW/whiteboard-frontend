@@ -7,13 +7,17 @@ export interface LayerTextProps {
   isSelected: boolean;
   onSelect: () => void;
   onChange: (layer: any) => void;
+  onStartEditing?: () => void;
+  onStopEditing?: () => void;
 }
 
 export const LayerText: React.FC<LayerTextProps> = ({ 
   layer, 
   isSelected, 
   onSelect, 
-  onChange 
+  onChange,
+  onStartEditing,
+  onStopEditing
 }) => {
   const textRef = useRef<Konva.Text>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
@@ -62,6 +66,11 @@ export const LayerText: React.FC<LayerTextProps> = ({
   const align = textConfig.align || 'left';
   const lineHeight = textConfig.line_height || 1.2;
 
+  const handleDoubleClick = () => {
+    // Notify parent that editing has started
+    if (onStartEditing) onStartEditing();
+  };
+
   const dragBoundFunc = (pos: { x: number; y: number }) => {
     const node = textRef.current;
     if (!node) return pos;
@@ -104,6 +113,8 @@ export const LayerText: React.FC<LayerTextProps> = ({
         dragBoundFunc={dragBoundFunc}
         onClick={onSelect}
         onTap={onSelect}
+        onDblClick={handleDoubleClick}
+        onDblTap={handleDoubleClick}
         ref={textRef}
         onDragEnd={(e) => {
           onChange({

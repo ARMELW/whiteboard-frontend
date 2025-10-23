@@ -91,7 +91,6 @@ const CameraToolbar: React.FC<CameraToolbarProps> = ({
       <div className="flex items-center gap-3">
         {/* Scene Zoom */}
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-xs">Zoom scène:</span>
           <button
             onClick={() => onSceneZoom(Math.max(0.5, sceneZoom - 0.1))}
             className="bg-secondary hover:bg-secondary/80 text-foreground p-1.5 rounded-lg transition-colors"
@@ -109,13 +108,7 @@ const CameraToolbar: React.FC<CameraToolbarProps> = ({
           >
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
-          <button
-            onClick={() => onFitToViewport ? onFitToViewport() : onSceneZoom(1.0)}
-            className="bg-secondary hover:bg-secondary/80 text-foreground p-1.5 rounded-lg transition-colors"
-            title="Ajuster à la vue (100%)"
-          >
-            <Maximize2 className="w-3.5 h-3.5" />
-          </button>
+         
         </div>
 
         {/* Camera Zoom (if camera selected) */}

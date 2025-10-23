@@ -1,6 +1,6 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { Button, Card } from '../atoms';
-import { Plus, ArrowUp, ArrowDown, Copy, Trash2, Download, Upload, MoreVertical } from 'lucide-react';
+import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical } from 'lucide-react';
 import { useScenes, useSceneStore, useScenesActions } from '@/app/scenes';
 import {
   DropdownMenu,
@@ -10,18 +10,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { THUMBNAIL_CONFIG } from '@/utils/sceneThumbnail';
+import EmbeddedAssetLibraryPanel from './EmbeddedAssetLibraryPanel';
 
 const ScenePanel: React.FC = () => {
   // Pour ouvrir asset library et shape toolbar
-  // const setShowAssetLibrary = useSceneStore((state) => state.setShowAssetLibrary); // No longer used for direct image upload
+  // const setShowAssetLibrary = useSceneStore((state) => state.setShowAssetLibrary);
   const setShowCropModal = useSceneStore((state) => state.setShowCropModal);
   const setPendingImageData = useSceneStore((state) => state.setPendingImageData);
   const setShowShapeToolbar = useSceneStore((state) => state.setShowShapeToolbar);
   const { scenes } = useScenes();
   const selectedSceneIndex = useSceneStore((state) => state.selectedSceneIndex);
   const setSelectedSceneIndex = useSceneStore((state) => state.setSelectedSceneIndex);
-  const importInputRef = useRef<HTMLInputElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
+  // Remove imageInputRef and importInputRef, handled in asset library
   
   // Use actions from useScenesActions hook
   const { createScene, deleteScene, duplicateScene, reorderScenes } = useScenesActions();
@@ -35,8 +35,8 @@ const ScenePanel: React.FC = () => {
     setSelectedSceneIndex(currentLength);
   }, [scenes.length, createScene, setSelectedSceneIndex]);
 
-  const handleMoveScene = useCallback(async (index: number, direction: 'up' | 'down') => {
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
+  const handleMoveScene = useCallback(async (index: number, direction: 'left' | 'right') => {
+    const newIndex = direction === 'left' ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= scenes.length) return;
 
     const reorderedScenes = [...scenes];
@@ -68,23 +68,7 @@ const ScenePanel: React.FC = () => {
   }, [scenes, selectedSceneIndex, deleteScene, setSelectedSceneIndex]);
 
   // Handle image file selection for direct upload/crop
-  const handleImageFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setPendingImageData({
-        imageUrl: event.target?.result,
-        fileName: file.name,
-        originalUrl: event.target?.result,
-        fileType: file.type
-      });
-      setShowCropModal(true);
-    };
-    reader.readAsDataURL(file);
-    // Reset input so same file can be selected again
-    e.target.value = '';
-  }, [setPendingImageData, setShowCropModal]);
+    // Removed image file handling as it is now managed in EmbeddedAssetLibraryPanel
 
   const formatSceneDuration = (duration: number): string => {
     if (typeof duration !== 'number' || isNaN(duration) || !isFinite(duration)) {
@@ -98,72 +82,6 @@ const ScenePanel: React.FC = () => {
 
   return (
     <div className="bg-white flex h-full shadow-sm">
-      {/* Header - Now on the left side */}
-      <div className="w-64 p-3 border-r border-border bg-secondary/30 flex flex-col flex-shrink-0">
-       
-        <Button
-          onClick={handleAddScene}
-          className="w-full gap-2 mb-2"
-          size="sm"
-        >
-          <Plus className="w-4 h-4" />
-          Ajouter
-        </Button>
-        <Button
-          onClick={() => imageInputRef.current?.click()}
-          className="w-full gap-2 mb-2"
-          size="sm"
-          variant="outline"
-        >
-          <Upload className="w-4 h-4" />
-          Ajouter une image
-        </Button>
-        <input
-          ref={imageInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleImageFileChange}
-          className="hidden"
-        />
-        <Button
-          onClick={() => setShowShapeToolbar(true)}
-          className="w-full gap-2 mb-2"
-          size="sm"
-          variant="outline"
-        >
-          <Plus className="w-4 h-4" />
-          Ajouter une forme
-        </Button>
-        <div className="flex gap-2">
-          <Button
-            onClick={() => { }}
-            variant="outline"
-            className="flex-1 gap-2"
-            size="sm"
-            title="Exporter la configuration"
-          >
-            <Download className="w-3.5 h-3.5" />
-          </Button>
-          <Button
-            onClick={() => importInputRef.current?.click()}
-            variant="outline"
-            className="flex-1 gap-2"
-            size="sm"
-            title="Importer une configuration"
-          >
-            <Upload className="w-3.5 h-3.5" />
-          </Button>
-          <input
-            ref={importInputRef}
-            type="file"
-            accept="application/json,.json"
-            onChange={() => { }}
-            className="hidden"
-          />
-        </div>
-      </div>
-
-      {/* Scenes List - Now horizontal */}
       <div className="flex-1 overflow-x-auto p-3">
         <div className="flex gap-3 h-full">
         {scenes.map((scene: any, index: number) => (
@@ -207,6 +125,37 @@ const ScenePanel: React.FC = () => {
                 <span>{formatSceneDuration(scene.duration)}</span>
               </div>
 
+              {/* Navigation buttons - centered bottom, visible on hover or when selected */}
+              <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 ${selectedSceneIndex === index ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
+                <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm rounded-full px-2 py-1 shadow-lg border border-border/50">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 rounded-full hover:bg-primary/10 hover:text-primary disabled:opacity-30"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMoveScene(index, 'left');
+                    }}
+                    disabled={index === 0}
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                  </Button>
+                  <div className="h-4 w-px bg-border/50" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 rounded-full hover:bg-primary/10 hover:text-primary disabled:opacity-30"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMoveScene(index, 'right');
+                    }}
+                    disabled={index === scenes.length - 1}
+                  >
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+
               {/* Actions dropdown - top right, visible on hover or when selected */}
               <div className={`absolute top-2 right-2 ${selectedSceneIndex === index ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
                 <DropdownMenu>
@@ -214,34 +163,13 @@ const ScenePanel: React.FC = () => {
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm"
+                      className="h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm rounded-full"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMoveScene(index, 'up');
-                      }}
-                      disabled={index === 0}
-                    >
-                      <ArrowUp className="mr-2 h-4 w-4" />
-                      Déplacer à gauche
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMoveScene(index, 'down');
-                      }}
-                      disabled={index === scenes.length - 1}
-                    >
-                      <ArrowDown className="mr-2 h-4 w-4" />
-                      Déplacer à droite
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation();

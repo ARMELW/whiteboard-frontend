@@ -54,5 +54,13 @@ export const useScenesActions = () => {
     isDuplicating: loading,
     isReordering: loading,
     invalidate: () => Promise.resolve(), // No longer needed with Zustand
+
+    // Ajout duplication de scène
+    duplicateScene: async (sceneId: string) => {
+  const duplicated = await scenesService.duplicate(sceneId);
+  console.log('[duplicateScene] duplicated:', duplicated);
+  addScene(duplicated);
+  return duplicated;
+    },
   };
 };

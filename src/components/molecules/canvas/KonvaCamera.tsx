@@ -125,28 +125,6 @@ export const KonvaCamera: React.FC<KonvaCameraProps> = ({
         />
       </Group>
       
-      <Group
-        x={pixelPos.x}
-        y={pixelPos.y - 30}
-        listening={false}
-      >
-        <Rect
-          width={150}
-          height={25}
-          fill={camera.locked ? '#3b82f6' : '#ec4899'}
-          cornerRadius={[5, 5, 0, 0]}
-        />
-        <Text
-          text={`${camera.name || camera.id} (${camera.zoom.toFixed(1)}x)`}
-          fill="white"
-          fontSize={12}
-          fontStyle="bold"
-          padding={5}
-          width={150}
-          align="center"
-        />
-      </Group>
-      
       {isSelected && !camera.locked && (
         <Transformer
           ref={transformerRef}

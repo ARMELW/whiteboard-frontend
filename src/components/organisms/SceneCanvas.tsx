@@ -2,6 +2,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Stage, Layer as KonvaLayer } from 'react-konva';
 import { CameraToolbar, KonvaCamera, LayerImage, LayerText, FloatingToolbar } from '../molecules';
+import SceneHeader from './SceneHeader';
 import { useScenesActions } from '@/app/scenes';
 import CameraManagerModal from './CameraManagerModal';
 import { createDefaultCamera } from '../../utils/cameraAnimator';
@@ -45,7 +46,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
     easing: (cam as any).easing ?? 'ease_out',
     width: (cam as any).width ?? 800,
     height: (cam as any).height ?? 450,
-  locked: (cam as any).locked ?? ((cam as any).isDefault ? true : false),
+    locked: (cam as any).locked ?? ((cam as any).isDefault ? true : false),
     isDefault: (cam as any).isDefault ?? false,
     pauseDuration: (cam as any).pauseDuration ?? 0,
     movementType: (cam as any).movementType ?? 'ease_out',
@@ -64,11 +65,11 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   const [hasInitialCentered, setHasInitialCentered] = useState(false);
   const [showCameraManager, setShowCameraManager] = useState(false);
   const { updateScene } = useScenesActions();
-  
+
   // Notify parent when camera selection changes
   React.useEffect(() => {
     if (onSelectCamera) {
-  const selectedCamera = sceneCameras.find((cam: Camera) => cam.id === selectedCameraId);
+      const selectedCamera = sceneCameras.find((cam: Camera) => cam.id === selectedCameraId);
       onSelectCamera(selectedCamera);
     }
   }, [selectedCameraId, sceneCameras, onSelectCamera]);
@@ -103,11 +104,11 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
 
   // Create a new camera
   const handleAddCamera = useCallback(() => {
-  const defaultCamera = sceneCameras.find((cam: Camera) => cam.isDefault);
+    const defaultCamera = sceneCameras.find((cam: Camera) => cam.isDefault);
     const defaultPosition = defaultCamera ? defaultCamera.position : { x: 0.5, y: 0.5 };
     const cameraWidth = defaultCamera?.width || 800;
     const cameraHeight = defaultCamera?.height || 450;
-  const newCamera: Camera = {
+    const newCamera: Camera = {
       id: `camera-${Date.now()}`,
       name: `Camera ${sceneCameras.length}`,
       position: { x: defaultPosition.x, y: defaultPosition.y },
@@ -125,8 +126,8 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
     };
     const updatedCameras = [...sceneCameras, newCamera];
     setSceneCameras(updatedCameras);
-  setSelectedCameraId(newCamera.id);
-  onUpdateScene({ sceneCameras: updatedCameras });
+    setSelectedCameraId(newCamera.id);
+    onUpdateScene({ sceneCameras: updatedCameras });
   }, [sceneCameras, onUpdateScene]);
 
   // Update camera properties
@@ -165,7 +166,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
         setSceneCameras(scene.sceneCameras.map(ensureCamera));
       }
     } else {
-  setSceneCameras([ensureCamera(createDefaultCamera('16:9'))]);
+      setSceneCameras([ensureCamera(createDefaultCamera('16:9'))]);
     }
   }, [scene.sceneCameras]);
 
@@ -184,55 +185,22 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   }, [selectedCameraId, hasInitialCentered]);
 
   // Sort layers by z_index for rendering
-  const sortedLayers = [...(scene.layers || [])].sort((a: Layer, b: Layer) => 
+  const sortedLayers = [...(scene.layers || [])].sort((a: Layer, b: Layer) =>
     (a.z_index || 0) - (b.z_index || 0)
   );
 
   const scaledSceneWidth = sceneWidth * sceneZoom;
   const scaledSceneHeight = sceneHeight * sceneZoom;
-  
-  return (
-    <div className="flex flex-col h-full bg-secondary">
-      {/* Camera Toolbar */}
-      <CameraToolbar
-        cameras={sceneCameras}
-        selectedCameraId={selectedCameraId}
-        onAddCamera={handleAddCamera}
-        onSelectCamera={(id: string | null) => setSelectedCameraId(id || 'default-camera')}
-        onZoomCamera={() => {}}
-  onToggleLock={handleToggleLock}
-        sceneZoom={sceneZoom}
-        onSceneZoom={setSceneZoom}
-        onFitToViewport={() => setSceneZoom(calculateFitZoom())}
-        onOpenCameraManager={() => setShowCameraManager(true)}
-      />
-      {showCameraManager && (
-        <CameraManagerModal
-          cameras={sceneCameras}
-          onClose={() => setShowCameraManager(false)}
-          onSave={async (updated: any[]) => {
-            // apply updated cameras to local state and notify parent
-            setSceneCameras(updated.map((c: any) => ({ ...c })));
-            onUpdateScene({ sceneCameras: updated });
 
-            // Persist immediately if scene id is available
-            try {
-              if (scene && scene.id) {
-                await updateScene({ id: scene.id, data: { sceneCameras: updated } });
-              }
-            } catch (err) {
-              console.error('Failed to persist cameras:', err);
-            }
-          }}
-        />
-      )}
-      {/* Main Content Area */}
+  return (
+    <div className="flex relative flex-col h-full bg-secondary">
+
       <div className="flex flex-1 min-h-0 bg-white" style={{ height: '100%' }}>
         {/* Canvas Area - Centered viewport */}
-        <div 
+        <div
           ref={scrollContainerRef}
           className="flex-1 bg-white relative flex items-center justify-center overflow-hidden"
-          style={{ 
+          style={{
             width: '100%',
             height: '100%',
             backgroundImage: 'radial-gradient(circle, #4b5563 1px, transparent 1px)',
@@ -257,12 +225,12 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                 height={sceneHeight}
                 scaleX={sceneZoom}
                 scaleY={sceneZoom}
-                
+
                 style={{
                   width: `${scaledSceneWidth}px`,
                   height: `${scaledSceneHeight}px`,
-                  backgroundImage: scene.backgroundImage 
-                    ? `url(${scene.backgroundImage})` 
+                  backgroundImage: scene.backgroundImage
+                    ? `url(${scene.backgroundImage})`
                     : 'linear-gradient(to bottom right, #f3f4f6, #e5e7eb)',
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
@@ -290,7 +258,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                     />
                   ))}
                 </KonvaLayer>
-                
+
                 {/* Layers - Au dessus */}
                 <KonvaLayer>
                   {sortedLayers.map((layer: Layer) => {
@@ -346,8 +314,34 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
           </div>
         </div>
       </div>
+      {/* Camera Toolbar in header (now SceneHeader) */}
+      <SceneHeader
+        sceneCameras={sceneCameras}
+        selectedCameraId={selectedCameraId}
+        onAddCamera={handleAddCamera}
+        onSelectCamera={(id: string | null) => setSelectedCameraId(id || 'default-camera')}
+        onZoomCamera={() => { }}
+        onToggleLock={handleToggleLock}
+        sceneZoom={sceneZoom}
+        onSceneZoom={setSceneZoom}
+        onFitToViewport={() => setSceneZoom(calculateFitZoom())}
+        showCameraManager={showCameraManager}
+        setShowCameraManager={setShowCameraManager}
+        onSaveCameras={async (updated: any[]) => {
+          setSceneCameras(updated.map((c: any) => ({ ...c })));
+          onUpdateScene({ sceneCameras: updated });
+          try {
+            if (scene && scene.id) {
+              await updateScene({ id: scene.id, data: { sceneCameras: updated } });
+            }
+          } catch (err) {
+            console.error('Failed to persist cameras:', err);
+          }
+        }}
+      />
+      {/* Main Content Area */}
 
-      {/* Text Editing Modal */}
+      {/* Text Editing Modal 
       {isEditingText && editingLayerId && (() => {
         const editingLayer = sortedLayers.find((l: Layer) => l.id === editingLayerId);
         if (!editingLayer || editingLayer.type !== 'text') return null;
@@ -432,7 +426,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
           </div>
         );
       })()}
-
+     */}
       {/* Floating Toolbar
       {selectedLayerId && !isEditingText && (() => {
         const selectedLayer = sortedLayers.find((l: Layer) => l.id === selectedLayerId);

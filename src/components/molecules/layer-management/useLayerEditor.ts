@@ -63,10 +63,18 @@ export const useLayerEditor = ({
   }, []);
 
   const handleAddLayer = useCallback((newLayer: any) => {
-    setEditedScene((prev: any) => ({
-      ...prev,
-      layers: [...prev.layers, newLayer]
-    }));
+    setEditedScene((prev: any) => {
+      // Ajoute la couche localement
+      const updated = {
+        ...prev,
+        layers: [...prev.layers, newLayer]
+      };
+      // Persiste dans le store global si la scène a un id
+      if (prev.id) {
+        useSceneStore.getState().addLayer(prev.id, newLayer);
+      }
+      return updated;
+    });
     setSelectedLayerId(newLayer.id);
   }, [setSelectedLayerId]);
 

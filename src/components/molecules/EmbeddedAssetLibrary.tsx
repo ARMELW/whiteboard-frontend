@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { searchAssetsAsync, getAllTags } from '@/utils/assetManager';
-import { Plus, Tag } from 'lucide-react';
+import { Filter, Plus, Search, Tag, X } from 'lucide-react';
 import { Button } from '../atoms';
 import type { Asset } from '@/utils/assetManager';
 
@@ -19,11 +19,7 @@ const EmbeddedAssetLibrary: React.FC<EmbeddedAssetLibraryProps> = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadTags = () => {
-      const tags = getAllTags();
-      setAllTags(tags);
-    };
-    loadTags();
+    setAllTags(getAllTags());
   }, []);
 
   useEffect(() => {
@@ -31,136 +27,110 @@ const EmbeddedAssetLibrary: React.FC<EmbeddedAssetLibraryProps> = ({
       setLoading(true);
       try {
         const results = await searchAssetsAsync({
-          tags: selectedTags.length > 0 ? selectedTags : undefined,
+          tags: selectedTags.length ? selectedTags : undefined,
           sortBy: 'uploadDate',
           sortOrder: 'desc'
         });
         setAssets(results);
       } catch (error) {
         console.error('Error loading assets:', error);
+        setAssets([]);
       } finally {
         setLoading(false);
       }
     };
-
     loadAssets();
   }, [selectedTags]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev =>
-      prev.includes(tag)
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center py-12">
+        <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
+  const hasAssets = assets.length > 0;
+  const hasFilters = selectedTags.length > 0;
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* Tag Filters */}
       {allTags.length > 0 && (
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-            <Tag className="w-3 h-3" />
-            <span>Filtrer par tags</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
+              <Tag className="w-3.5 h-3.5" />
+              <span>Tags</span>
+            </div>
+            {hasFilters && (
+              <button
+                onClick={() => setSelectedTags([])}
+                className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+              >
+                <X className="w-3 h-3" />
+                Clear
+              </button>
+            )}
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {allTags.map(tag => (
               <button
                 key={tag}
                 onClick={() => toggleTag(tag)}
-                className={`text-xs px-2 py-1 rounded transition-colors ${
-                  selectedTags.includes(tag)
-                    ? 'bg-primary text-white'
-                    : 'bg-secondary/30 text-foreground hover:bg-secondary/50'
-                }`}
+                className={`text-xs px-3 py-1.5 font-medium transition-all ${selectedTags.includes(tag)
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
-                #{tag}
+                {tag}
               </button>
             ))}
           </div>
-          {selectedTags.length > 0 && (
-            <button
-              onClick={() => setSelectedTags([])}
-              className="text-xs text-primary hover:underline"
-            >
-              Effacer les filtres
-            </button>
-          )}
         </div>
       )}
 
-      {/* Assets Grid */}
-      {assets.length === 0 ? (
-        <div className="space-y-3 py-4">
-          <p className="text-xs text-muted-foreground text-center">
-            {selectedTags.length > 0
-              ? `Aucun asset avec les tags sélectionnés`
-              : `Aucun asset disponible`}
+      {/* Assets Grid or Empty State */}
+      {!hasAssets ? (
+        <div className="flex flex-col items-center justify-center py-12 space-y-3">
+          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+            <Plus className="w-6 h-6 text-gray-400" />
+          </div>
+          <p className="text-sm text-gray-500">
+            {hasFilters ? 'No assets match these tags' : 'No assets yet'}
           </p>
-          <Button
-            onClick={onBrowseAssets}
-            size="sm"
-            variant="outline"
-            className="w-full gap-1"
-          >
-            <Plus className="w-3 h-3" />
-            Ajouter des assets
+          <Button onClick={onBrowseAssets} size="sm" className="gap-2">
+            <Plus className="w-4 h-4" />
+            Add Assets
           </Button>
         </div>
       ) : (
-        <>
-          <div className="grid grid-cols-2 gap-2 max-h-[calc(100vh-300px)] overflow-y-auto pr-1">
-            {assets.map((asset) => (
-              <div
-                key={asset.id}
-                onClick={() => onSelectAsset?.(asset)}
-                className="relative cursor-pointer group bg-secondary/30 rounded border border-border hover:border-primary transition-all hover:shadow-md overflow-hidden"
-              >
-                <div className="aspect-square bg-white flex items-center justify-center overflow-hidden">
-                  <img
-                    src={asset.dataUrl}
-                    alt={asset.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                  />
-                </div>
-                <div className="p-1.5 bg-secondary/50">
-                  <p className="text-xs text-white truncate font-medium">
-                    {asset.name}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {asset.width} × {asset.height}
-                  </p>
-                </div>
-                {asset.tags.length > 0 && (
-                  <div className="absolute top-1 right-1 bg-purple-600 text-white text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1">
-                    {asset.tags.slice(0, 1).map(tag => (
-                      <span key={tag}>#{tag}</span>
-                    ))}
-                    {asset.tags.length > 1 && <span>+{asset.tags.length - 1}</span>}
-                  </div>
-                )}
+        <div className="grid grid-cols-2 gap-2 max-h-[calc(100vh-250px)] overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {assets.map((asset) => (
+            <div
+              key={asset.id}
+              onClick={() => onSelectAsset?.(asset)}
+              className="group cursor-pointer border border-gray-300 shadow-sm transition-all"
+            >
+              <div className="relative aspect-square">
+                <img
+                  src={asset.dataUrl}
+                  alt={asset.name}
+                  className="w-full h-full object-cover"
+                />
               </div>
-            ))}
-          </div>
-          
-          <Button
-            onClick={onBrowseAssets}
-            size="sm"
-            variant="outline"
-            className="w-full gap-1"
-          >
-            <Plus className="w-3 h-3" />
-            Gérer tous les assets
-          </Button>
-        </>
+              <p className="mt-2 text-xs text-gray-700 truncate font-medium">
+                {asset.name}
+              </p>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

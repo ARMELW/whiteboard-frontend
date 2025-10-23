@@ -54,12 +54,18 @@ class ScenesService extends BaseService<Scene> {
   async duplicate(id: string): Promise<Scene> {
     await this.delay();
     const scene = await this.detail(id);
-    
+
     // Ensure sceneCameras has at least a default camera
     let sceneCameras = scene.sceneCameras || [];
     if (sceneCameras.length === 0) {
       sceneCameras = [createDefaultCamera()];
     }
+
+    // Deep copy layers with new IDs
+    const duplicatedLayers = (scene.layers || []).map(layer => ({
+      ...layer,
+      id: `layer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    }));
 
     const duplicatedScene: Partial<Scene> = {
       ...scene,
@@ -69,8 +75,10 @@ class ScenesService extends BaseService<Scene> {
       multiTimeline: scene.multiTimeline || createMultiTimeline(scene.duration),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      layers: duplicatedLayers,
     };
 
+    console.log('[scenesService.duplicate] duplicatedScene:', duplicatedScene);
     return super.create(duplicatedScene);
   }
 

@@ -1,0 +1,100 @@
+import React, { useRef, useCallback } from 'react';
+import { Button } from '../../atoms';
+import { Upload, Plus } from 'lucide-react';
+import { useCurrentScene, useSceneStore, useScenesActions } from '@/app/scenes';
+import { LayersListPanel } from '../../molecules/properties';
+import { useLayerCreation } from '../../molecules/layer-management';
+
+const LayersTab: React.FC = () => {
+  const scene = useCurrentScene();
+  const selectedLayerId = useSceneStore((state) => state.selectedLayerId);
+  const setSelectedLayerId = useSceneStore((state) => state.setSelectedLayerId);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { deleteLayer, moveLayer, duplicateLayer, addLayer } = useScenesActions();
+  const { createTextLayer, createImageLayer } = useLayerCreation({
+    sceneWidth: 1920,
+    sceneHeight: 1080,
+    selectedCamera: null
+  });
+
+  const handleAddText = useCallback(async () => {
+    if (!scene?.id) return;
+    try {
+      const newTextLayer = createTextLayer(scene.layers?.length || 0);
+      await addLayer({ sceneId: scene.id, layer: newTextLayer as any });
+      setSelectedLayerId(newTextLayer.id);
+    } catch (error) {
+      console.error('Error adding text layer:', error);
+    }
+  }, [scene?.id, scene?.layers?.length, createTextLayer, addLayer, setSelectedLayerId]);
+
+  const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !scene?.id) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Veuillez sélectionner une image valide');
+      return;
+    }
+    // ...image upload logic (can be refactored in a utility)
+    e.target.value = '';
+  }, [scene?.id]);
+
+  return (
+    <div className="p-3">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-bold">Layers</h3>
+        <div className="flex gap-1">
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            size="sm"
+            variant="outline"
+            className="gap-1"
+            title="Add Image"
+          >
+            <Upload className="w-3 h-3" />
+          </Button>
+          <Button
+            onClick={handleAddText}
+            size="sm"
+            className="gap-1"
+          >
+            <Plus className="w-3 h-3" />
+            Text
+          </Button>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="hidden"
+        />
+      </div>
+      {scene && scene.layers && scene.layers.length > 0 ? (
+        <LayersListPanel
+          layers={scene.layers || []}
+          selectedLayerId={selectedLayerId}
+          onSelectLayer={setSelectedLayerId}
+          onMoveLayer={(layerId, direction) => {
+            if (!scene.id) return;
+            moveLayer({ sceneId: scene.id, layerId, direction });
+          }}
+          onDuplicateLayer={(layerId) => {
+            if (!scene.id) return;
+            duplicateLayer({ sceneId: scene.id, layerId });
+          }}
+          onDeleteLayer={(layerId: string) => {
+            if (!scene.id) return;
+            deleteLayer({ sceneId: scene.id, layerId });
+          }}
+        />
+      ) : (
+        <p className="text-xs text-muted-foreground text-center py-8">
+          No layers in this scene. Add images or text to get started.
+        </p>
+      )}
+    </div>
+  );
+};
+
+export default LayersTab;

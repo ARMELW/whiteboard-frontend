@@ -1,3 +1,4 @@
+import { Scene, Layer, Camera } from '../app/scenes/types';
 /**
  * Scene Export Utility
  * Exports complete scenes with all layers combined using camera-based cropping
@@ -16,7 +17,17 @@
  * @param {number} options.pixelRatio - Pixel ratio for high-res export (default: 1)
  * @returns {Promise<string>} Data URL of the exported PNG
  */
-export const exportSceneImage = async (scene, options = {}) => {
+interface ExportSceneImageOptions {
+  sceneWidth?: number;
+  sceneHeight?: number;
+  background?: string;
+  pixelRatio?: number;
+}
+
+export const exportSceneImage = async (
+  scene: Scene,
+  options: ExportSceneImageOptions = {}
+): Promise<string> => {
   const {
     sceneWidth = 1920,
     sceneHeight = 1080,
@@ -25,8 +36,8 @@ export const exportSceneImage = async (scene, options = {}) => {
   } = options;
 
   // Get the default camera
-  const cameras = scene.sceneCameras || [];
-  const defaultCamera = cameras.find(cam => cam.isDefault);
+  const cameras: Camera[] = scene.sceneCameras || [];
+  const defaultCamera = cameras.find((cam: Camera) => cam.isDefault);
   
   if (!defaultCamera) {
     throw new Error('No default camera found in scene. Cannot export scene without a camera.');
@@ -41,6 +52,7 @@ export const exportSceneImage = async (scene, options = {}) => {
   canvas.width = canvasWidth * pixelRatio;
   canvas.height = canvasHeight * pixelRatio;
   const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Could not get 2D context for canvas');
 
   // Scale context for pixel ratio
   ctx.scale(pixelRatio, pixelRatio);
@@ -60,9 +72,9 @@ export const exportSceneImage = async (scene, options = {}) => {
 
   // Get all visible layers sorted by z_index
   const layers = (scene.layers || [])
-    .filter(layer => layer.visible !== false)
+    .filter((layer: Layer | undefined): layer is Layer => !!layer && (layer.visible === undefined || layer.visible !== false))
     .slice()
-    .sort((a, b) => (a.z_index || 0) - (b.z_index || 0));
+    .sort((a: Layer, b: Layer) => (a.z_index || 0) - (b.z_index || 0));
 
   // Render each layer
   for (const layer of layers) {
@@ -97,32 +109,36 @@ export const exportSceneImage = async (scene, options = {}) => {
 /**
  * Render scene background image with camera cropping
  */
-const renderBackgroundImage = (ctx, imageUrl, canvasWidth, canvasHeight, camera, sceneWidth, sceneHeight) => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
+const renderBackgroundImage = (
+  ctx: CanvasRenderingContext2D,
+  imageUrl: string,
+  canvasWidth: number,
+  canvasHeight: number,
+  camera: Camera,
+  sceneWidth: number,
+  sceneHeight: number
+): Promise<void> => {
+  return new Promise((resolve) => {
+    const img = new window.Image();
     img.crossOrigin = 'anonymous';
 
     img.onload = () => {
       try {
         ctx.save();
-        
         // Calculate camera viewport position in scene
         const cameraX = (camera.position.x * sceneWidth) - (canvasWidth / 2);
         const cameraY = (camera.position.y * sceneHeight) - (canvasHeight / 2);
-        
         // Calculate source rectangle (portion of background image to show)
         const sourceX = (cameraX / sceneWidth) * img.width;
         const sourceY = (cameraY / sceneHeight) * img.height;
         const sourceWidth = (canvasWidth / sceneWidth) * img.width;
         const sourceHeight = (canvasHeight / sceneHeight) * img.height;
-        
         // Draw the cropped portion of the background
         ctx.drawImage(
           img,
           sourceX, sourceY, sourceWidth, sourceHeight,  // source rectangle
           0, 0, canvasWidth, canvasHeight               // destination rectangle
         );
-        
         ctx.restore();
         resolve();
       } catch (error) {

@@ -1,8 +1,8 @@
-import { AnimationContainer } from './components/organisms';
+import DoodleMaker from './components/organisms/DoodleMaker';
 
 
 function App() {
-  return <AnimationContainer />;
+  return <DoodleMaker />;
 }
 
 export default App;

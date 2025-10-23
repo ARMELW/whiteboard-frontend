@@ -200,7 +200,7 @@ const DoodleMaker: React.FC = () => {
       <div className="bg-white/80 backdrop-blur-sm shadow-lg px-6 py-4 border-b-4 border-purple-400">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="text-3xl">🎨</div>
+            <div className="text-3xl animate-bounce">🎨</div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               Doodle Maker
             </h1>
@@ -344,6 +344,18 @@ const DoodleMaker: React.FC = () => {
                   fill="#ffffff"
                 />
                 
+                {/* Welcome message when empty */}
+                {lines.length === 0 && shapes.length === 0 && texts.length === 0 && (
+                  <KonvaText
+                    text="🎨 Start drawing your doodle! ✨"
+                    x={(dimensions.width - 100) / 2 - 150}
+                    y={(dimensions.height - 150) / 2}
+                    fontSize={24}
+                    fill="#cbd5e1"
+                    fontStyle="bold"
+                  />
+                )}
+                
                 {/* Lines */}
                 {lines.map((line, i) => (
                   <Line
@@ -407,11 +419,26 @@ const DoodleMaker: React.FC = () => {
       </div>
 
       {/* Fun Footer */}
-      <div className="bg-white/80 backdrop-blur-sm px-6 py-2 border-t-2 border-purple-200 text-center">
-        <p className="text-sm text-gray-600">
-          ✨ Draw, doodle, and create! 🎨 Current: <span className="font-bold text-purple-600">{tool}</span> | 
-          Color: <span className="inline-block w-4 h-4 rounded-full align-middle mx-1" style={{ backgroundColor: color }}></span>
-        </p>
+      <div className="bg-white/80 backdrop-blur-sm px-6 py-3 border-t-2 border-purple-200">
+        <div className="flex items-center justify-center gap-4">
+          <p className="text-sm text-gray-600 flex items-center gap-2">
+            <span className="text-base">✨</span>
+            <span>Draw, doodle, and create!</span>
+            <span className="text-base">🎨</span>
+          </p>
+          <div className="h-4 w-px bg-gray-300"></div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-500">Current:</span>
+            <span className="font-bold text-purple-600 capitalize">{tool}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-500">Color:</span>
+            <span 
+              className="inline-block w-5 h-5 rounded-full border-2 border-gray-300 shadow-sm" 
+              style={{ backgroundColor: color }}
+            ></span>
+          </div>
+        </div>
       </div>
     </div>
   );

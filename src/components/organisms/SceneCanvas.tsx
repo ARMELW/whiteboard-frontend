@@ -236,17 +236,26 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
     }
   }, [onUpdateScene, scene, updateScene]);
 
-  // Propagate camera state upward to AnimationContainer
-  const prevCameraStateRef = useRef<{
+  // Type for camera state snapshot used in change detection
+  interface CameraStateSnapshot {
     cameras: Camera[];
     selectedCameraId: string | null;
-  } | null>(null);
+  }
+
+  // Propagate camera state upward to AnimationContainer
+  const prevCameraStateRef = useRef<CameraStateSnapshot | null>(null);
   
   useEffect(() => {
     if (onCameraStateChange) {
       // Only update if cameras or selectedCameraId actually changed
+      // Using shallow comparison for performance
       const camerasChanged = !prevCameraStateRef.current || 
-        JSON.stringify(prevCameraStateRef.current.cameras) !== JSON.stringify(sceneCameras) ||
+        prevCameraStateRef.current.cameras.length !== sceneCameras.length ||
+        prevCameraStateRef.current.cameras.some((cam, idx) => 
+          cam.id !== sceneCameras[idx]?.id || 
+          cam.locked !== sceneCameras[idx]?.locked ||
+          cam.zoom !== sceneCameras[idx]?.zoom
+        ) ||
         prevCameraStateRef.current.selectedCameraId !== effectiveSelectedCameraId;
       
       if (camerasChanged) {

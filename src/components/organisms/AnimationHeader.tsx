@@ -1,7 +1,8 @@
 import React, { useEffect, useCallback } from 'react';
-import { Save, Download, Undo, Redo, FileVideo, Play, Clock, Library, BookmarkPlus, Camera, Plus, ZoomIn, ZoomOut, Lock, Unlock } from 'lucide-react';
+import { Save, Download, Undo, Redo, FileVideo, Play, Clock, Library, BookmarkPlus, Camera, Plus, ZoomIn, ZoomOut, Lock, Unlock, Sparkles } from 'lucide-react';
 import { useSceneStore } from '@/app/scenes';
 import { useHistory } from '@/app/history';
+import { useWizardStore } from '@/app/wizard';
 import {
   Select,
   SelectContent,
@@ -41,6 +42,7 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
   const setActiveTab = useSceneStore((state) => state.setActiveTab);
   const showHistoryPanel = useSceneStore((state) => state.showHistoryPanel);
   const setShowHistoryPanel = useSceneStore((state) => state.setShowHistoryPanel);
+  const openWizard = useWizardStore((state) => state.openWizard);
   
   const { undo, redo, canUndo, canRedo } = useHistory();
   
@@ -177,6 +179,18 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
 
       {/* Center: Quick Actions */}
       <div className="flex items-center gap-2">
+        {/* AI Wizard Button */}
+        <button
+          onClick={openWizard}
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded transition-all shadow-md hover:shadow-lg"
+          title="Assistant IA - Créer un projet automatiquement"
+        >
+          <Sparkles className="w-4 h-4" />
+          <span className="font-medium">Assistant IA</span>
+        </button>
+        
+        <div className="h-6 w-px bg-gray-300 mx-2" />
+        
         <button
           onClick={handleUndo}
           disabled={!canUndo}

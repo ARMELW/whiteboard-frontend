@@ -3,6 +3,7 @@ import { Button, Card } from '../atoms';
 import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical, Music, BookmarkPlus, Play } from 'lucide-react';
 import { useScenes, useSceneStore } from '@/app/scenes';
 import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
+import { useWizardStore } from '@/app/wizard';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +29,7 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   const { scenes } = useScenes();
   const selectedSceneIndex = useSceneStore((state) => state.selectedSceneIndex);
   const setSelectedSceneIndex = useSceneStore((state) => state.setSelectedSceneIndex);
+  const openWizard = useWizardStore((state) => state.openWizard);
   
   const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false);
   const [sceneToSaveAsTemplate, setSceneToSaveAsTemplate] = useState<any>(null);
@@ -58,6 +60,11 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
       onOpenTemplateLibrary();
     }
   }, [onOpenTemplateLibrary]);
+
+  const handleCreateFromWizard = useCallback(() => {
+    // Open AI Wizard
+    openWizard();
+  }, [openWizard]);
 
   const handleMoveScene = useCallback(async (index: number, direction: 'left' | 'right') => {
     const newIndex = direction === 'left' ? index - 1 : index + 1;
@@ -285,6 +292,7 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
         onClose={() => setShowNewSceneDialog(false)}
         onCreateBlank={handleCreateBlankScene}
         onCreateFromTemplate={handleCreateFromTemplate}
+        onCreateFromWizard={handleCreateFromWizard}
       />
       
       {/* Save as Template Dialog */}

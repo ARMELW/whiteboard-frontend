@@ -11,6 +11,7 @@ import HistoryPanel from './HistoryPanel';
 import TemplateLibrary from './TemplateLibrary';
 import SaveAsTemplateDialog from './SaveAsTemplateDialog';
 import CameraManagerModal from './CameraManagerModal';
+import { AiWizardDialog } from './wizard';
 import { useScenes, useSceneStore, useCurrentScene } from '@/app/scenes';
 import type { Camera } from '@/app/scenes/types';
 
@@ -64,6 +65,9 @@ const AnimationContainer: React.FC = () => {
           }}
         />
       )}
+      
+      {/* AI Wizard Dialog */}
+      <AiWizardDialog />
       
       {/* Header */}
       <AnimationHeader 

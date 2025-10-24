@@ -7,13 +7,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { FileText, Layout } from 'lucide-react';
+import { FileText, Layout, Sparkles } from 'lucide-react';
 
 interface NewSceneDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onCreateBlank: () => void;
   onCreateFromTemplate: () => void;
+  onCreateFromWizard?: () => void;
 }
 
 export const NewSceneDialog: React.FC<NewSceneDialogProps> = ({
@@ -21,6 +22,7 @@ export const NewSceneDialog: React.FC<NewSceneDialogProps> = ({
   onClose,
   onCreateBlank,
   onCreateFromTemplate,
+  onCreateFromWizard,
 }) => {
   const handleCreateBlank = () => {
     onCreateBlank();
@@ -30,6 +32,13 @@ export const NewSceneDialog: React.FC<NewSceneDialogProps> = ({
   const handleCreateFromTemplate = () => {
     onCreateFromTemplate();
     onClose();
+  };
+
+  const handleCreateFromWizard = () => {
+    if (onCreateFromWizard) {
+      onCreateFromWizard();
+      onClose();
+    }
   };
 
   return (
@@ -43,6 +52,29 @@ export const NewSceneDialog: React.FC<NewSceneDialogProps> = ({
         </DialogHeader>
         
         <div className="grid grid-cols-1 gap-4 py-4">
+          {/* AI Wizard Option */}
+          {onCreateFromWizard && (
+            <button
+              onClick={handleCreateFromWizard}
+              className="group relative flex flex-col items-center gap-4 rounded-lg border-2 border-purple-500 bg-gradient-to-br from-purple-50 to-pink-50 p-6 hover:border-purple-600 hover:shadow-lg transition-all"
+            >
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-purple-500 group-hover:bg-purple-600 transition-colors">
+                <Sparkles className="h-8 w-8 text-white" />
+              </div>
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <h3 className="font-semibold text-lg">Assistant IA</h3>
+                  <span className="px-2 py-0.5 text-xs font-bold text-purple-600 bg-purple-100 rounded-full">
+                    NOUVEAU
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Laissez l'IA créer votre projet automatiquement
+                </p>
+              </div>
+            </button>
+          )}
+
           {/* Blank Scene Option */}
           <button
             onClick={handleCreateBlank}

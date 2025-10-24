@@ -1,51 +1,49 @@
 import React, { useState } from 'react';
-import { Image, Layers as LayersIcon, Type, Music, Images } from 'lucide-react';
-import AssetsTab from './tabs/AssetsTab';
+import { Sparkles, Layers as LayersIcon, Type, Music, Images } from 'lucide-react';
+import MediaTab from './tabs/MediaTab';
 import LayersTab from './tabs/LayersTab';
 import TextTab from './tabs/TextTab';
 import AudioTab from './tabs/AudioTab';
-import ImagesTab from './tabs/ImagesTab';
 
-type TabType = 'assets' | 'layers' | 'text' | 'audio' | 'images';
+type TabType = 'media' | 'layers' | 'text' | 'audio';
 
 const ContextTabs: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('layers');
   
   const tabs = [
-    { id: 'images' as TabType, label: 'Images', icon: Images },
-    { id: 'assets' as TabType, label: 'Assets', icon: Image },
+    { id: 'media' as TabType, label: 'Media', icon: Sparkles },
     { id: 'layers' as TabType, label: 'Layers', icon: LayersIcon },
     { id: 'text' as TabType, label: 'Text', icon: Type },
     { id: 'audio' as TabType, label: 'Audio', icon: Music },
   ];
 
   return (
-    <div className="bg-white border-r border-border flex flex-col h-full shadow-sm">
-      {/* Tabs Header - Compact */}
-  <div className="flex  mt-2 gap-3 px-3  overflow-hidden">
+    <div className="bg-white border-r border-border flex h-full shadow-sm">
+      {/* Vertical Tabs Sidebar */}
+      <div className="flex flex-col w-16 border-r border-gray-200 bg-gray-50 py-2 gap-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 px-2 border-accent-foreground border rounded-full py-2 flex items-center justify-center gap-1.5 transition-colors ${
+              className={`flex flex-col items-center justify-center py-3 px-2 gap-1 transition-all rounded-lg mx-1 ${
                 activeTab === tab.id
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground bg-gray-100 hover:bg-secondary/50'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
               }`}
+              title={tab.label}
             >
-              <Icon className="w-3.5 h-3.5" />
-              <span className="text-md font-medium">{tab.label}</span>
+              <Icon className="w-5 h-5" />
+              <span className="text-xs font-medium">{tab.label}</span>
             </button>
           );
         })}
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 px-2 py-3 overflow-hidden">
-        {activeTab === 'images' && <ImagesTab />}
-        {activeTab === 'assets' && <AssetsTab />}
+      <div className="flex-1 overflow-hidden">
+        {activeTab === 'media' && <MediaTab />}
         {activeTab === 'layers' && <LayersTab />}
         {activeTab === 'text' && <TextTab />}
         {activeTab === 'audio' && <AudioTab />}

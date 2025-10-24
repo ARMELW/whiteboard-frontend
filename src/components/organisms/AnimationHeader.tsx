@@ -1,8 +1,11 @@
 import React, { useEffect, useCallback } from 'react';
 import { Save, Download, Undo, Redo, FileVideo, Play, Clock, Library, BookmarkPlus, Camera, Plus, ZoomIn, ZoomOut, Lock, Unlock, Sparkles } from 'lucide-react';
 import { useSceneStore } from '@/app/scenes';
-import { useHistory } from '@/app/history';
 import { useWizardStore } from '@/app/wizard';
+import { Save, Download, Undo, Redo, FileVideo, Play, Clock, Library, BookmarkPlus, Camera, Plus, ZoomIn, ZoomOut, Lock, Unlock, Loader2 } from 'lucide-react';
+import { useSceneStore } from '@/app/scenes';
+import { useHistory } from '@/app/history';
+import { useQuickPreview } from '@/hooks/useQuickPreview';
 import {
   Select,
   SelectContent,
@@ -43,6 +46,7 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
   const showHistoryPanel = useSceneStore((state) => state.showHistoryPanel);
   const setShowHistoryPanel = useSceneStore((state) => state.setShowHistoryPanel);
   const openWizard = useWizardStore((state) => state.openWizard);
+  const { generatePreview, isGenerating } = useQuickPreview();
   
   const { undo, redo, canUndo, canRedo } = useHistory();
   
@@ -62,10 +66,9 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
     setActiveTab('export');
   };
 
-  const handlePreviewClick = () => {
-    // For now, just open the export tab
-    // The actual preview will be triggered from VideoGenerationPanel
-    setActiveTab('export');
+  const handlePreviewClick = async () => {
+    // Generate and show quick preview immediately
+    await generatePreview();
   };
 
   // Keyboard shortcuts
@@ -229,10 +232,20 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
         <div className="h-6 w-px  mx-2" />
         <button
           onClick={handlePreviewClick}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-          title="Prévisualiser"
+          disabled={isGenerating}
+          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
+            isGenerating
+              ? 'bg-blue-400 cursor-not-allowed'
+              : 'bg-blue-600 hover:bg-blue-700'
+          } text-white`}
+          title={isGenerating ? "Génération en cours..." : "Prévisualiser"}
         >
-          <Play className="w-4 h-4" />
+          {isGenerating ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Play className="w-4 h-4" />
+          )}
+          {isGenerating ? 'Génération...' : ''}
         </button>
       </div>
 

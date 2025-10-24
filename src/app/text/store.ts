@@ -33,11 +33,16 @@ export const useTextLibraryStore = create<TextLibraryState>((set, get) => ({
     items: [item, ...state.items]
   })),
   
-  removeItem: (id) => {
-    textMockService.deleteText(id).catch(console.error);
-    set((state) => ({
-      items: state.items.filter(item => item.id !== id)
-    }));
+  removeItem: async (id) => {
+    try {
+      await textMockService.deleteText(id);
+      set((state) => ({
+        items: state.items.filter(item => item.id !== id)
+      }));
+    } catch (error) {
+      console.error('Failed to delete text item:', error);
+      // Keep item in state if deletion fails
+    }
   },
   
   updateItem: (id, updates) => set((state) => ({

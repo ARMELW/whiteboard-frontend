@@ -15,6 +15,7 @@ interface SceneState {
   showAssetLibrary: boolean;
   showShapeToolbar: boolean;
   showCropModal: boolean;
+  showHistoryPanel: boolean;
   pendingImageData: any | null;
   activeTab: string; // Ajout onglet actif pour PropertiesPanel
   
@@ -40,6 +41,7 @@ interface SceneState {
   setShowAssetLibrary: (show: boolean) => void;
   setShowShapeToolbar: (show: boolean) => void;
   setShowCropModal: (show: boolean) => void;
+  setShowHistoryPanel: (show: boolean) => void;
   setPendingImageData: (data: any | null) => void;
   setActiveTab: (tab: string) => void; // Ajout setter onglet actif
   
@@ -53,6 +55,7 @@ const initialUIState = {
   showAssetLibrary: false,
   showShapeToolbar: false,
   showCropModal: false,
+  showHistoryPanel: false,
   pendingImageData: null,
   activeTab: 'properties',
 };
@@ -188,6 +191,7 @@ export const useSceneStore = create<SceneState>((set) => ({
   setShowAssetLibrary: (show) => set({ showAssetLibrary: show }),
   setShowShapeToolbar: (show) => set({ showShapeToolbar: show }),
   setShowCropModal: (show) => set({ showCropModal: show }),
+  setShowHistoryPanel: (show) => set({ showHistoryPanel: show }),
   setPendingImageData: (data) => set({ pendingImageData: data }),
   
   reset: () => set({ ...initialDataState, ...initialUIState }),

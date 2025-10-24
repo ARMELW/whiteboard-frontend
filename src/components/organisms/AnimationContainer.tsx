@@ -7,12 +7,15 @@ import AssetLibrary from './AssetLibrary';
 import ShapeToolbar from './ShapeToolbar';
 import ScenePanel from './ScenePanel';
 import ContextTabs from './ContextTabs';
+import HistoryPanel from './HistoryPanel';
 import { useScenes, useSceneStore, useCurrentScene } from '@/app/scenes';
 
 const AnimationContainer: React.FC = () => {
   const currentScene = useCurrentScene();
   const showShapeToolbar = useSceneStore((state: any) => state.showShapeToolbar);
   const showAssetLibrary = useSceneStore((state: any) => state.showAssetLibrary);
+  const showHistoryPanel = useSceneStore((state: any) => state.showHistoryPanel);
+  const setShowHistoryPanel = useSceneStore((state: any) => state.setShowHistoryPanel);
 
   return (
     <div className="animation-container flex flex-col h-screen">
@@ -36,9 +39,13 @@ const AnimationContainer: React.FC = () => {
             {currentScene && <LayerEditor />}
           </div>
           
-          {/* Right: Properties Panel */}
+          {/* Right: Properties Panel or History Panel */}
           <div className="w-80 flex-shrink-0 border-l border-gray-700 bg-gray-50">
-            {currentScene && <PropertiesPanel />}
+            {showHistoryPanel ? (
+              <HistoryPanel onClose={() => setShowHistoryPanel(false)} />
+            ) : (
+              currentScene && <PropertiesPanel />
+            )}
           </div>
         </div>
         

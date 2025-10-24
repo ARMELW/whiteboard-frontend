@@ -1,28 +1,22 @@
 import React, { useEffect, useCallback } from 'react';
-import { Save, Download, Undo, Redo, FileVideo, Play } from 'lucide-react';
+import { Save, Download, Undo, Redo, FileVideo, Play, Clock } from 'lucide-react';
 import { useSceneStore } from '@/app/scenes';
-import { useHistory } from '@/app/hooks/useHistory';
+import { useHistory } from '@/app/history';
 
 const AnimationHeader: React.FC = () => {
-  const scenes = useSceneStore((state) => state.scenes);
-  const setScenes = useSceneStore((state) => state.setScenes);
   const setActiveTab = useSceneStore((state) => state.setActiveTab);
+  const showHistoryPanel = useSceneStore((state) => state.showHistoryPanel);
+  const setShowHistoryPanel = useSceneStore((state) => state.setShowHistoryPanel);
   
-  const { undo, redo, canUndo, canRedo } = useHistory(scenes, 10);
+  const { undo, redo, canUndo, canRedo } = useHistory();
 
   const handleUndo = useCallback(() => {
-    const previousState = undo();
-    if (previousState) {
-      setScenes(previousState);
-    }
-  }, [undo, setScenes]);
+    undo();
+  }, [undo]);
 
   const handleRedo = useCallback(() => {
-    const nextState = redo();
-    if (nextState) {
-      setScenes(nextState);
-    }
-  }, [redo, setScenes]);
+    redo();
+  }, [redo]);
 
   const handleExportClick = () => {
     // Switch to export tab in properties panel
@@ -83,6 +77,17 @@ const AnimationHeader: React.FC = () => {
           title="Rétablir (Ctrl+Y)"
         >
           <Redo className="w-5 h-5" />
+        </button>
+        <button
+          onClick={() => setShowHistoryPanel(!showHistoryPanel)}
+          className={`p-2 rounded transition-colors ${
+            showHistoryPanel
+              ? 'bg-purple-600 text-white'
+              : 'hover:bg-gray-800 text-gray-300'
+          }`}
+          title="Afficher l'historique"
+        >
+          <Clock className="w-5 h-5" />
         </button>
         <div className="h-6 w-px  mx-2" />
         <button

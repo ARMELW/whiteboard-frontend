@@ -12,6 +12,7 @@ type TabType = 'properties' | 'project' | 'soundtrack' | 'hands' | 'layers' | 'e
 const PropertiesPanel: React.FC = () => {
   const scene = useCurrentScene();
   const selectedLayerId = useSceneStore((state) => state.selectedLayerId);
+  const selectedLayerIds = useSceneStore((state) => state.selectedLayerIds);
   const setSelectedLayerId = useSceneStore((state) => state.setSelectedLayerId);
   const activeTab = useSceneStore((state) => state.activeTab) as TabType;
   const setActiveTab = useSceneStore((state) => state.setActiveTab);
@@ -84,13 +85,29 @@ const PropertiesPanel: React.FC = () => {
       <div className="flex-1 overflow-y-auto p-3">
         {activeTab === 'properties' && (
           <div className="space-y-4">
+            {/* Show multi-selection info */}
+            {selectedLayerIds.length > 1 && (
+              <div className="bg-primary/10 border border-primary rounded-lg p-3">
+                <h3 className="text-sm font-semibold text-foreground mb-1">
+                  Multiple Layers Selected
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  {selectedLayerIds.length} layers selected
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  • Drag any layer to move all together<br />
+                  • Press Delete to remove all selected
+                </p>
+              </div>
+            )}
+            
             {/* Show Scene Properties when no layer is selected */}
-            {!selectedLayer && (
+            {!selectedLayer && selectedLayerIds.length <= 1 && (
               <ScenePropertiesPanel scene={scene} handleSceneChange={handleSceneChange} />
             )}
 
             {/* Show Selected Layer Properties */}
-            {selectedLayer && (
+            {selectedLayer && selectedLayerIds.length === 1 && (
               <div>
                 <div className="mb-3">
                   <h3 className="text-sm font-semibold text-foreground mb-1">Layer Properties</h3>

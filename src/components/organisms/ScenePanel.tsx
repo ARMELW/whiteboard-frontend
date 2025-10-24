@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Button, Card } from '../atoms';
-import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical } from 'lucide-react';
+import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical, Music } from 'lucide-react';
 import { useScenes, useSceneStore } from '@/app/scenes';
 import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import {
@@ -120,6 +120,14 @@ const ScenePanel: React.FC = () => {
               <div className="absolute top-2 left-2 bg-black/70 text-white text-xs font-bold px-2 py-1 rounded">
                 {index + 1}
               </div>
+
+              {/* Audio indicator badge - top right of thumbnail (always visible, but moves down if actions menu visible) */}
+              {scene.sceneAudio && (
+                <div className={`absolute ${selectedSceneIndex === index ? 'top-12' : 'top-2 group-hover:top-12'} right-2 bg-blue-600/90 text-white text-xs font-medium px-2 py-1 rounded flex items-center gap-1 transition-all z-10`}>
+                  <Music className="h-3 w-3" />
+                  <span>{Math.floor(scene.sceneAudio.duration)}s</span>
+                </div>
+              )}
 
               {/* Scene duration badge - bottom left */}
               <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs font-medium px-2 py-1 rounded flex items-center gap-1">

@@ -5,7 +5,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Move, Sliders, RotateCw, Zap } from 'lucide-react';
+import { Move, Sliders, RotateCw, Zap, FlipHorizontal, FlipVertical } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ImagePropertiesFormProps {
   layer: any;
@@ -115,6 +116,56 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = ({ layer,
                 onChange={(e) => onPropertyChange(layer.id, 'rotation', Number(e.target.value))}
                 className="w-full"
               />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-foreground text-xs mb-1.5">
+                  Scale X: <span className="font-mono">{(layer.scaleX || 1.0).toFixed(2)}</span>
+                </label>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="3"
+                  step="0.1"
+                  value={layer.scaleX || 1.0}
+                  onChange={(e) => onPropertyChange(layer.id, 'scaleX', Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-foreground text-xs mb-1.5">
+                  Scale Y: <span className="font-mono">{(layer.scaleY || 1.0).toFixed(2)}</span>
+                </label>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="3"
+                  step="0.1"
+                  value={layer.scaleY || 1.0}
+                  onChange={(e) => onPropertyChange(layer.id, 'scaleY', Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant={layer.flipX ? "default" : "outline"}
+                size="sm"
+                onClick={() => onPropertyChange(layer.id, 'flipX', !layer.flipX)}
+                className="w-full"
+              >
+                <FlipHorizontal className="w-4 h-4 mr-2" />
+                Flip H
+              </Button>
+              <Button
+                variant={layer.flipY ? "default" : "outline"}
+                size="sm"
+                onClick={() => onPropertyChange(layer.id, 'flipY', !layer.flipY)}
+                className="w-full"
+              >
+                <FlipVertical className="w-4 h-4 mr-2" />
+                Flip V
+              </Button>
             </div>
           </div>
         </AccordionContent>

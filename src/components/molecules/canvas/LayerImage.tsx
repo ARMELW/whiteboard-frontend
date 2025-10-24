@@ -55,8 +55,10 @@ export const LayerImage: React.FC<LayerImageProps> = ({
         image={img}
         x={layer.position?.x || 0}
         y={layer.position?.y || 0}
-        scaleX={layer.scale || 1.0}
-        scaleY={layer.scale || 1.0}
+        scaleX={(layer.scale || 1.0) * (layer.scaleX || 1.0) * (layer.flipX ? -1 : 1)}
+        scaleY={(layer.scale || 1.0) * (layer.scaleY || 1.0) * (layer.flipY ? -1 : 1)}
+        offsetX={layer.flipX ? img.width : 0}
+        offsetY={layer.flipY ? img.height : 0}
         rotation={layer.rotation || 0}
         opacity={layer.opacity || 1.0}
         draggable

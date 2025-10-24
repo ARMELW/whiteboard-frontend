@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -12,8 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Move, Sliders, RotateCw, Zap, FlipHorizontal, FlipVertical, Lock, Unlock } from 'lucide-react';
+import { Move, Sliders, RotateCw, Zap, FlipHorizontal, FlipVertical, Lock, Unlock, Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { HandLibraryDialog, HandType } from '@/components/organisms/HandLibraryDialog';
 
 interface ImagePropertiesFormProps {
   layer: any;
@@ -21,12 +22,31 @@ interface ImagePropertiesFormProps {
 }
 
 export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = ({ layer, onPropertyChange }) => {
+  const [showHandLibrary, setShowHandLibrary] = useState(false);
+  
   const handlePositionChange = (axis: 'x' | 'y', value: number) => {
     const newPosition = { ...layer.position, [axis]: value };
     onPropertyChange(layer.id, 'position', newPosition);
   };
 
+  const handleHandSelect = (handType: HandType) => {
+    onPropertyChange(layer.id, 'hand_type', handType);
+  };
+
+  const getHandLabel = (handType?: string) => {
+    switch (handType) {
+      case 'hand_1': return 'Main droite - Claire';
+      case 'hand_2': return 'Main droite - Medium';
+      case 'hand_3': return 'Main droite - Foncée';
+      case 'hand_4': return 'Main gauche - Claire';
+      case 'hand_5': return 'Main gauche - Medium';
+      case 'hand_6': return 'Main gauche - Foncée';
+      default: return 'Aucune main';
+    }
+  };
+
   return (
+    <>
     <Accordion type="multiple" defaultValue={["basic", "transform", "animation"]} className="w-full">
       {/* Basic Properties */}
       <AccordionItem value="basic">
@@ -273,9 +293,29 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = ({ layer,
               />
               <p className="text-gray-500 text-xs mt-1">Pause après l'animation</p>
             </div>
+            <div>
+              <label className="block text-foreground text-xs mb-1.5">Type de main</label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHandLibrary(true)}
+                className="w-full justify-start"
+              >
+                <Hand className="w-4 h-4 mr-2" />
+                {getHandLabel(layer.hand_type)}
+              </Button>
+              <p className="text-gray-500 text-xs mt-1">Main utilisée pour l'animation d'écriture</p>
+            </div>
           </div>
         </AccordionContent>
       </AccordionItem>
     </Accordion>
+    <HandLibraryDialog
+      isOpen={showHandLibrary}
+      onClose={() => setShowHandLibrary(false)}
+      onSelectHand={handleHandSelect}
+      currentHandType={(layer.hand_type as HandType) || HandType.NONE}
+    />
+    </>
   );
 };

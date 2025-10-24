@@ -13,8 +13,13 @@ import {
 import { THUMBNAIL_CONFIG } from '@/utils/sceneThumbnail';
 import EmbeddedAssetLibraryPanel from './EmbeddedAssetLibraryPanel';
 import SaveAsTemplateDialog from './SaveAsTemplateDialog';
+import { NewSceneDialog } from './NewSceneDialog';
 
-const ScenePanel: React.FC = () => {
+interface ScenePanelProps {
+  onOpenTemplateLibrary?: () => void;
+}
+
+const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   // Pour ouvrir asset library et shape toolbar
   // const setShowAssetLibrary = useSceneStore((state) => state.setShowAssetLibrary);
   const setShowCropModal = useSceneStore((state) => state.setShowCropModal);
@@ -26,6 +31,7 @@ const ScenePanel: React.FC = () => {
   
   const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false);
   const [sceneToSaveAsTemplate, setSceneToSaveAsTemplate] = useState<any>(null);
+  const [showNewSceneDialog, setShowNewSceneDialog] = useState(false);
   
   // Remove imageInputRef and importInputRef, handled in asset library
   
@@ -33,6 +39,11 @@ const ScenePanel: React.FC = () => {
   const { createScene, deleteScene, duplicateScene, reorderScenes } = useScenesActionsWithHistory();
 
   const handleAddScene = useCallback(async () => {
+    // Show dialog to choose between blank and template
+    setShowNewSceneDialog(true);
+  }, []);
+
+  const handleCreateBlankScene = useCallback(async () => {
     const currentLength = scenes.length;
     await createScene({});
     // After creation, the new scene will be at the end of the array
@@ -40,6 +51,13 @@ const ScenePanel: React.FC = () => {
     // So we set to currentLength which will be the new scene's index
     setSelectedSceneIndex(currentLength);
   }, [scenes.length, createScene, setSelectedSceneIndex]);
+
+  const handleCreateFromTemplate = useCallback(() => {
+    // Open template library via parent callback
+    if (onOpenTemplateLibrary) {
+      onOpenTemplateLibrary();
+    }
+  }, [onOpenTemplateLibrary]);
 
   const handleMoveScene = useCallback(async (index: number, direction: 'left' | 'right') => {
     const newIndex = direction === 'left' ? index - 1 : index + 1;
@@ -239,6 +257,14 @@ const ScenePanel: React.FC = () => {
         </Card>
         </div>
       </div>
+      
+      {/* New Scene Dialog */}
+      <NewSceneDialog
+        isOpen={showNewSceneDialog}
+        onClose={() => setShowNewSceneDialog(false)}
+        onCreateBlank={handleCreateBlankScene}
+        onCreateFromTemplate={handleCreateFromTemplate}
+      />
       
       {/* Save as Template Dialog */}
       {showSaveAsTemplate && sceneToSaveAsTemplate && (

@@ -40,6 +40,7 @@ export interface Layer {
   animation_type?: string;
   animation_speed?: number;
   end_delay?: number;
+  hand_type?: string;
   [key: string]: any;
 }
 

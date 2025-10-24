@@ -42,47 +42,55 @@ const EmbeddedAssetLibraryPanel: React.FC = () => {
     const scene = scenes[selectedSceneIndex];
     if (!scene) return;
     
+    // Scene dimensions
+    const sceneWidth = 1920;
+    const sceneHeight = 1080;
+    
     // Find default camera
     const defaultCamera = (scene.sceneCameras || []).find((c) => c.isDefault) || (scene.cameras || []).find((c) => c.isDefault);
     
-    // Calculate position based on default camera center
-    let position = { x: 0.5, y: 0.5 };
+    // Calculate camera center in pixel coordinates
+    let cameraCenterX = sceneWidth / 2;
+    let cameraCenterY = sceneHeight / 2;
     
-    if (defaultCamera) {
-      // Center the image at the camera's center position
-      if (defaultCamera.position) {
-        // If camera uses normalized coordinates (0-1), use as is
-        if (
-          typeof defaultCamera.position.x === 'number' &&
-          defaultCamera.position.x >= 0 &&
-          defaultCamera.position.x <= 1 &&
-          defaultCamera.position.y >= 0 &&
-          defaultCamera.position.y <= 1
-        ) {
-          position = { 
-            x: defaultCamera.position.x, 
-            y: defaultCamera.position.y 
-          };
-        } else {
-          // If absolute coordinates, normalize them
-          const canvasWidth = 1920;
-          const canvasHeight = 1080;
-          position = {
-            x: defaultCamera.position.x / canvasWidth,
-            y: defaultCamera.position.y / canvasHeight,
-          };
-        }
-      }
+    if (defaultCamera && defaultCamera.position) {
+      // Camera position is in normalized coordinates (0-1), convert to pixels
+      cameraCenterX = defaultCamera.position.x * sceneWidth;
+      cameraCenterY = defaultCamera.position.y * sceneHeight;
     }
+    
+    // Calculate image scale to fit within camera viewport
+    const cameraWidth = defaultCamera?.width || 800;
+    const cameraHeight = defaultCamera?.height || 450;
+    const cameraZoom = Math.max(0.1, defaultCamera?.zoom || 1);
+    
+    // Calculate viewport size in scene coordinates
+    const viewportWidth = cameraWidth / cameraZoom;
+    const viewportHeight = cameraHeight / cameraZoom;
+    
+    // Fit image within 80% of the camera's viewport
+    const maxWidth = viewportWidth * 0.8;
+    const maxHeight = viewportHeight * 0.8;
+    
+    const scaleX = maxWidth / asset.width;
+    const scaleY = maxHeight / asset.height;
+    const scale = Math.min(scaleX, scaleY, 1.0);
+    
+    // Calculate top-left position to center the scaled image in the camera viewport
+    const scaledImageWidth = asset.width * scale;
+    const scaledImageHeight = asset.height * scale;
+    
+    const positionX = cameraCenterX - (scaledImageWidth / 2);
+    const positionY = cameraCenterY - (scaledImageHeight / 2);
     
     const newLayer = {
       id: uuidv4(),
       name: asset.name || 'Image',
       type: LayerType.IMAGE,
       mode: LayerMode.STATIC,
-      position,
+      position: { x: positionX, y: positionY },
       z_index: (scene.layers?.length || 0) + 1,
-      scale: 1,
+      scale,
       opacity: 1,
       image_path: asset.dataUrl,
     };
@@ -95,37 +103,51 @@ const EmbeddedAssetLibraryPanel: React.FC = () => {
     const scene = scenes[selectedSceneIndex];
     if (!scene) return;
     
+    // Scene dimensions
+    const sceneWidth = 1920;
+    const sceneHeight = 1080;
+    
     // Find default camera
     const defaultCamera = (scene.sceneCameras || []).find((c) => c.isDefault) || (scene.cameras || []).find((c) => c.isDefault);
     
-    // Calculate position based on default camera center
-    let position = { x: 0.5, y: 0.5 };
+    // Calculate camera center in pixel coordinates
+    let cameraCenterX = sceneWidth / 2;
+    let cameraCenterY = sceneHeight / 2;
     
-    if (defaultCamera) {
-      // Center the image at the camera's center position
-      if (defaultCamera.position) {
-        // If camera uses normalized coordinates (0-1), use as is
-        if (
-          typeof defaultCamera.position.x === 'number' &&
-          defaultCamera.position.x >= 0 &&
-          defaultCamera.position.x <= 1 &&
-          defaultCamera.position.y >= 0 &&
-          defaultCamera.position.y <= 1
-        ) {
-          position = { 
-            x: defaultCamera.position.x, 
-            y: defaultCamera.position.y 
-          };
-        } else {
-          // If absolute coordinates, normalize them
-          const canvasWidth = 1920;
-          const canvasHeight = 1080;
-          position = {
-            x: defaultCamera.position.x / canvasWidth,
-            y: defaultCamera.position.y / canvasHeight,
-          };
-        }
-      }
+    if (defaultCamera && defaultCamera.position) {
+      // Camera position is in normalized coordinates (0-1), convert to pixels
+      cameraCenterX = defaultCamera.position.x * sceneWidth;
+      cameraCenterY = defaultCamera.position.y * sceneHeight;
+    }
+    
+    // Calculate image scale to fit within camera viewport
+    let scale = 1;
+    let positionX = cameraCenterX;
+    let positionY = cameraCenterY;
+    
+    if (imageDimensions) {
+      const cameraWidth = defaultCamera?.width || 800;
+      const cameraHeight = defaultCamera?.height || 450;
+      const cameraZoom = Math.max(0.1, defaultCamera?.zoom || 1);
+      
+      // Calculate viewport size in scene coordinates
+      const viewportWidth = cameraWidth / cameraZoom;
+      const viewportHeight = cameraHeight / cameraZoom;
+      
+      // Fit image within 80% of the camera's viewport
+      const maxWidth = viewportWidth * 0.8;
+      const maxHeight = viewportHeight * 0.8;
+      
+      const scaleX = maxWidth / imageDimensions.width;
+      const scaleY = maxHeight / imageDimensions.height;
+      scale = Math.min(scaleX, scaleY, 1.0);
+      
+      // Calculate top-left position to center the scaled image in the camera viewport
+      const scaledImageWidth = imageDimensions.width * scale;
+      const scaledImageHeight = imageDimensions.height * scale;
+      
+      positionX = cameraCenterX - (scaledImageWidth / 2);
+      positionY = cameraCenterY - (scaledImageHeight / 2);
     }
     
     const newLayer = {
@@ -133,9 +155,9 @@ const EmbeddedAssetLibraryPanel: React.FC = () => {
       name: pendingImageData?.fileName || 'Image',
       type: LayerType.IMAGE,
       mode: LayerMode.STATIC,
-      position,
+      position: { x: positionX, y: positionY },
       z_index: (scene.layers?.length || 0) + 1,
-      scale: 1,
+      scale,
       opacity: 1,
       image_path: croppedImageUrl,
     };

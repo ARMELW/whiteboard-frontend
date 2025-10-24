@@ -6,7 +6,7 @@ import Konva from 'konva';
 export interface LayerImageProps {
   layer: any;
   isSelected: boolean;
-  onSelect: () => void;
+  onSelect: (e?: any) => void;
   onChange: (layer: any) => void;
 }
 
@@ -63,8 +63,8 @@ export const LayerImage: React.FC<LayerImageProps> = ({
         opacity={layer.opacity || 1.0}
         draggable
         dragBoundFunc={dragBoundFunc}
-        onClick={onSelect}
-        onTap={onSelect}
+        onClick={(e) => onSelect(e)}
+        onTap={(e) => onSelect(e)}
         ref={imageRef}
         onDragEnd={(e) => {
           onChange({

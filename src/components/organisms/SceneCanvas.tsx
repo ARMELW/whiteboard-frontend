@@ -8,6 +8,7 @@ import CameraManagerModal from './CameraManagerModal';
 import { createDefaultCamera } from '../../utils/cameraAnimator';
 import LayerShape from '../LayerShape';
 import type { Scene, Layer, Camera } from '../../app/scenes/types';
+import { useSceneStore } from '@/app/scenes';
 
 /**
  * SceneCanvas Component
@@ -33,6 +34,12 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   const [isEditingText, setIsEditingText] = useState(false);
   const [editingTextValue, setEditingTextValue] = useState('');
   const [editingLayerId, setEditingLayerId] = useState<string | null>(null);
+  
+  // Multi-selection support
+  const selectedLayerIds = useSceneStore((state) => state.selectedLayerIds);
+  const toggleLayerSelection = useSceneStore((state) => state.toggleLayerSelection);
+  const setSelectedLayerIds = useSceneStore((state) => state.setSelectedLayerIds);
+  const clearSelection = useSceneStore((state) => state.clearSelection);
 
   const ensureCamera = (cam: Partial<Camera>): Camera => ({
     id: cam.id ?? 'default-camera',
@@ -239,8 +246,12 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                 onMouseDown={(e) => {
                   const clickedOnEmpty = e.target === e.target.getStage();
                   if (clickedOnEmpty) {
-                    onSelectLayer(null);
-                    setSelectedCameraId('default-camera');
+                    // Clear selection if clicking on empty space (without Ctrl)
+                    if (!e.evt.ctrlKey && !e.evt.metaKey) {
+                      clearSelection();
+                      onSelectLayer(null);
+                      setSelectedCameraId('default-camera');
+                    }
                   }
                 }}
               >
@@ -262,16 +273,27 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                 {/* Layers - Au dessus */}
                 <KonvaLayer>
                   {sortedLayers.map((layer: Layer) => {
+                    const isLayerSelected = selectedLayerIds.includes(layer.id);
+                    const handleLayerSelect = (e?: any) => {
+                      const ctrlPressed = e?.evt?.ctrlKey || e?.evt?.metaKey;
+                      if (ctrlPressed) {
+                        // Multi-selection: toggle layer
+                        toggleLayerSelection(layer.id);
+                      } else {
+                        // Single selection: clear others
+                        onSelectLayer(layer.id);
+                        setSelectedLayerIds([layer.id]);
+                      }
+                      setSelectedCameraId('default-camera');
+                    };
+                    
                     if (layer.type === 'text') {
                       return (
                         <LayerText
                           key={layer.id}
                           layer={layer}
-                          isSelected={layer.id === selectedLayerId}
-                          onSelect={() => {
-                            onSelectLayer(layer.id);
-                            setSelectedCameraId('default-camera');
-                          }}
+                          isSelected={isLayerSelected}
+                          onSelect={handleLayerSelect}
                           onChange={onUpdateLayer as (layer: any) => void}
                           onStartEditing={() => {
                             setIsEditingText(true);
@@ -285,11 +307,8 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                         <LayerShape
                           key={layer.id}
                           layer={layer as any}
-                          isSelected={layer.id === selectedLayerId}
-                          onSelect={() => {
-                            onSelectLayer(layer.id);
-                            setSelectedCameraId('default-camera');
-                          }}
+                          isSelected={isLayerSelected}
+                          onSelect={handleLayerSelect}
                           onChange={onUpdateLayer as (layer: any) => void}
                         />
                       );
@@ -298,11 +317,8 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                         <LayerImage
                           key={layer.id}
                           layer={layer}
-                          isSelected={layer.id === selectedLayerId}
-                          onSelect={() => {
-                            onSelectLayer(layer.id);
-                            setSelectedCameraId('default-camera');
-                          }}
+                          isSelected={isLayerSelected}
+                          onSelect={handleLayerSelect}
                           onChange={onUpdateLayer as (layer: any) => void}
                         />
                       );

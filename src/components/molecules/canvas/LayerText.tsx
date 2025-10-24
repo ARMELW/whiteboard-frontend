@@ -5,7 +5,7 @@ import Konva from 'konva';
 export interface LayerTextProps {
   layer: any;
   isSelected: boolean;
-  onSelect: () => void;
+  onSelect: (e?: any) => void;
   onChange: (layer: any) => void;
   onStartEditing?: () => void;
   onStopEditing?: () => void;
@@ -111,8 +111,8 @@ export const LayerText: React.FC<LayerTextProps> = ({
         offsetY={textOffsets.offsetY}
         draggable
         dragBoundFunc={dragBoundFunc}
-        onClick={onSelect}
-        onTap={onSelect}
+        onClick={(e) => onSelect(e)}
+        onTap={(e) => onSelect(e)}
         onDblClick={handleDoubleClick}
         onDblTap={handleDoubleClick}
         ref={textRef}

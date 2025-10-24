@@ -12,6 +12,7 @@ interface SceneState {
   // UI state
   selectedSceneIndex: number;
   selectedLayerId: string | null;
+  selectedLayerIds: string[]; // Multi-selection support
   showAssetLibrary: boolean;
   showShapeToolbar: boolean;
   showCropModal: boolean;
@@ -42,6 +43,9 @@ interface SceneState {
   // UI Actions
   setSelectedSceneIndex: (index: number) => void;
   setSelectedLayerId: (id: string | null) => void;
+  setSelectedLayerIds: (ids: string[]) => void;
+  toggleLayerSelection: (id: string) => void; // For Ctrl+Click multi-selection
+  clearSelection: () => void;
   setShowAssetLibrary: (show: boolean) => void;
   setShowShapeToolbar: (show: boolean) => void;
   setShowCropModal: (show: boolean) => void;
@@ -56,6 +60,7 @@ interface SceneState {
 const initialUIState = {
   selectedSceneIndex: 0,
   selectedLayerId: null,
+  selectedLayerIds: [],
   showAssetLibrary: false,
   showShapeToolbar: false,
   showCropModal: false,
@@ -232,7 +237,23 @@ export const useSceneStore = create<SceneState>((set) => ({
   
   // UI Actions
   setSelectedSceneIndex: (index) => set({ selectedSceneIndex: index }),
-  setSelectedLayerId: (id) => set({ selectedLayerId: id }),
+  setSelectedLayerId: (id) => set({ selectedLayerId: id, selectedLayerIds: id ? [id] : [] }),
+  setSelectedLayerIds: (ids) => set({ 
+    selectedLayerIds: ids,
+    selectedLayerId: ids.length === 1 ? ids[0] : (ids.length > 0 ? ids[0] : null)
+  }),
+  toggleLayerSelection: (id) => set((state) => {
+    const currentIds = state.selectedLayerIds;
+    const isSelected = currentIds.includes(id);
+    const newIds = isSelected 
+      ? currentIds.filter(layerId => layerId !== id)
+      : [...currentIds, id];
+    return {
+      selectedLayerIds: newIds,
+      selectedLayerId: newIds.length === 1 ? newIds[0] : (newIds.length > 0 ? newIds[0] : null)
+    };
+  }),
+  clearSelection: () => set({ selectedLayerId: null, selectedLayerIds: [] }),
   setShowAssetLibrary: (show) => set({ showAssetLibrary: show }),
   setShowShapeToolbar: (show) => set({ showShapeToolbar: show }),
   setShowCropModal: (show) => set({ showCropModal: show }),

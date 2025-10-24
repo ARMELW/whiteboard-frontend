@@ -1,6 +1,7 @@
 import { useHistoryActions } from '../history/hooks/useHistoryActions';
 import { useScenesActions } from '../scenes/hooks/useScenesActions';
 import { Scene, Layer, Camera } from '../scenes/types';
+import { useSceneStore } from '../scenes/store';
 
 /**
  * Enhanced scenes actions that automatically record history
@@ -40,10 +41,47 @@ export const useScenesActionsWithHistory = () => {
       updateLayerWithHistory(params.sceneId, params.layer),
     deleteLayer: (params: { sceneId: string; layerId: string }) => 
       deleteLayerWithHistory(params.sceneId, params.layerId),
-    moveLayer: (params: { sceneId: string; from: number; to: number }) => 
-      moveLayerWithHistory(params.sceneId, params.from, params.to),
-    duplicateLayer: (params: { sceneId: string; layer: Layer }) => 
-      duplicateLayerWithHistory(params.sceneId, params.layer),
+    moveLayer: (params: { sceneId: string; layerId?: string; from?: number; to?: number; direction?: 'up' | 'down' }) => {
+      // Support both API styles: {from, to} indices or {layerId, direction}
+      if (params.layerId && params.direction) {
+        const scenes = useSceneStore.getState().scenes;
+        const scene = scenes.find(s => s.id === params.sceneId);
+        if (!scene?.layers) return;
+        
+        const currentIndex = scene.layers.findIndex(l => l.id === params.layerId);
+        if (currentIndex === -1) return;
+        
+        const newIndex = params.direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+        if (newIndex < 0 || newIndex >= scene.layers.length) return;
+        
+        moveLayerWithHistory(params.sceneId, currentIndex, newIndex);
+      } else if (params.from !== undefined && params.to !== undefined) {
+        moveLayerWithHistory(params.sceneId, params.from, params.to);
+      }
+    },
+    duplicateLayer: (params: { sceneId: string; layerId?: string; layer?: Layer }) => {
+      // Support both API styles: {layerId} or {layer}
+      let layerToDuplicate: Layer | undefined;
+      
+      if (params.layerId) {
+        const scenes = useSceneStore.getState().scenes;
+        const scene = scenes.find(s => s.id === params.sceneId);
+        layerToDuplicate = scene?.layers?.find(l => l.id === params.layerId);
+      } else if (params.layer) {
+        layerToDuplicate = params.layer;
+      }
+      
+      if (!layerToDuplicate) return;
+      
+      // Create a duplicate with a new ID
+      const newLayer = {
+        ...layerToDuplicate,
+        id: `${Date.now()}-${Math.random()}`,
+        name: `${layerToDuplicate.name} (copie)`,
+      };
+      
+      duplicateLayerWithHistory(params.sceneId, newLayer);
+    },
     
     // Property operations with history
     // Note: Using 'any' for value type to support the flexible property system

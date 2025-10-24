@@ -1,7 +1,8 @@
 import React, { useRef, useCallback } from 'react';
 import { Button } from '../../atoms';
 import { Upload, Plus } from 'lucide-react';
-import { useCurrentScene, useSceneStore, useScenesActions } from '@/app/scenes';
+import { useCurrentScene, useSceneStore } from '@/app/scenes';
+import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import { LayersListPanel } from '../../molecules/properties';
 import { useLayerCreation } from '../../molecules/layer-management';
 
@@ -10,7 +11,7 @@ const LayersTab: React.FC = () => {
   const selectedLayerId = useSceneStore((state) => state.selectedLayerId);
   const setSelectedLayerId = useSceneStore((state) => state.setSelectedLayerId);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { deleteLayer, moveLayer, duplicateLayer, addLayer } = useScenesActions();
+  const { deleteLayer, moveLayer, duplicateLayer, addLayer } = useScenesActionsWithHistory();
   const { createTextLayer, createImageLayer } = useLayerCreation({
     sceneWidth: 1920,
     sceneHeight: 1080,

@@ -3,7 +3,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { Stage, Layer as KonvaLayer } from 'react-konva';
 import { CameraToolbar, KonvaCamera, LayerImage, LayerText, FloatingToolbar } from '../molecules';
 import SceneHeader from './SceneHeader';
-import { useScenesActions } from '@/app/scenes';
+import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import CameraManagerModal from './CameraManagerModal';
 import { createDefaultCamera } from '../../utils/cameraAnimator';
 import LayerShape from '../LayerShape';
@@ -64,7 +64,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   const [selectedCameraId, setSelectedCameraId] = useState<string>('default-camera');
   const [hasInitialCentered, setHasInitialCentered] = useState(false);
   const [showCameraManager, setShowCameraManager] = useState(false);
-  const { updateScene } = useScenesActions();
+  const { updateScene } = useScenesActionsWithHistory();
 
   // Notify parent when camera selection changes
   React.useEffect(() => {

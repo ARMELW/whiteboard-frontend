@@ -46,8 +46,47 @@ export const useScenesActions = () => {
     updateLayerProperty: (sceneId: string, layerId: string, property: string, value: any) => updateLayerProperty(sceneId, layerId, property, value),
     deleteLayer: async (params: { sceneId: string; layerId: string }) => deleteLayer(params.sceneId, params.layerId),
     addCamera: async (params: { sceneId: string; camera: Camera }) => addCamera(params.sceneId, params.camera),
-    moveLayer: async (params: { sceneId: string; from: number; to: number }) => moveLayer(params.sceneId, params.from, params.to),
-    duplicateLayer: async (params: { sceneId: string; layer: Layer }) => duplicateLayer(params.sceneId, params.layer),
+    moveLayer: async (params: { sceneId: string; layerId?: string; from?: number; to?: number; direction?: 'up' | 'down' }) => {
+      // Support both API styles: {from, to} indices or {layerId, direction}
+      if (params.layerId && params.direction) {
+        const scenes = useSceneStore.getState().scenes;
+        const scene = scenes.find(s => s.id === params.sceneId);
+        if (!scene?.layers) return;
+        
+        const currentIndex = scene.layers.findIndex(l => l.id === params.layerId);
+        if (currentIndex === -1) return;
+        
+        const newIndex = params.direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+        if (newIndex < 0 || newIndex >= scene.layers.length) return;
+        
+        moveLayer(params.sceneId, currentIndex, newIndex);
+      } else if (params.from !== undefined && params.to !== undefined) {
+        moveLayer(params.sceneId, params.from, params.to);
+      }
+    },
+    duplicateLayer: async (params: { sceneId: string; layerId?: string; layer?: Layer }) => {
+      // Support both API styles: {layerId} or {layer}
+      let layerToDuplicate: Layer | undefined;
+      
+      if (params.layerId) {
+        const scenes = useSceneStore.getState().scenes;
+        const scene = scenes.find(s => s.id === params.sceneId);
+        layerToDuplicate = scene?.layers?.find(l => l.id === params.layerId);
+      } else if (params.layer) {
+        layerToDuplicate = params.layer;
+      }
+      
+      if (!layerToDuplicate) return;
+      
+      // Create a duplicate with a new ID
+      const newLayer = {
+        ...layerToDuplicate,
+        id: `${Date.now()}-${Math.random()}`,
+        name: `${layerToDuplicate.name} (copie)`,
+      };
+      
+      duplicateLayer(params.sceneId, newLayer);
+    },
     isCreating: loading,
     isUpdating: loading,
     isDeleting: loading,

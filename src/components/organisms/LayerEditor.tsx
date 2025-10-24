@@ -1,5 +1,6 @@
 import React, { useRef, useCallback } from 'react';
-import { useSceneStore, useScenesActions } from '../../app/scenes';
+import { useSceneStore } from '../../app/scenes';
+import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import {
   useLayerEditor,
   useLayerCreationHandlers
@@ -22,8 +23,8 @@ const LayerEditor: React.FC = () => {
   const selectedLayerId = useSceneStore((state) => state.selectedLayerId);
   const setSelectedLayerId = useSceneStore((state) => state.setSelectedLayerId);
 
-  // Use actions from useScenesActions hook for persistence
-  const { updateScene } = useScenesActions();
+  // Use actions from useScenesActionsWithHistory hook for history tracking
+  const { updateScene } = useScenesActionsWithHistory();
 
   const sceneWidth = 1920;
   const sceneHeight = 1080;

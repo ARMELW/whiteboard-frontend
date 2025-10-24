@@ -1,14 +1,15 @@
 import React from 'react';
 import { Eye, EyeOff, Trash2, Copy, MoveUp, MoveDown } from 'lucide-react';
-import { useCurrentScene, useSceneStore, useScenesActions } from '@/app/scenes';
+import { useCurrentScene, useSceneStore } from '@/app/scenes';
+import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 
 const LayersList: React.FC = () => {
   const scene = useCurrentScene();
   const selectedLayerId = useSceneStore((state) => state.selectedLayerId);
   const setSelectedLayerId = useSceneStore((state) => state.setSelectedLayerId);
   
-  // Use actions from useScenesActions hook instead of store
-  const { deleteLayer, moveLayer, duplicateLayer } = useScenesActions();
+  // Use actions from useScenesActionsWithHistory hook for history tracking
+  const { deleteLayer, moveLayer, duplicateLayer } = useScenesActionsWithHistory();
 
   if (!scene || !scene.layers || scene.layers.length === 0) {
     return (

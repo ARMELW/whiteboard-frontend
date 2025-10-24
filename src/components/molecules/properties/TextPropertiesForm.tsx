@@ -12,7 +12,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Slider } from '@/components/ui/slider';
 import { Type, Palette, AlignLeft } from 'lucide-react';
+import { AVAILABLE_FONTS, TEXT_CONSTRAINTS } from '@/app/text';
 
 export interface TextPropertiesFormProps {
   layer: any;
@@ -48,7 +50,7 @@ export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = ({
   };
 
   return (
-    <Accordion type="multiple" defaultValue={["content", "typography", "style"]} className="w-full">
+    <Accordion type="multiple" defaultValue={["content", "typography", "style", "spacing"]} className="w-full">
       {/* Text Content */}
       <AccordionItem value="content">
         <AccordionTrigger>
@@ -96,14 +98,11 @@ export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = ({
                   <SelectValue placeholder="Sélectionner une police" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Arial">Arial</SelectItem>
-                  <SelectItem value="Arial Black">Arial Black</SelectItem>
-                  <SelectItem value="Verdana">Verdana</SelectItem>
-                  <SelectItem value="Times New Roman">Times New Roman</SelectItem>
-                  <SelectItem value="Georgia">Georgia</SelectItem>
-                  <SelectItem value="Courier New">Courier New</SelectItem>
-                  <SelectItem value="Comic Sans MS">Comic Sans MS</SelectItem>
-                  <SelectItem value="Impact">Impact</SelectItem>
+                  {AVAILABLE_FONTS.map((font) => (
+                    <SelectItem key={font} value={font} style={{ fontFamily: font }}>
+                      {font}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -111,14 +110,12 @@ export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = ({
               <label className="block text-foreground text-xs mb-1.5">
                 Taille: <span className="font-mono">{textConfig.size || 48}px</span>
               </label>
-              <input
-                type="range"
-                min="12"
-                max="120"
-                step="1"
-                value={textConfig.size || 48}
-                onChange={(e) => handleTextConfigChange('size', Number(e.target.value))}
-                className="w-full"
+              <Slider
+                value={[textConfig.size || 48]}
+                onValueChange={([value]) => handleTextConfigChange('size', value)}
+                min={TEXT_CONSTRAINTS.fontSize.min}
+                max={TEXT_CONSTRAINTS.fontSize.max}
+                step={1}
               />
             </div>
             <div>
@@ -182,6 +179,44 @@ export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = ({
                   <SelectItem value="right">Droite</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+
+      {/* Spacing */}
+      <AccordionItem value="spacing">
+        <AccordionTrigger>
+          <div className="flex items-center gap-2">
+            <AlignLeft className="w-4 h-4" />
+            <span>Spacing</span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-foreground text-xs mb-1.5">
+                Interligne: <span className="font-mono">{(textConfig.line_height || 1.2).toFixed(1)}</span>
+              </label>
+              <Slider
+                value={[textConfig.line_height || 1.2]}
+                onValueChange={([value]) => handleTextConfigChange('line_height', value)}
+                min={TEXT_CONSTRAINTS.lineHeight.min}
+                max={TEXT_CONSTRAINTS.lineHeight.max}
+                step={TEXT_CONSTRAINTS.lineHeight.step}
+              />
+            </div>
+            <div>
+              <label className="block text-foreground text-xs mb-1.5">
+                Espacement lettres: <span className="font-mono">{textConfig.letter_spacing || 0}px</span>
+              </label>
+              <Slider
+                value={[textConfig.letter_spacing || 0]}
+                onValueChange={([value]) => handleTextConfigChange('letter_spacing', value)}
+                min={TEXT_CONSTRAINTS.letterSpacing.min}
+                max={TEXT_CONSTRAINTS.letterSpacing.max}
+                step={TEXT_CONSTRAINTS.letterSpacing.step}
+              />
             </div>
           </div>
         </AccordionContent>

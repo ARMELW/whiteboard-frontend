@@ -198,8 +198,14 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       // Delete or Backspace key - delete selected layers
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedLayerIds.length > 0) {
-        // Don't delete if user is editing text
+        // Don't delete if user is editing text in modal
         if (isEditingText) return;
+        
+        // Don't delete if user is typing in any input or textarea
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+          return;
+        }
         
         // Prevent default browser behavior
         e.preventDefault();

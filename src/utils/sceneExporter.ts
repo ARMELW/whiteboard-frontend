@@ -172,6 +172,8 @@ const renderImageLayer = (ctx, layer, cameraX, cameraY) => {
         const scale = layer.scale || 1.0;
         const opacity = layer.opacity !== undefined ? layer.opacity : 1.0;
         const rotation = layer.rotation || 0;
+        const flipX = layer.flipX || false;
+        const flipY = layer.flipY || false;
 
         ctx.save();
         ctx.globalAlpha = opacity;
@@ -180,29 +182,25 @@ const renderImageLayer = (ctx, layer, cameraX, cameraY) => {
         const imgWidth = img.width * scale;
         const imgHeight = img.height * scale;
         
-        // If there's rotation, we need to translate to center, rotate, then draw offset
+        // Translate to the center point for rotation and flipping
+        ctx.translate(layerX + imgWidth / 2, layerY + imgHeight / 2);
+        
+        // Apply rotation if needed
         if (rotation) {
-          // Translate to the center point of where the image will be
-          ctx.translate(layerX + imgWidth / 2, layerY + imgHeight / 2);
           ctx.rotate(rotation * Math.PI / 180);
-          // Draw image centered on this rotated point
-          ctx.drawImage(
-            img,
-            -imgWidth / 2,
-            -imgHeight / 2,
-            imgWidth,
-            imgHeight
-          );
-        } else {
-          // No rotation: simple top-left positioning
-          ctx.drawImage(
-            img,
-            layerX,
-            layerY,
-            imgWidth,
-            imgHeight
-          );
         }
+        
+        // Apply flip transformations
+        ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+        
+        // Draw image centered on the transformed point
+        ctx.drawImage(
+          img,
+          -imgWidth / 2,
+          -imgHeight / 2,
+          imgWidth,
+          imgHeight
+        );
         
         ctx.restore();
         resolve();

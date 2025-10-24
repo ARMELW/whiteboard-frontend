@@ -13,7 +13,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { FileText, Clock, Image as ImageIcon, Play } from 'lucide-react';
+import { FileText, Clock, Image as ImageIcon, Play, Music } from 'lucide-react';
+import SceneAudioControl from '../molecules/SceneAudioControl';
 
 interface ScenePropertiesPanelProps {
   scene: any;
@@ -22,7 +23,7 @@ interface ScenePropertiesPanelProps {
 
 const ScenePropertiesPanel: React.FC<ScenePropertiesPanelProps> = ({ scene, handleSceneChange }) => {
   return (
-    <Accordion type="multiple" defaultValue={["basic", "transitions", "timing"]} className="w-full">
+    <Accordion type="multiple" defaultValue={["basic", "transitions", "timing", "audio"]} className="w-full">
       {/* Basic Properties */}
       <AccordionItem value="basic">
         <AccordionTrigger>
@@ -131,6 +132,19 @@ const ScenePropertiesPanel: React.FC<ScenePropertiesPanelProps> = ({ scene, hand
               </div>
             </div>
           </div>
+        </AccordionContent>
+      </AccordionItem>
+
+      {/* Audio */}
+      <AccordionItem value="audio">
+        <AccordionTrigger>
+          <div className="flex items-center gap-2">
+            <Music className="w-4 h-4" />
+            <span>Audio</span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent>
+          <SceneAudioControl sceneId={scene.id} sceneAudio={scene.sceneAudio} />
         </AccordionContent>
       </AccordionItem>
     </Accordion>

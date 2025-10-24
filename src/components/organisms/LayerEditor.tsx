@@ -10,8 +10,29 @@ import LayerEditorModals from './LayerEditorModals';
 import LayerEditorCanvas from './LayerEditorCanvas';
 import { useCurrentScene } from '@/app/scenes';
 import { createDefaultCamera } from '@/utils/cameraAnimator';
+import type { Camera } from '@/app/scenes/types';
 
-const LayerEditor: React.FC = () => {
+interface LayerEditorProps {
+  sceneZoom?: number;
+  onSceneZoomChange?: (zoom: number) => void;
+  selectedCameraId?: string | null;
+  onCameraStateChange?: (state: {
+    cameras: Camera[];
+    selectedCameraId: string | null;
+    callbacks: {
+      onAddCamera?: () => void;
+      onToggleLock?: (cameraId: string) => void;
+      onSaveCameras?: (cameras: Camera[]) => Promise<void>;
+    };
+  }) => void;
+}
+
+const LayerEditor: React.FC<LayerEditorProps> = ({ 
+  sceneZoom,
+  onSceneZoomChange,
+  selectedCameraId: parentSelectedCameraId,
+  onCameraStateChange 
+}) => {
   const scene = useCurrentScene();
   const showShapeToolbar = useSceneStore((state) => state.showShapeToolbar);
   const setShowShapeToolbar = useSceneStore((state) => state.setShowShapeToolbar);
@@ -202,6 +223,10 @@ const LayerEditor: React.FC = () => {
         onSelectLayer={setSelectedLayerId}
         onSelectCamera={setSelectedCamera}
         onSave={handleSave}
+        sceneZoom={sceneZoom}
+        onSceneZoomChange={onSceneZoomChange}
+        selectedCameraId={parentSelectedCameraId}
+        onCameraStateChange={onCameraStateChange}
       />
     </div>
   );

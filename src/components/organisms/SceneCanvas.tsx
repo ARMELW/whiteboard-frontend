@@ -1,10 +1,8 @@
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Stage, Layer as KonvaLayer } from 'react-konva';
-import { CameraToolbar, KonvaCamera, LayerImage, LayerText, FloatingToolbar } from '../molecules';
-import SceneHeader from './SceneHeader';
+import { KonvaCamera, LayerImage, LayerText, FloatingToolbar } from '../molecules';
 import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
-import CameraManagerModal from './CameraManagerModal';
 import { createDefaultCamera } from '../../utils/cameraAnimator';
 import LayerShape from '../LayerShape';
 import type { Scene, Layer, Camera } from '../../app/scenes/types';
@@ -21,6 +19,18 @@ interface SceneCanvasProps {
   selectedLayerId: string | null;
   onSelectLayer: (layerId: string | null) => void;
   onSelectCamera?: (camera: Camera | undefined) => void;
+  sceneZoom?: number;
+  onSceneZoomChange?: (zoom: number) => void;
+  selectedCameraId?: string | null;
+  onCameraStateChange?: (state: {
+    cameras: Camera[];
+    selectedCameraId: string | null;
+    callbacks: {
+      onAddCamera?: () => void;
+      onToggleLock?: (cameraId: string) => void;
+      onSaveCameras?: (cameras: Camera[]) => Promise<void>;
+    };
+  }) => void;
 }
 
 const SceneCanvas: React.FC<SceneCanvasProps> = ({
@@ -30,6 +40,10 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   selectedLayerId,
   onSelectLayer,
   onSelectCamera,
+  sceneZoom: parentSceneZoom,
+  onSceneZoomChange,
+  selectedCameraId: parentSelectedCameraId,
+  onCameraStateChange,
 }) => {
   const [isEditingText, setIsEditingText] = useState(false);
   const [editingTextValue, setEditingTextValue] = useState('');
@@ -75,14 +89,44 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   const [showCameraManager, setShowCameraManager] = useState(false);
   const { updateScene } = useScenesActionsWithHistory();
 
+  // Use parent's selectedCameraId if provided, otherwise use local state
+  const effectiveSelectedCameraId = parentSelectedCameraId !== undefined ? parentSelectedCameraId : selectedCameraId;
+  
+  // Update local selectedCameraId when parent changes
+  useEffect(() => {
+    if (parentSelectedCameraId !== undefined && parentSelectedCameraId !== selectedCameraId) {
+      setSelectedCameraId(parentSelectedCameraId);
+    }
+  }, [parentSelectedCameraId, selectedCameraId]);
+
   // Notify parent when camera selection changes
   React.useEffect(() => {
     if (onSelectCamera) {
-      const selectedCamera = sceneCameras.find((cam: Camera) => cam.id === selectedCameraId);
+      const selectedCamera = sceneCameras.find((cam: Camera) => cam.id === effectiveSelectedCameraId);
       onSelectCamera(selectedCamera);
     }
-  }, [selectedCameraId, sceneCameras, onSelectCamera]);
+  }, [effectiveSelectedCameraId, sceneCameras, onSelectCamera]);
+  
   const [sceneZoom, setSceneZoom] = useState(0.8);
+  
+  // Use parent's sceneZoom if provided, otherwise use local state
+  const effectiveSceneZoom = parentSceneZoom !== undefined ? parentSceneZoom : sceneZoom;
+  
+  // Update local sceneZoom when parent changes
+  useEffect(() => {
+    if (parentSceneZoom !== undefined && parentSceneZoom !== sceneZoom) {
+      setSceneZoom(parentSceneZoom);
+    }
+  }, [parentSceneZoom, sceneZoom]);
+  
+  // Handle zoom change - call parent callback if provided
+  const handleSceneZoomChange = useCallback((newZoom: number) => {
+    if (onSceneZoomChange) {
+      onSceneZoomChange(newZoom);
+    } else {
+      setSceneZoom(newZoom);
+    }
+  }, [onSceneZoomChange]);
   const [hasCalculatedInitialZoom, setHasCalculatedInitialZoom] = useState(false);
   const canvasRef = useRef(null);
   const stageRef = useRef(null);
@@ -106,10 +150,10 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   React.useEffect(() => {
     if (!hasCalculatedInitialZoom && scrollContainerRef.current) {
       const fitZoom = calculateFitZoom();
-      setSceneZoom(Math.max(fitZoom, 1.0));
+      handleSceneZoomChange(Math.max(fitZoom, 1.0));
       setHasCalculatedInitialZoom(true);
     }
-  }, [hasCalculatedInitialZoom, calculateFitZoom]);
+  }, [hasCalculatedInitialZoom, calculateFitZoom, handleSceneZoomChange]);
 
   // Create a new camera
   const handleAddCamera = useCallback(() => {
@@ -179,6 +223,31 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
     }
   }, [scene.sceneCameras]);
 
+  // Propagate camera state upward to AnimationContainer
+  useEffect(() => {
+    if (onCameraStateChange) {
+      onCameraStateChange({
+        cameras: sceneCameras,
+        selectedCameraId: effectiveSelectedCameraId,
+        callbacks: {
+          onAddCamera: handleAddCamera,
+          onToggleLock: handleToggleLock,
+          onSaveCameras: async (updatedCameras: Camera[]) => {
+            setSceneCameras(updatedCameras);
+            onUpdateScene({ sceneCameras: updatedCameras });
+            try {
+              if (scene && scene.id) {
+                await updateScene({ id: scene.id, data: { sceneCameras: updatedCameras } });
+              }
+            } catch (err) {
+              console.error('Failed to persist cameras:', err);
+            }
+          }
+        }
+      });
+    }
+  }, [sceneCameras, effectiveSelectedCameraId, handleAddCamera, handleToggleLock, onCameraStateChange, onUpdateScene, scene, updateScene]);
+
   // Reset centering flag when scene ID changes
   React.useEffect(() => {
     setHasInitialCentered(false);
@@ -229,37 +298,11 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
     (a.z_index || 0) - (b.z_index || 0)
   );
 
-  const scaledSceneWidth = sceneWidth * sceneZoom;
-  const scaledSceneHeight = sceneHeight * sceneZoom;
+  const scaledSceneWidth = sceneWidth * effectiveSceneZoom;
+  const scaledSceneHeight = sceneHeight * effectiveSceneZoom;
 
   return (
     <div className="flex relative flex-col h-full bg-secondary">
-      {/* Camera Toolbar in header (now SceneHeader) */}
-      <SceneHeader
-        sceneCameras={sceneCameras}
-        selectedCameraId={selectedCameraId}
-        onAddCamera={handleAddCamera}
-        onSelectCamera={(id: string | null) => setSelectedCameraId(id || 'default-camera')}
-        onZoomCamera={() => { }}
-        onToggleLock={handleToggleLock}
-        sceneZoom={sceneZoom}
-        onSceneZoom={setSceneZoom}
-        onFitToViewport={() => setSceneZoom(calculateFitZoom())}
-        showCameraManager={showCameraManager}
-        setShowCameraManager={setShowCameraManager}
-        onSaveCameras={async (updated: any[]) => {
-          setSceneCameras(updated.map((c: any) => ({ ...c })));
-          onUpdateScene({ sceneCameras: updated });
-          try {
-            if (scene && scene.id) {
-              await updateScene({ id: scene.id, data: { sceneCameras: updated } });
-            }
-          } catch (err) {
-            console.error('Failed to persist cameras:', err);
-          }
-        }}
-      />
-
       <div className="flex flex-1 min-h-0 bg-white" style={{ height: '100%' }}>
         {/* Canvas Area - Centered viewport */}
         <div
@@ -288,8 +331,8 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
               <Stage
                 width={sceneWidth}
                 height={sceneHeight}
-                scaleX={sceneZoom}
-                scaleY={sceneZoom}
+                scaleX={effectiveSceneZoom}
+                scaleY={effectiveSceneZoom}
 
                 style={{
                   width: `${scaledSceneWidth}px`,
@@ -486,8 +529,8 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
         if (!selectedLayer || (selectedLayer.type !== 'text' && selectedLayer.type !== 'image')) return null;
 
         // Calculate position based on layer position and zoom
-        const layerX = (selectedLayer.position?.x || 0) * sceneZoom;
-        const layerY = (selectedLayer.position?.y || 0) * sceneZoom;
+        const layerX = (selectedLayer.position?.x || 0) * effectiveSceneZoom;
+        const layerY = (selectedLayer.position?.y || 0) * effectiveSceneZoom;
         
         // Adjust for canvas position in viewport
         const canvasContainer = scrollContainerRef.current;

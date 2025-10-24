@@ -19,6 +19,16 @@ export const API_ENDPOINTS = {
     detail: (id: string) => `${prefix}/assets/${id}`,
     delete: (id: string) => `${prefix}/assets/${id}`,
   },
+  templates: {
+    base: `${prefix}/templates`,
+    list: `${prefix}/templates`,
+    create: `${prefix}/templates`,
+    detail: (id: string) => `${prefix}/templates/${id}`,
+    update: (id: string) => `${prefix}/templates/${id}`,
+    delete: (id: string) => `${prefix}/templates/${id}`,
+    export: (id: string) => `${prefix}/templates/${id}/export`,
+    import: `${prefix}/templates/import`,
+  },
   export: {
     config: `${prefix}/export/config`,
     scene: (id: string) => `${prefix}/export/scene/${id}`,

@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Button, Card } from '../atoms';
-import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical, Music } from 'lucide-react';
+import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical, Music, BookmarkPlus } from 'lucide-react';
 import { useScenes, useSceneStore } from '@/app/scenes';
 import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import {
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { THUMBNAIL_CONFIG } from '@/utils/sceneThumbnail';
 import EmbeddedAssetLibraryPanel from './EmbeddedAssetLibraryPanel';
+import SaveAsTemplateDialog from './SaveAsTemplateDialog';
 
 const ScenePanel: React.FC = () => {
   // Pour ouvrir asset library et shape toolbar
@@ -22,6 +23,10 @@ const ScenePanel: React.FC = () => {
   const { scenes } = useScenes();
   const selectedSceneIndex = useSceneStore((state) => state.selectedSceneIndex);
   const setSelectedSceneIndex = useSceneStore((state) => state.setSelectedSceneIndex);
+  
+  const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false);
+  const [sceneToSaveAsTemplate, setSceneToSaveAsTemplate] = useState<any>(null);
+  
   // Remove imageInputRef and importInputRef, handled in asset library
   
   // Use actions from useScenesActionsWithHistory hook for history tracking
@@ -66,6 +71,12 @@ const ScenePanel: React.FC = () => {
       setSelectedSceneIndex(Math.max(0, scenes.length - 2));
     }
   }, [scenes, selectedSceneIndex, deleteScene, setSelectedSceneIndex]);
+
+  const handleSaveAsTemplate = useCallback((index: number) => {
+    const scene = scenes[index];
+    setSceneToSaveAsTemplate(scene);
+    setShowSaveAsTemplate(true);
+  }, [scenes]);
 
   // Handle image file selection for direct upload/crop
     // Removed image file handling as it is now managed in EmbeddedAssetLibraryPanel
@@ -187,6 +198,15 @@ const ScenePanel: React.FC = () => {
                       <Copy className="mr-2 h-4 w-4" />
                       Dupliquer
                     </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSaveAsTemplate(index);
+                      }}
+                    >
+                      <BookmarkPlus className="mr-2 h-4 w-4" />
+                      Sauvegarder comme template
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={(e) => {
@@ -219,6 +239,18 @@ const ScenePanel: React.FC = () => {
         </Card>
         </div>
       </div>
+      
+      {/* Save as Template Dialog */}
+      {showSaveAsTemplate && sceneToSaveAsTemplate && (
+        <SaveAsTemplateDialog
+          isOpen={showSaveAsTemplate}
+          onClose={() => {
+            setShowSaveAsTemplate(false);
+            setSceneToSaveAsTemplate(null);
+          }}
+          scene={sceneToSaveAsTemplate}
+        />
+      )}
     </div>
   );
 };

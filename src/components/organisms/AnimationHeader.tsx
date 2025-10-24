@@ -1,9 +1,19 @@
 import React, { useEffect, useCallback } from 'react';
-import { Save, Download, Undo, Redo, FileVideo, Play, Clock } from 'lucide-react';
+import { Save, Download, Undo, Redo, FileVideo, Play, Clock, Library, BookmarkPlus } from 'lucide-react';
 import { useSceneStore } from '@/app/scenes';
 import { useHistory } from '@/app/history';
 
-const AnimationHeader: React.FC = () => {
+interface AnimationHeaderProps {
+  onOpenTemplateLibrary: () => void;
+  onSaveAsTemplate: () => void;
+  hasCurrentScene: boolean;
+}
+
+const AnimationHeader: React.FC<AnimationHeaderProps> = ({
+  onOpenTemplateLibrary,
+  onSaveAsTemplate,
+  hasCurrentScene,
+}) => {
   const setActiveTab = useSceneStore((state) => state.setActiveTab);
   const showHistoryPanel = useSceneStore((state) => state.showHistoryPanel);
   const setShowHistoryPanel = useSceneStore((state) => state.setShowHistoryPanel);
@@ -99,6 +109,27 @@ const AnimationHeader: React.FC = () => {
 
       {/* Right: Save & Export */}
       <div className="flex items-center gap-2">
+        <button
+          onClick={onOpenTemplateLibrary}
+          className="flex items-center gap-2 px-3 py-2 hover:bg-gray-800 text-gray-300 rounded transition-colors"
+          title="Bibliothèque de templates"
+        >
+          <Library className="w-4 h-4" />
+          <span className="text-sm">Templates</span>
+        </button>
+        <button
+          onClick={onSaveAsTemplate}
+          disabled={!hasCurrentScene}
+          className={`flex items-center gap-2 px-3 py-2 rounded transition-colors ${
+            hasCurrentScene
+              ? 'hover:bg-gray-800 text-gray-300'
+              : 'text-gray-500 cursor-not-allowed'
+          }`}
+          title="Sauvegarder comme template"
+        >
+          <BookmarkPlus className="w-4 h-4" />
+        </button>
+        <div className="h-6 w-px bg-gray-700 mx-2" />
         <button
           className="flex items-center gap-2 px-3 py-2 hover:bg-gray-800 text-gray-300 rounded transition-colors"
         >

@@ -114,7 +114,7 @@ export const LayerText: React.FC<LayerTextProps> = ({
         opacity={layer.opacity || 1.0}
         offsetX={textOffsets.offsetX}
         offsetY={textOffsets.offsetY}
-        draggable
+        draggable={!layer.locked}
         dragBoundFunc={dragBoundFunc}
         onClick={(e) => onSelect(e)}
         onTap={(e) => onSelect(e)}
@@ -182,7 +182,7 @@ export const LayerText: React.FC<LayerTextProps> = ({
           if (typeof onSelect === 'function') onSelect();
         }}
       />
-      {isSelected && (
+      {isSelected && !layer.locked && (
         <Transformer
           ref={transformerRef}
           rotateEnabled={true}

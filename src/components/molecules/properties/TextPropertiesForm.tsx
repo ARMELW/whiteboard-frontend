@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Select,
   SelectContent,
@@ -13,8 +13,10 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Slider } from '@/components/ui/slider';
-import { Type, Palette, AlignLeft } from 'lucide-react';
+import { Type, Palette, AlignLeft, Zap, Lock, Unlock, Hand } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { AVAILABLE_FONTS, TEXT_CONSTRAINTS } from '@/app/text';
+import { HandLibraryDialog, HandType } from '@/components/organisms/HandLibraryDialog';
 
 export interface TextPropertiesFormProps {
   layer: any;
@@ -25,6 +27,8 @@ export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = ({
   layer,
   onPropertyChange
 }) => {
+  const [showHandLibrary, setShowHandLibrary] = useState(false);
+  
   if (!layer || !layer.text_config) return null;
 
   const textConfig = layer.text_config;
@@ -49,8 +53,25 @@ export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = ({
     return colorArr || '#000000';
   };
 
+  const handleHandSelect = (handType: HandType) => {
+    onPropertyChange(layerId, 'hand_type', handType);
+  };
+
+  const getHandLabel = (handType?: string) => {
+    switch (handType) {
+      case 'hand_1': return 'Main droite - Claire';
+      case 'hand_2': return 'Main droite - Medium';
+      case 'hand_3': return 'Main droite - Foncée';
+      case 'hand_4': return 'Main gauche - Claire';
+      case 'hand_5': return 'Main gauche - Medium';
+      case 'hand_6': return 'Main gauche - Foncée';
+      default: return 'Aucune main';
+    }
+  };
+
   return (
-    <Accordion type="multiple" defaultValue={["content", "typography", "style", "spacing"]} className="w-full">
+    <>
+    <Accordion type="multiple" defaultValue={["content", "typography", "style", "spacing", "animation"]} className="w-full">
       {/* Text Content */}
       <AccordionItem value="content">
         <AccordionTrigger>
@@ -71,6 +92,23 @@ export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = ({
                 className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm h-20 resize-none focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="Entrez votre texte ici..."
               />
+            </div>
+            <div className="flex items-center justify-between pt-2">
+              <label className="text-foreground text-xs font-medium">
+                {layer.locked ? 'Verrouillé' : 'Déverrouillé'}
+              </label>
+              <Button
+                variant={layer.locked ? "default" : "outline"}
+                size="sm"
+                onClick={() => onPropertyChange(layerId, 'locked', !layer.locked)}
+                className="h-8 px-3"
+              >
+                {layer.locked ? (
+                  <><Lock className="w-4 h-4 mr-1" /> Verrouillé</>
+                ) : (
+                  <><Unlock className="w-4 h-4 mr-1" /> Déverrouillé</>
+                )}
+              </Button>
             </div>
           </div>
         </AccordionContent>
@@ -221,6 +259,84 @@ export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = ({
           </div>
         </AccordionContent>
       </AccordionItem>
+
+      {/* Animation */}
+      <AccordionItem value="animation">
+        <AccordionTrigger>
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4" />
+            <span>Animation</span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-foreground text-xs mb-1.5">Type d'animation</label>
+              <Select
+                value={layer.animation_type || 'none'}
+                onValueChange={(value) => onPropertyChange(layerId, 'animation_type', value)}
+              >
+                <SelectTrigger className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm">
+                  <SelectValue placeholder="Sélectionner un type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucune</SelectItem>
+                  <SelectItem value="draw">Draw (écriture)</SelectItem>
+                  <SelectItem value="fade">Fade In</SelectItem>
+                  <SelectItem value="slide">Slide</SelectItem>
+                  <SelectItem value="typewriter">Typewriter</SelectItem>
+                  <SelectItem value="bounce">Bounce</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-foreground text-xs mb-1.5">
+                Vitesse d'animation: <span className="font-mono">{layer.animation_speed || 1}x</span>
+              </label>
+              <Slider
+                value={[layer.animation_speed || 1]}
+                onValueChange={([value]) => onPropertyChange(layerId, 'animation_speed', value)}
+                min={0.1}
+                max={3}
+                step={0.1}
+              />
+            </div>
+            <div>
+              <label className="block text-foreground text-xs mb-1.5">
+                Délai de fin (secondes): <span className="font-mono">{layer.end_delay || 0}s</span>
+              </label>
+              <Slider
+                value={[layer.end_delay || 0]}
+                onValueChange={([value]) => onPropertyChange(layerId, 'end_delay', value)}
+                min={0}
+                max={5}
+                step={0.1}
+              />
+              <p className="text-gray-500 text-xs mt-1">Pause après l'animation</p>
+            </div>
+            <div>
+              <label className="block text-foreground text-xs mb-1.5">Type de main</label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHandLibrary(true)}
+                className="w-full justify-start"
+              >
+                <Hand className="w-4 h-4 mr-2" />
+                {getHandLabel(layer.hand_type)}
+              </Button>
+              <p className="text-gray-500 text-xs mt-1">Main utilisée pour l'animation d'écriture</p>
+            </div>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
     </Accordion>
+    <HandLibraryDialog
+      isOpen={showHandLibrary}
+      onClose={() => setShowHandLibrary(false)}
+      onSelectHand={handleHandSelect}
+      currentHandType={(layer.hand_type as HandType) || HandType.NONE}
+    />
+    </>
   );
 };

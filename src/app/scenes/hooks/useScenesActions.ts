@@ -88,12 +88,17 @@ export const useScenesActions = () => {
       
       if (!layerToDuplicate) return;
       
-      // Create a duplicate with a new ID
-      const newLayer = {
-        ...layerToDuplicate,
-        id: `${Date.now()}-${Math.random()}`,
-        name: `${layerToDuplicate.name} (copie)`,
-      };
+      // Deep copy the layer to ensure all nested properties are duplicated
+      const newLayer: Layer = JSON.parse(JSON.stringify(layerToDuplicate));
+      newLayer.id = `${Date.now()}-${Math.random()}`;
+      newLayer.name = `${layerToDuplicate.name} (copie)`;
+      // Offset position slightly to make it visible
+      if (newLayer.position) {
+        newLayer.position = {
+          x: newLayer.position.x + 20,
+          y: newLayer.position.y + 20
+        };
+      }
       
       // Insert the duplicated layer right after the original layer
       duplicateLayer(params.sceneId, newLayer, layerIndex);

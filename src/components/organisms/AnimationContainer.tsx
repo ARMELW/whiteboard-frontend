@@ -73,7 +73,9 @@ const AnimationContainer: React.FC = () => {
         
         {/* Bottom: Scenes Panel */}
         <div className="h-48 border-t border-gray-700 overflow-y-auto flex-shrink-0 bg-gray-100">
-          <ScenePanel />
+          <ScenePanel 
+            onOpenTemplateLibrary={() => setShowTemplateLibrary(true)}
+          />
         </div>
       </div>
     </div>

@@ -63,7 +63,8 @@ Cette PR adresse les 5 points d'amélioration mentionnés dans l'issue "amelio" 
 
 **Changements**:
 - Suppression complète du tab "Soundtrack" du panneau de droite
-- Retrait du composant `AudioManager` du PropertiesPanel
+- Retrait du composant `AudioManager` du PropertiesPanel (import et usage dans le JSX)
+- Retrait de l'import de l'icône `Music` de lucide-react
 - L'audio reste accessible via le tab "Audio" dans le panneau de gauche (ContextTabs)
 
 **Bénéfices**:
@@ -145,6 +146,6 @@ Les captures d'écran devraient montrer:
 
 ---
 
-**Date**: 2025-10-24
+**Date**: 2024-10-24
 **Branch**: copilot/refactor-upload-media-and-ui
-**Commit**: 283f34e
+**Commit**: f3a936d

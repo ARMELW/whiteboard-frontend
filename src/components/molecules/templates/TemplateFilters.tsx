@@ -16,7 +16,7 @@ interface TemplateFiltersProps {
 }
 
 const TYPE_OPTIONS = [
-  { value: '', label: 'Tous les types' },
+  { value: 'all', label: 'Tous les types' },
   { value: TemplateType.EDUCATION, label: 'Éducatif' },
   { value: TemplateType.MARKETING, label: 'Marketing' },
   { value: TemplateType.PRESENTATION, label: 'Présentation' },
@@ -26,7 +26,7 @@ const TYPE_OPTIONS = [
 ];
 
 const STYLE_OPTIONS = [
-  { value: '', label: 'Tous les styles' },
+  { value: 'all', label: 'Tous les styles' },
   { value: TemplateStyle.MINIMAL, label: 'Minimaliste' },
   { value: TemplateStyle.COLORFUL, label: 'Coloré' },
   { value: TemplateStyle.PROFESSIONAL, label: 'Professionnel' },
@@ -46,14 +46,14 @@ const TemplateFilters: React.FC<TemplateFiltersProps> = ({
   const handleTypeChange = (value: string) => {
     onFiltersChange({
       ...filters,
-      type: value ? (value as TemplateType) : undefined,
+      type: value !== 'all' ? (value as TemplateType) : undefined,
     });
   };
 
   const handleStyleChange = (value: string) => {
     onFiltersChange({
       ...filters,
-      style: value ? (value as TemplateStyle) : undefined,
+      style: value !== 'all' ? (value as TemplateStyle) : undefined,
     });
   };
 
@@ -74,7 +74,7 @@ const TemplateFilters: React.FC<TemplateFiltersProps> = ({
       {/* Type and Style Filters */}
       <div className="grid grid-cols-2 gap-3">
         <Select
-          value={filters.type || ''}
+          value={filters.type || 'all'}
           onValueChange={handleTypeChange}
         >
           <SelectTrigger>
@@ -90,7 +90,7 @@ const TemplateFilters: React.FC<TemplateFiltersProps> = ({
         </Select>
 
         <Select
-          value={filters.style || ''}
+          value={filters.style || 'all'}
           onValueChange={handleStyleChange}
         >
           <SelectTrigger>

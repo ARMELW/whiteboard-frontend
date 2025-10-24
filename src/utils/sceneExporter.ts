@@ -188,7 +188,7 @@ const renderImageLayer = (ctx, layer, cameraX, cameraY) => {
           ctx.translate(layerX + imgWidth / 2, layerY + imgHeight / 2);
           
           // Apply rotation if needed
-          if (rotation) {
+          if (rotation !== 0) {
             ctx.rotate(rotation * Math.PI / 180);
           }
           

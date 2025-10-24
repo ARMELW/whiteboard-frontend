@@ -46,6 +46,9 @@ export const useScenesActionsWithHistory = () => {
       duplicateLayerWithHistory(params.sceneId, params.layer),
     
     // Property operations with history
+    // Note: Using 'any' for value type to support the flexible property system
+    // where layers can have dynamic properties. Consider using a more specific
+    // union type if the set of possible properties becomes well-defined.
     updateSceneProperty: (sceneId: string, property: string, value: any) => 
       updateScenePropertyWithHistory(sceneId, property, value),
     updateLayerProperty: (sceneId: string, layerId: string, property: string, value: any) => 

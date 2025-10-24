@@ -105,7 +105,7 @@
 3. Switch back to Scene A
 4. Press Ctrl+Z
 5. Verify the last action (Scene B's layer) is undone
-6. Not Scene A's layer
+6. Scene A's layer should not be undone
 
 **Expected Result:** History should work across all scenes, undoing in chronological order
 

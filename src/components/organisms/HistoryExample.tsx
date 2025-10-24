@@ -15,20 +15,26 @@ const HistoryExample: React.FC = () => {
   const currentScene = useCurrentScene();
   const { addLayer, deleteLayer, updateLayerProperty } = useScenesActionsWithHistory();
   
+  // Helper function to create a test layer
+  const createTestLayer = (name: string, zIndex: number) => ({
+    id: uuidv4(),
+    name,
+    type: LayerType.TEXT,
+    mode: LayerMode.STATIC,
+    position: { x: 0.5, y: 0.5 },
+    z_index: zIndex,
+    scale: 1,
+    opacity: 1,
+    text: 'Test Layer',
+  });
+  
   const handleAddTestLayer = () => {
     if (!currentScene) return;
     
-    const newLayer = {
-      id: uuidv4(),
-      name: `Test Layer ${Date.now()}`,
-      type: LayerType.TEXT,
-      mode: LayerMode.STATIC,
-      position: { x: 0.5, y: 0.5 },
-      z_index: (currentScene.layers?.length || 0) + 1,
-      scale: 1,
-      opacity: 1,
-      text: 'Test Layer',
-    };
+    const newLayer = createTestLayer(
+      `Test Layer ${Date.now()}`,
+      (currentScene.layers?.length || 0) + 1
+    );
     
     // This will add the layer AND record it in history
     addLayer({ sceneId: currentScene.id, layer: newLayer });

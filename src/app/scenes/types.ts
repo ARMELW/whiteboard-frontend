@@ -66,6 +66,14 @@ export interface MultiTimeline {
   [key: string]: any;
 }
 
+export interface SceneAudioConfig {
+  fileId: string;
+  fileName: string;
+  fileUrl: string;
+  volume: number;
+  duration: number;
+}
+
 export interface AudioConfig {
   [key: string]: any;
 }
@@ -83,6 +91,7 @@ export interface Scene {
   sceneCameras: Camera[];
   multiTimeline: MultiTimeline;
   audio: AudioConfig;
+  sceneAudio?: SceneAudioConfig | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -99,4 +108,5 @@ export interface ScenePayload {
   sceneCameras?: Camera[];
   multiTimeline?: MultiTimeline;
   audio?: AudioConfig;
+  sceneAudio?: SceneAudioConfig | null;
 }

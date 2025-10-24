@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 // scenesService calls removed from store. Consumers must call API and update store via setters.
-import { Scene, Layer, Camera } from './types';
+import { Scene, Layer, Camera, SceneAudioConfig } from './types';
 import { generateSceneThumbnail } from '../../utils/sceneThumbnail';
 
 interface SceneState {
@@ -34,6 +34,10 @@ interface SceneState {
   moveLayer: (sceneId: string, from: number, to: number) => void;
   duplicateLayer: (sceneId: string, layer: Layer) => void;
   updateSceneThumbnail: (sceneId: string) => Promise<void>;
+  
+  // Audio Actions
+  setSceneAudio: (sceneId: string, audio: SceneAudioConfig | null) => void;
+  updateSceneAudioVolume: (sceneId: string, volume: number) => void;
   
   // UI Actions
   setSelectedSceneIndex: (index: number) => void;
@@ -183,6 +187,24 @@ export const useSceneStore = create<SceneState>((set) => ({
         scenes: state.scenes.map(s => s.id === sceneId ? { ...s, sceneImage: thumbnail } : s)
       });
     }
+  },
+  
+  // Audio Actions
+  setSceneAudio: (sceneId: string, audio: SceneAudioConfig | null) => {
+    set(state => ({
+      scenes: state.scenes.map(s => s.id === sceneId ? { ...s, sceneAudio: audio } : s)
+    }));
+  },
+  
+  updateSceneAudioVolume: (sceneId: string, volume: number) => {
+    set(state => ({
+      scenes: state.scenes.map(s => {
+        if (s.id === sceneId && s.sceneAudio) {
+          return { ...s, sceneAudio: { ...s.sceneAudio, volume } };
+        }
+        return s;
+      })
+    }));
   },
   
   // UI Actions

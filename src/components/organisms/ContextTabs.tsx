@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Image, Layers as LayersIcon, Type } from 'lucide-react';
+import { Image, Layers as LayersIcon, Type, Music } from 'lucide-react';
 import AssetsTab from './tabs/AssetsTab';
 import LayersTab from './tabs/LayersTab';
 import TextTab from './tabs/TextTab';
+import AudioTab from './tabs/AudioTab';
 
-type TabType = 'assets' | 'layers' | 'text';
+type TabType = 'assets' | 'layers' | 'text' | 'audio';
 
 const ContextTabs: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('layers');
@@ -13,6 +14,7 @@ const ContextTabs: React.FC = () => {
     { id: 'assets' as TabType, label: 'Assets', icon: Image },
     { id: 'layers' as TabType, label: 'Layers', icon: LayersIcon },
     { id: 'text' as TabType, label: 'Text', icon: Type },
+    { id: 'audio' as TabType, label: 'Audio', icon: Music },
   ];
 
   return (
@@ -43,6 +45,7 @@ const ContextTabs: React.FC = () => {
         {activeTab === 'assets' && <AssetsTab />}
         {activeTab === 'layers' && <LayersTab />}
         {activeTab === 'text' && <TextTab />}
+        {activeTab === 'audio' && <AudioTab />}
       </div>
     </div>
   );

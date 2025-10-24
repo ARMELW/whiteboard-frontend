@@ -79,42 +79,51 @@ export const createQuickPreview = async (
   // Start recording
   mediaRecorder.start();
 
-  // Render each scene
-  for (const scene of scenes) {
-    try {
-      // Get scene duration (use provided duration or default)
-      const duration = (scene.duration || sceneDuration) * 1000; // Convert to ms
-      
-      // Export scene as image
-      const sceneDataUrl = await exportSceneImage(scene, {
-        sceneWidth: width,
-        sceneHeight: height,
-        background: scene.backgroundColor || '#FFFFFF'
-      });
+  // Render each scene frame by frame
+  const renderScenes = async () => {
+    for (const scene of scenes) {
+      try {
+        // Get scene duration (use provided duration or default)
+        const duration = (scene.duration || sceneDuration) * 1000; // Convert to ms
+        
+        // Export scene as image
+        const sceneDataUrl = await exportSceneImage(scene, {
+          sceneWidth: width,
+          sceneHeight: height,
+          background: scene.backgroundColor || '#FFFFFF'
+        });
 
-      // Load the scene image
-      const img = await loadImage(sceneDataUrl);
-      
-      // Calculate frames for this scene
-      const frames = Math.ceil((duration / 1000) * fps);
-      
-      // Render frames for this scene
-      for (let i = 0; i < frames; i++) {
-        // Clear canvas
-        ctx.fillStyle = scene.backgroundColor || '#FFFFFF';
-        ctx.fillRect(0, 0, width, height);
+        // Load the scene image
+        const img = await loadImage(sceneDataUrl);
         
-        // Draw scene image
-        ctx.drawImage(img, 0, 0, width, height);
+        // Calculate frames for this scene
+        const frames = Math.ceil((duration / 1000) * fps);
+        const frameDuration = 1000 / fps;
         
-        // Wait for next frame
-        await new Promise(resolve => setTimeout(resolve, 1000 / fps));
+        // Render frames for this scene
+        for (let i = 0; i < frames; i++) {
+          // Clear canvas
+          ctx.fillStyle = scene.backgroundColor || '#FFFFFF';
+          ctx.fillRect(0, 0, width, height);
+          
+          // Draw scene image
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Wait for next frame - important for MediaRecorder
+          await new Promise(resolve => setTimeout(resolve, frameDuration));
+        }
+      } catch (error) {
+        console.error('Error rendering scene:', error);
+        // Continue with next scene
       }
-    } catch (error) {
-      console.error('Error rendering scene:', error);
-      // Continue with next scene
     }
-  }
+  };
+
+  // Render all scenes
+  await renderScenes();
+
+  // Wait a bit for the last frame to be captured
+  await new Promise(resolve => setTimeout(resolve, 100));
 
   // Stop recording
   mediaRecorder.stop();

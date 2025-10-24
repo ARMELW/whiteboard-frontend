@@ -57,7 +57,7 @@ const MediaLibrary: React.FC = () => {
       try {
         const results = await searchAssetsAsync({
           tags: selectedTags.length ? selectedTags : undefined,
-          query: debouncedSearchQuery || undefined,
+          query: debouncedSearchQuery ? debouncedSearchQuery : undefined,
           sortBy: 'uploadDate',
           sortOrder: 'desc'
         });

@@ -51,7 +51,7 @@ import {
 interface LayerShapeProps {
   layer: ShapeLayer;
   isSelected: boolean;
-  onSelect: () => void;
+  onSelect: (e?: any) => void;
   onChange: (layer: ShapeLayer) => void;
 }
 
@@ -72,8 +72,8 @@ const LayerShape: React.FC<LayerShapeProps> = ({ layer, isSelected, onSelect, on
   const commonProps = {
     ref: shapeRef,
     draggable: true,
-    onClick: onSelect,
-    onTap: onSelect,
+    onClick: (e: any) => onSelect(e),
+    onTap: (e: any) => onSelect(e),
     opacity: layer.opacity || 1.0,
     onDragEnd: handleDragEnd,
     onTransformEnd: handleTransformEnd,

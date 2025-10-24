@@ -8,6 +8,7 @@ import CameraManagerModal from './CameraManagerModal';
 import { createDefaultCamera } from '../../utils/cameraAnimator';
 import LayerShape from '../LayerShape';
 import type { Scene, Layer, Camera } from '../../app/scenes/types';
+import { useSceneStore } from '@/app/scenes';
 
 /**
  * SceneCanvas Component
@@ -33,6 +34,14 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   const [isEditingText, setIsEditingText] = useState(false);
   const [editingTextValue, setEditingTextValue] = useState('');
   const [editingLayerId, setEditingLayerId] = useState<string | null>(null);
+  
+  // Multi-selection support
+  const selectedLayerIds = useSceneStore((state) => state.selectedLayerIds);
+  const toggleLayerSelection = useSceneStore((state) => state.toggleLayerSelection);
+  const setSelectedLayerIds = useSceneStore((state) => state.setSelectedLayerIds);
+  const clearSelection = useSceneStore((state) => state.clearSelection);
+  
+  const { deleteLayer } = useScenesActionsWithHistory();
 
   const ensureCamera = (cam: Partial<Camera>): Camera => ({
     id: cam.id ?? 'default-camera',
@@ -183,6 +192,31 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
       setHasInitialCentered(true);
     }
   }, [selectedCameraId, hasInitialCentered]);
+  
+  // Handle keyboard shortcuts for multi-selection deletion
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Delete or Backspace key - delete selected layers
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedLayerIds.length > 0) {
+        // Don't delete if user is editing text
+        if (isEditingText) return;
+        
+        // Prevent default browser behavior
+        e.preventDefault();
+        
+        // Delete all selected layers
+        selectedLayerIds.forEach((layerId) => {
+          deleteLayer({ sceneId: scene.id, layerId });
+        });
+        
+        // Clear selection
+        clearSelection();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedLayerIds, scene.id, deleteLayer, clearSelection, isEditingText]);
 
   // Sort layers by z_index for rendering
   const sortedLayers = [...(scene.layers || [])].sort((a: Layer, b: Layer) =>
@@ -239,8 +273,12 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                 onMouseDown={(e) => {
                   const clickedOnEmpty = e.target === e.target.getStage();
                   if (clickedOnEmpty) {
-                    onSelectLayer(null);
-                    setSelectedCameraId('default-camera');
+                    // Clear selection if clicking on empty space (without Ctrl)
+                    if (!e.evt.ctrlKey && !e.evt.metaKey) {
+                      clearSelection();
+                      onSelectLayer(null);
+                      setSelectedCameraId('default-camera');
+                    }
                   }
                 }}
               >
@@ -262,22 +300,35 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                 {/* Layers - Au dessus */}
                 <KonvaLayer>
                   {sortedLayers.map((layer: Layer) => {
+                    const isLayerSelected = selectedLayerIds.includes(layer.id);
+                    const handleLayerSelect = (e?: any) => {
+                      const ctrlPressed = e?.evt?.ctrlKey || e?.evt?.metaKey;
+                      if (ctrlPressed) {
+                        // Multi-selection: toggle layer
+                        toggleLayerSelection(layer.id);
+                      } else {
+                        // Single selection: clear others
+                        onSelectLayer(layer.id);
+                        setSelectedLayerIds([layer.id]);
+                      }
+                      setSelectedCameraId('default-camera');
+                    };
+                    
                     if (layer.type === 'text') {
                       return (
                         <LayerText
                           key={layer.id}
                           layer={layer}
-                          isSelected={layer.id === selectedLayerId}
-                          onSelect={() => {
-                            onSelectLayer(layer.id);
-                            setSelectedCameraId('default-camera');
-                          }}
+                          isSelected={isLayerSelected}
+                          onSelect={handleLayerSelect}
                           onChange={onUpdateLayer as (layer: any) => void}
                           onStartEditing={() => {
                             setIsEditingText(true);
                             setEditingLayerId(layer.id);
                             setEditingTextValue(layer.text_config?.text || '');
                           }}
+                          selectedLayerIds={selectedLayerIds}
+                          allLayers={sortedLayers}
                         />
                       );
                     } else if (layer.type === 'shape') {
@@ -285,11 +336,8 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                         <LayerShape
                           key={layer.id}
                           layer={layer as any}
-                          isSelected={layer.id === selectedLayerId}
-                          onSelect={() => {
-                            onSelectLayer(layer.id);
-                            setSelectedCameraId('default-camera');
-                          }}
+                          isSelected={isLayerSelected}
+                          onSelect={handleLayerSelect}
                           onChange={onUpdateLayer as (layer: any) => void}
                         />
                       );
@@ -298,12 +346,11 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                         <LayerImage
                           key={layer.id}
                           layer={layer}
-                          isSelected={layer.id === selectedLayerId}
-                          onSelect={() => {
-                            onSelectLayer(layer.id);
-                            setSelectedCameraId('default-camera');
-                          }}
+                          isSelected={isLayerSelected}
+                          onSelect={handleLayerSelect}
                           onChange={onUpdateLayer as (layer: any) => void}
+                          selectedLayerIds={selectedLayerIds}
+                          allLayers={sortedLayers}
                         />
                       );
                     }

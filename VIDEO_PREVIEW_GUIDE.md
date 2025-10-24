@@ -111,10 +111,12 @@ Responsabilités:
 
 États:
 ```typescript
-- audioFile: File | null
-- format: 'mp4' | 'webm'
-- quality: 'hd' | 'fullhd' | '4k'
-- fps: 24 | 30 | 60
+interface VideoGenerationState {
+  audioFile: File | null;
+  format: 'mp4' | 'webm';
+  quality: 'hd' | 'fullhd' | '4k';
+  fps: 24 | 30 | 60;
+}
 ```
 
 #### VideoPreviewPlayer
@@ -142,9 +144,11 @@ interface VideoPreviewPlayerProps {
 
 Nouveaux états:
 ```typescript
-previewMode: boolean          // Active le mode prévisualisation
-previewVideoUrl: string | null // URL de la vidéo à afficher
-previewType: 'full' | 'scene' | null // Type de prévisualisation
+interface PreviewState {
+  previewMode: boolean;          // Active le mode prévisualisation
+  previewVideoUrl: string | null; // URL de la vidéo à afficher
+  previewType: 'full' | 'scene' | null; // Type de prévisualisation
+}
 ```
 
 Nouvelles actions:

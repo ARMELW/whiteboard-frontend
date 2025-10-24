@@ -9,6 +9,8 @@ export interface LayerTextProps {
   onChange: (layer: any) => void;
   onStartEditing?: () => void;
   onStopEditing?: () => void;
+  selectedLayerIds?: string[];
+  allLayers?: any[];
 }
 
 export const LayerText: React.FC<LayerTextProps> = ({ 
@@ -17,11 +19,14 @@ export const LayerText: React.FC<LayerTextProps> = ({
   onSelect, 
   onChange,
   onStartEditing,
-  onStopEditing
+  onStopEditing,
+  selectedLayerIds = [],
+  allLayers = []
 }) => {
   const textRef = useRef<Konva.Text>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
   const [textOffsets, setTextOffsets] = useState({ offsetX: 0, offsetY: 0 });
+  const dragStartPosRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (textRef.current) {
@@ -116,6 +121,38 @@ export const LayerText: React.FC<LayerTextProps> = ({
         onDblClick={handleDoubleClick}
         onDblTap={handleDoubleClick}
         ref={textRef}
+        onDragStart={(e) => {
+          dragStartPosRef.current = {
+            x: e.target.x(),
+            y: e.target.y()
+          };
+        }}
+        onDragMove={(e) => {
+          if (selectedLayerIds.length > 1 && dragStartPosRef.current) {
+            const deltaX = e.target.x() - dragStartPosRef.current.x;
+            const deltaY = e.target.y() - dragStartPosRef.current.y;
+            
+            selectedLayerIds.forEach((layerId) => {
+              if (layerId !== layer.id) {
+                const targetLayer = allLayers.find(l => l.id === layerId);
+                if (targetLayer) {
+                  onChange({
+                    ...targetLayer,
+                    position: {
+                      x: (targetLayer.position?.x || 0) + deltaX,
+                      y: (targetLayer.position?.y || 0) + deltaY
+                    }
+                  });
+                }
+              }
+            });
+            
+            dragStartPosRef.current = {
+              x: e.target.x(),
+              y: e.target.y()
+            };
+          }
+        }}
         onDragEnd={(e) => {
           onChange({
             ...layer,
@@ -124,6 +161,7 @@ export const LayerText: React.FC<LayerTextProps> = ({
               y: e.target.y(),
             }
           });
+          dragStartPosRef.current = null;
         }}
         onTransformEnd={() => {
           const node = textRef.current;

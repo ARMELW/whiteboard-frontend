@@ -8,17 +8,22 @@ export interface LayerImageProps {
   isSelected: boolean;
   onSelect: (e?: any) => void;
   onChange: (layer: any) => void;
+  selectedLayerIds?: string[];
+  allLayers?: any[];
 }
 
 export const LayerImage: React.FC<LayerImageProps> = ({ 
   layer, 
   isSelected, 
   onSelect, 
-  onChange 
+  onChange,
+  selectedLayerIds = [],
+  allLayers = []
 }) => {
   const [img] = useImage(layer.image_path);
   const imageRef = useRef<Konva.Image>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
+  const dragStartPosRef = useRef<{ x: number; y: number } | null>(null);
 
   React.useEffect(() => {
     if (isSelected && transformerRef.current && imageRef.current && img) {
@@ -66,6 +71,42 @@ export const LayerImage: React.FC<LayerImageProps> = ({
         onClick={(e) => onSelect(e)}
         onTap={(e) => onSelect(e)}
         ref={imageRef}
+        onDragStart={(e) => {
+          // Store initial position for multi-layer drag
+          dragStartPosRef.current = {
+            x: e.target.x(),
+            y: e.target.y()
+          };
+        }}
+        onDragMove={(e) => {
+          // If multiple layers are selected, move them all together
+          if (selectedLayerIds.length > 1 && dragStartPosRef.current) {
+            const deltaX = e.target.x() - dragStartPosRef.current.x;
+            const deltaY = e.target.y() - dragStartPosRef.current.y;
+            
+            // Move all other selected layers
+            selectedLayerIds.forEach((layerId) => {
+              if (layerId !== layer.id) {
+                const targetLayer = allLayers.find(l => l.id === layerId);
+                if (targetLayer) {
+                  onChange({
+                    ...targetLayer,
+                    position: {
+                      x: (targetLayer.position?.x || 0) + deltaX,
+                      y: (targetLayer.position?.y || 0) + deltaY
+                    }
+                  });
+                }
+              }
+            });
+            
+            // Update drag start position for next move
+            dragStartPosRef.current = {
+              x: e.target.x(),
+              y: e.target.y()
+            };
+          }
+        }}
         onDragEnd={(e) => {
           onChange({
             ...layer,
@@ -74,6 +115,7 @@ export const LayerImage: React.FC<LayerImageProps> = ({
               y: e.target.y(),
             }
           });
+          dragStartPosRef.current = null;
         }}
         onTransformEnd={() => {
           const node = imageRef.current;

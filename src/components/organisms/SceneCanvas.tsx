@@ -40,6 +40,8 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   const toggleLayerSelection = useSceneStore((state) => state.toggleLayerSelection);
   const setSelectedLayerIds = useSceneStore((state) => state.setSelectedLayerIds);
   const clearSelection = useSceneStore((state) => state.clearSelection);
+  
+  const { deleteLayer } = useScenesActionsWithHistory();
 
   const ensureCamera = (cam: Partial<Camera>): Camera => ({
     id: cam.id ?? 'default-camera',
@@ -190,6 +192,31 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
       setHasInitialCentered(true);
     }
   }, [selectedCameraId, hasInitialCentered]);
+  
+  // Handle keyboard shortcuts for multi-selection deletion
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Delete or Backspace key - delete selected layers
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedLayerIds.length > 0) {
+        // Don't delete if user is editing text
+        if (isEditingText) return;
+        
+        // Prevent default browser behavior
+        e.preventDefault();
+        
+        // Delete all selected layers
+        selectedLayerIds.forEach((layerId) => {
+          deleteLayer({ sceneId: scene.id, layerId });
+        });
+        
+        // Clear selection
+        clearSelection();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedLayerIds, scene.id, deleteLayer, clearSelection, isEditingText]);
 
   // Sort layers by z_index for rendering
   const sortedLayers = [...(scene.layers || [])].sort((a: Layer, b: Layer) =>
@@ -300,6 +327,8 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                             setEditingLayerId(layer.id);
                             setEditingTextValue(layer.text_config?.text || '');
                           }}
+                          selectedLayerIds={selectedLayerIds}
+                          allLayers={sortedLayers}
                         />
                       );
                     } else if (layer.type === 'shape') {
@@ -320,6 +349,8 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                           isSelected={isLayerSelected}
                           onSelect={handleLayerSelect}
                           onChange={onUpdateLayer as (layer: any) => void}
+                          selectedLayerIds={selectedLayerIds}
+                          allLayers={sortedLayers}
                         />
                       );
                     }

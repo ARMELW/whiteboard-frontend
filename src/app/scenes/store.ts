@@ -20,6 +20,11 @@ interface SceneState {
   pendingImageData: any | null;
   activeTab: string; // Ajout onglet actif pour PropertiesPanel
   
+  // Preview state
+  previewMode: boolean;
+  previewVideoUrl: string | null;
+  previewType: 'full' | 'scene' | null;
+  
   // Data Actions
   setScenes: (scenes: Scene[]) => void;
   addScene: (scene: Scene, afterIndex?: number) => void;
@@ -53,6 +58,13 @@ interface SceneState {
   setPendingImageData: (data: any | null) => void;
   setActiveTab: (tab: string) => void; // Ajout setter onglet actif
   
+  // Preview Actions
+  setPreviewMode: (mode: boolean) => void;
+  setPreviewVideoUrl: (url: string | null) => void;
+  setPreviewType: (type: 'full' | 'scene' | null) => void;
+  startPreview: (videoUrl: string, type: 'full' | 'scene') => void;
+  stopPreview: () => void;
+  
   // Reset all state
   reset: () => void;
 }
@@ -67,6 +79,9 @@ const initialUIState = {
   showHistoryPanel: false,
   pendingImageData: null,
   activeTab: 'properties',
+  previewMode: false,
+  previewVideoUrl: null,
+  previewType: null,
 };
 
 const initialDataState = {
@@ -259,6 +274,21 @@ export const useSceneStore = create<SceneState>((set) => ({
   setShowCropModal: (show) => set({ showCropModal: show }),
   setShowHistoryPanel: (show) => set({ showHistoryPanel: show }),
   setPendingImageData: (data) => set({ pendingImageData: data }),
+  
+  // Preview Actions
+  setPreviewMode: (mode) => set({ previewMode: mode }),
+  setPreviewVideoUrl: (url) => set({ previewVideoUrl: url }),
+  setPreviewType: (type) => set({ previewType: type }),
+  startPreview: (videoUrl, type) => set({ 
+    previewMode: true, 
+    previewVideoUrl: videoUrl, 
+    previewType: type 
+  }),
+  stopPreview: () => set({ 
+    previewMode: false, 
+    previewVideoUrl: null, 
+    previewType: null 
+  }),
   
   reset: () => set({ ...initialDataState, ...initialUIState }),
 }));

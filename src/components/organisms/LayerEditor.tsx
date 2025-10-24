@@ -8,6 +8,7 @@ import {
 import { useLayerCreation } from '../molecules/layer-management/useLayerCreation';
 import LayerEditorModals from './LayerEditorModals';
 import LayerEditorCanvas from './LayerEditorCanvas';
+import VideoPreviewPlayer from './VideoPreviewPlayer';
 import { useCurrentScene } from '@/app/scenes';
 import { createDefaultCamera } from '@/utils/cameraAnimator';
 import type { Camera } from '@/app/scenes/types';
@@ -43,6 +44,12 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
   const setPendingImageData = useSceneStore((state) => state.setPendingImageData);
   const selectedLayerId = useSceneStore((state) => state.selectedLayerId);
   const setSelectedLayerId = useSceneStore((state) => state.setSelectedLayerId);
+  
+  // Preview state
+  const previewMode = useSceneStore((state) => state.previewMode);
+  const previewVideoUrl = useSceneStore((state) => state.previewVideoUrl);
+  const previewType = useSceneStore((state) => state.previewType);
+  const stopPreview = useSceneStore((state) => state.stopPreview);
 
   // Use actions from useScenesActionsWithHistory hook for history tracking
   const { updateScene } = useScenesActionsWithHistory();
@@ -197,37 +204,48 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
 
   return (
     <div className="flex items-center justify-center w-full h-full">
-      <LayerEditorModals
-        showShapeToolbar={showShapeToolbar}
-        showAssetLibrary={showAssetLibrary}
-        showCropModal={showCropModal}
-        showThumbnailMaker={showThumbnailMaker}
-        pendingImageData={pendingImageData}
-        scene={editedScene}
-        onCloseShapeToolbar={() => setShowShapeToolbar(false)}
-        onCloseThumbnailMaker={() => setShowThumbnailMaker(false)}
-        onAddShape={handleAddShapeWrapper}
-        onCropComplete={handleCropComplete}
-        onCropCancel={handleCropCancel}
-        onSaveThumbnail={(updatedScene) => {
-          setEditedScene(updatedScene);
-          setShowThumbnailMaker(false);
-        }}
-      />
+      {/* Show Video Preview or Normal Editor */}
+      {previewMode && previewVideoUrl ? (
+        <VideoPreviewPlayer
+          videoUrl={previewVideoUrl}
+          onClose={stopPreview}
+          title={previewType === 'scene' ? 'Prévisualisation Scène' : 'Prévisualisation Complète'}
+        />
+      ) : (
+        <>
+          <LayerEditorModals
+            showShapeToolbar={showShapeToolbar}
+            showAssetLibrary={showAssetLibrary}
+            showCropModal={showCropModal}
+            showThumbnailMaker={showThumbnailMaker}
+            pendingImageData={pendingImageData}
+            scene={editedScene}
+            onCloseShapeToolbar={() => setShowShapeToolbar(false)}
+            onCloseThumbnailMaker={() => setShowThumbnailMaker(false)}
+            onAddShape={handleAddShapeWrapper}
+            onCropComplete={handleCropComplete}
+            onCropCancel={handleCropCancel}
+            onSaveThumbnail={(updatedScene) => {
+              setEditedScene(updatedScene);
+              setShowThumbnailMaker(false);
+            }}
+          />
 
-      <LayerEditorCanvas
-        scene={editedScene}
-        selectedLayerId={selectedLayerId}
-        onUpdateScene={handleUpdateScene}
-        onUpdateLayer={handleUpdateLayer}
-        onSelectLayer={setSelectedLayerId}
-        onSelectCamera={setSelectedCamera}
-        onSave={handleSave}
-        sceneZoom={sceneZoom}
-        onSceneZoomChange={onSceneZoomChange}
-        selectedCameraId={parentSelectedCameraId}
-        onCameraStateChange={onCameraStateChange}
-      />
+          <LayerEditorCanvas
+            scene={editedScene}
+            selectedLayerId={selectedLayerId}
+            onUpdateScene={handleUpdateScene}
+            onUpdateLayer={handleUpdateLayer}
+            onSelectLayer={setSelectedLayerId}
+            onSelectCamera={setSelectedCamera}
+            onSave={handleSave}
+            sceneZoom={sceneZoom}
+            onSceneZoomChange={onSceneZoomChange}
+            selectedCameraId={parentSelectedCameraId}
+            onCameraStateChange={onCameraStateChange}
+          />
+        </>
+      )}
     </div>
   );
 };

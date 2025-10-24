@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Button, Card } from '../atoms';
-import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical, Music, BookmarkPlus } from 'lucide-react';
+import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical, Music, BookmarkPlus, Play } from 'lucide-react';
 import { useScenes, useSceneStore } from '@/app/scenes';
 import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import {
@@ -96,8 +96,19 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
     setShowSaveAsTemplate(true);
   }, [scenes]);
 
-  // Handle image file selection for direct upload/crop
-    // Removed image file handling as it is now managed in EmbeddedAssetLibraryPanel
+  const handlePreviewScene = useCallback(async (index: number) => {
+    const scene = scenes[index];
+    
+    // For now, we'll use a mock video URL
+    // In a real implementation, this would call the backend to generate a preview
+    // or use a pre-generated preview URL from the scene data
+    
+    // Mock video generation for single scene
+    const mockVideoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+    
+    // Start preview with the mock URL
+    useSceneStore.getState().startPreview(mockVideoUrl, 'scene');
+  }, [scenes]);
 
   const formatSceneDuration = (duration: number): string => {
     if (typeof duration !== 'number' || isNaN(duration) || !isFinite(duration)) {
@@ -207,6 +218,16 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePreviewScene(index);
+                      }}
+                    >
+                      <Play className="mr-2 h-4 w-4" />
+                      Prévisualiser
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation();

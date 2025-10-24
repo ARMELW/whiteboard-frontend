@@ -60,6 +60,12 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
     setActiveTab('export');
   };
 
+  const handlePreviewClick = () => {
+    // For now, just open the export tab
+    // The actual preview will be triggered from VideoGenerationPanel
+    setActiveTab('export');
+  };
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -208,7 +214,9 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
         </button>
         <div className="h-6 w-px  mx-2" />
         <button
-          className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors"
+          onClick={handlePreviewClick}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+          title="Prévisualiser"
         >
           <Play className="w-4 h-4" />
         </button>

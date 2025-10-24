@@ -1,20 +1,36 @@
-import React, { useState, useRef } from 'react';
-import { Film, Download, Upload, X, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import React, { useState, useRef, useMemo } from 'react';
+import { Film, Download, Upload, X, Loader2, AlertCircle, CheckCircle, Play } from 'lucide-react';
 import { useVideoGeneration } from '@/hooks/useVideoGeneration';
+import { useSceneStore } from '@/app/scenes';
 import { Button } from '../atoms';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const VideoGenerationPanel: React.FC = () => {
   const { generateVideo, downloadVideo, reset, currentJob, isGenerating, error, progress } =
     useVideoGeneration();
+  const scenes = useSceneStore((state) => state.scenes);
+  
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [format, setFormat] = useState<'mp4' | 'webm'>('mp4');
+  const [quality, setQuality] = useState<'hd' | 'fullhd' | '4k'>('fullhd');
+  const [fps, setFps] = useState<24 | 30 | 60>(30);
   const audioInputRef = useRef<HTMLInputElement>(null);
+
+  const totalDuration = useMemo(() => {
+    return scenes.reduce((acc, scene) => acc + (scene.duration || 0), 0);
+  }, [scenes]);
 
   const handleAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('audio/')) {
       setAudioFile(file);
     }
-    // Reset input
     e.target.value = '';
   };
 
@@ -23,7 +39,7 @@ const VideoGenerationPanel: React.FC = () => {
   };
 
   const handleGenerate = () => {
-    generateVideo(audioFile || undefined);
+    generateVideo(audioFile || undefined, { format, quality, fps });
   };
 
   const handleDownload = () => {
@@ -33,6 +49,69 @@ const VideoGenerationPanel: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      {/* Generation Parameters */}
+      <div className="space-y-3 p-4 bg-secondary/20 rounded-lg border border-border">
+        <h3 className="text-sm font-semibold text-foreground mb-2">Paramètres de Génération</h3>
+        
+        {/* Format Selection */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-foreground">Format</label>
+          <Select value={format} onValueChange={(value: 'mp4' | 'webm') => setFormat(value)}>
+            <SelectTrigger className="w-full bg-white text-foreground border border-border rounded px-3 py-2 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="mp4">MP4 (recommandé)</SelectItem>
+              <SelectItem value="webm">WebM</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Quality Selection */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-foreground">Qualité</label>
+          <Select value={quality} onValueChange={(value: 'hd' | 'fullhd' | '4k') => setQuality(value)}>
+            <SelectTrigger className="w-full bg-white text-foreground border border-border rounded px-3 py-2 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="hd">HD (1280×720)</SelectItem>
+              <SelectItem value="fullhd">Full HD (1920×1080)</SelectItem>
+              <SelectItem value="4k">4K (3840×2160)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* FPS Selection */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-foreground">Images par seconde (FPS)</label>
+          <Select value={fps.toString()} onValueChange={(value) => setFps(parseInt(value) as 24 | 30 | 60)}>
+            <SelectTrigger className="w-full bg-white text-foreground border border-border rounded px-3 py-2 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="24">24 FPS (cinéma)</SelectItem>
+              <SelectItem value="30">30 FPS (standard)</SelectItem>
+              <SelectItem value="60">60 FPS (fluide)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Total Duration Display */}
+        <div className="pt-2 border-t border-border">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-muted-foreground">Durée totale:</span>
+            <span className="font-semibold text-foreground">
+              {Math.floor(totalDuration / 60)}:{(totalDuration % 60).toFixed(0).padStart(2, '0')} min
+            </span>
+          </div>
+          <div className="flex justify-between items-center text-xs text-muted-foreground mt-1">
+            <span>Nombre de scènes:</span>
+            <span>{scenes.length}</span>
+          </div>
+        </div>
+      </div>
+
       {/* Audio Upload Section */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-foreground">
@@ -107,29 +186,45 @@ const VideoGenerationPanel: React.FC = () => {
         </div>
       )}
 
-      {/* Success State */}
+      {/* Success State with Preview Button */}
       {currentJob?.status === 'completed' && !isGenerating && (
-        <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-green-300">Vidéo prête!</p>
-              <p className="text-xs text-green-400 mt-1">Votre vidéo est prête à être téléchargée</p>
+        <div className="space-y-3">
+          <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-green-300">Vidéo prête!</p>
+                <p className="text-xs text-green-400 mt-1">Votre vidéo est prête à être téléchargée ou prévisualisée</p>
+              </div>
             </div>
+          </div>
+
+          {/* Preview and Download Buttons */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => {
+                if (currentJob.videoUrl) {
+                  useSceneStore.getState().startPreview(currentJob.videoUrl, 'full');
+                }
+              }}
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors shadow-lg"
+            >
+              <Play className="w-5 h-5" />
+              Prévisualiser
+            </button>
+            <button
+              onClick={handleDownload}
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors shadow-lg"
+            >
+              <Download className="w-5 h-5" />
+              Télécharger
+            </button>
           </div>
         </div>
       )}
 
-      {/* Action Button */}
-      {currentJob?.status === 'completed' ? (
-        <button
-          onClick={handleDownload}
-          className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-lg transition-colors shadow-lg"
-        >
-          <Download className="w-6 h-6" />
-          Télécharger la Vidéo
-        </button>
-      ) : (
+      {/* Action Button - Only show if not completed */}
+      {currentJob?.status !== 'completed' && (
         <button
           onClick={handleGenerate}
           disabled={isGenerating}

@@ -174,4 +174,4 @@ const LayersList: React.FC = () => {
   );
 };
 
-export default LayersList;
+export default React.memo(LayersList);

@@ -7,6 +7,7 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Upload, Trash2, Plus, Tag, X, Search, ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useImageLibrary, useImageActions, IMAGE_CONFIG } from '@/app/images';
 import { useCurrentScene } from '@/app/scenes/hooks/useCurrentScene';
 import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
@@ -16,6 +17,7 @@ import { ImageCropModal } from '../molecules';
 import { v4 as uuidv4 } from 'uuid';
 import { searchAssetsAsync, getAllTags, Asset } from '@/utils/assetManager';
 import { toast } from 'sonner';
+import { useDebounce } from 'use-debounce';
 
 const MediaLibrary: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -30,6 +32,7 @@ const MediaLibrary: React.FC = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [assetsLoading, setAssetsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 300);
   
   // Scene integration
   const currentScene = useCurrentScene();
@@ -54,7 +57,7 @@ const MediaLibrary: React.FC = () => {
       try {
         const results = await searchAssetsAsync({
           tags: selectedTags.length ? selectedTags : undefined,
-          query: searchQuery || undefined,
+          query: debouncedSearchQuery || undefined,
           sortBy: 'uploadDate',
           sortOrder: 'desc'
         });
@@ -68,7 +71,7 @@ const MediaLibrary: React.FC = () => {
       }
     };
     loadAssets();
-  }, [selectedTags, searchQuery]);
+  }, [selectedTags, debouncedSearchQuery]);
 
   // Combine all media items
   const allMedia = useMemo(() => {
@@ -101,13 +104,13 @@ const MediaLibrary: React.FC = () => {
 
   // Filter media by search query
   const filteredMedia = useMemo(() => {
-    if (!searchQuery) return allMedia;
-    const query = searchQuery.toLowerCase();
+    if (!debouncedSearchQuery) return allMedia;
+    const query = debouncedSearchQuery.toLowerCase();
     return allMedia.filter(item => 
       item.name.toLowerCase().includes(query) ||
       item.tags.some(tag => tag.toLowerCase().includes(query))
     );
-  }, [allMedia, searchQuery]);
+  }, [allMedia, debouncedSearchQuery]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
@@ -387,8 +390,17 @@ const MediaLibrary: React.FC = () => {
         {/* Media Grid */}
         <div className="flex-1 overflow-y-auto p-3">
           {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <div className="grid grid-cols-2 gap-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <Skeleton className="aspect-square w-full" />
+                  <div className="p-2 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                    <Skeleton className="h-3 w-1/3" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : !hasMedia ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-400">

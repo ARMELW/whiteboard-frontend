@@ -112,7 +112,7 @@ export const WizardConfigurationStep: React.FC = () => {
             min="5"
             max="60"
             value={configuration.sceneDuration}
-            onChange={(e) => setConfiguration({ sceneDuration: parseInt(e.target.value) || 10 })}
+            onChange={(e) => setConfiguration({ sceneDuration: parseInt(e.target.value, 10) || 10 })}
             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
         </div>

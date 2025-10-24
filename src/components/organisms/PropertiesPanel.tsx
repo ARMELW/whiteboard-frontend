@@ -94,10 +94,10 @@ const PropertiesPanel: React.FC = () => {
                 <p className="text-xs text-muted-foreground">
                   {selectedLayerIds.length} layers selected
                 </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  • Drag any layer to move all together<br />
-                  • Press Delete to remove all selected
-                </p>
+                <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                  <p>• Drag any layer to move all together</p>
+                  <p>• Press Delete to remove all selected</p>
+                </div>
               </div>
             )}
             

@@ -172,8 +172,8 @@ const renderImageLayer = (ctx, layer, cameraX, cameraY) => {
         const scale = layer.scale || 1.0;
         const opacity = layer.opacity !== undefined ? layer.opacity : 1.0;
         const rotation = layer.rotation || 0;
-        const flipX = layer.flipX || false;
-        const flipY = layer.flipY || false;
+        const flipX = layer.flipX ?? false;
+        const flipY = layer.flipY ?? false;
 
         ctx.save();
         ctx.globalAlpha = opacity;
@@ -183,7 +183,7 @@ const renderImageLayer = (ctx, layer, cameraX, cameraY) => {
         const imgHeight = img.height * scale;
         
         // Check if any transformations are needed
-        if (rotation || flipX || flipY) {
+        if (rotation !== 0 || flipX || flipY) {
           // Translate to the center point for rotation and flipping
           ctx.translate(layerX + imgWidth / 2, layerY + imgHeight / 2);
           

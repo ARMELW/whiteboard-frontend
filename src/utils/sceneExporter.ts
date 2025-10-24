@@ -182,25 +182,37 @@ const renderImageLayer = (ctx, layer, cameraX, cameraY) => {
         const imgWidth = img.width * scale;
         const imgHeight = img.height * scale;
         
-        // Translate to the center point for rotation and flipping
-        ctx.translate(layerX + imgWidth / 2, layerY + imgHeight / 2);
-        
-        // Apply rotation if needed
-        if (rotation) {
-          ctx.rotate(rotation * Math.PI / 180);
+        // Check if any transformations are needed
+        if (rotation || flipX || flipY) {
+          // Translate to the center point for rotation and flipping
+          ctx.translate(layerX + imgWidth / 2, layerY + imgHeight / 2);
+          
+          // Apply rotation if needed
+          if (rotation) {
+            ctx.rotate(rotation * Math.PI / 180);
+          }
+          
+          // Apply flip transformations
+          ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+          
+          // Draw image centered on the transformed point
+          ctx.drawImage(
+            img,
+            -imgWidth / 2,
+            -imgHeight / 2,
+            imgWidth,
+            imgHeight
+          );
+        } else {
+          // No transformations: simple top-left positioning
+          ctx.drawImage(
+            img,
+            layerX,
+            layerY,
+            imgWidth,
+            imgHeight
+          );
         }
-        
-        // Apply flip transformations
-        ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
-        
-        // Draw image centered on the transformed point
-        ctx.drawImage(
-          img,
-          -imgWidth / 2,
-          -imgHeight / 2,
-          imgWidth,
-          imgHeight
-        );
         
         ctx.restore();
         resolve();

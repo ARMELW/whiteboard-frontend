@@ -1,7 +1,8 @@
 import React, { useCallback } from 'react';
 import { Button, Card } from '../atoms';
 import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical } from 'lucide-react';
-import { useScenes, useSceneStore, useScenesActions } from '@/app/scenes';
+import { useScenes, useSceneStore } from '@/app/scenes';
+import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,8 +24,8 @@ const ScenePanel: React.FC = () => {
   const setSelectedSceneIndex = useSceneStore((state) => state.setSelectedSceneIndex);
   // Remove imageInputRef and importInputRef, handled in asset library
   
-  // Use actions from useScenesActions hook
-  const { createScene, deleteScene, duplicateScene, reorderScenes } = useScenesActions();
+  // Use actions from useScenesActionsWithHistory hook for history tracking
+  const { createScene, deleteScene, duplicateScene, reorderScenes } = useScenesActionsWithHistory();
 
   const handleAddScene = useCallback(async () => {
     const currentLength = scenes.length;

@@ -1,13 +1,14 @@
 import React from 'react';
 import { Button } from '../../atoms';
 import { Plus, Type } from 'lucide-react';
-import { useCurrentScene, useSceneStore, useScenesActions } from '@/app/scenes';
+import { useCurrentScene, useSceneStore } from '@/app/scenes';
+import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import { useLayerCreation } from '../../molecules/layer-management';
 
 const TextTab: React.FC = () => {
   const scene = useCurrentScene();
   const setSelectedLayerId = useSceneStore((state) => state.setSelectedLayerId);
-  const { addLayer } = useScenesActions();
+  const { addLayer } = useScenesActionsWithHistory();
   const { createTextLayer } = useLayerCreation({
     sceneWidth: 1920,
     sceneHeight: 1080,

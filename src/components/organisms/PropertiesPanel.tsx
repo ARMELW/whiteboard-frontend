@@ -3,7 +3,8 @@ import { Settings, FolderKanban, Music, Hand, Layers as LayersIcon, Film } from 
 import ScenePropertiesPanel from '../atoms/ScenePropertiesPanel';
 import AudioManager from '../audio/AudioManager';
 import { LayerPropertiesForm, LayersListPanel } from '../molecules';
-import { useCurrentScene, useSceneStore, useScenesActions } from '@/app/scenes';
+import { useCurrentScene, useSceneStore } from '@/app/scenes';
+import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import VideoGenerationPanel from './VideoGenerationPanel';
 
 type TabType = 'properties' | 'project' | 'soundtrack' | 'hands' | 'layers' | 'export';
@@ -15,7 +16,7 @@ const PropertiesPanel: React.FC = () => {
   const activeTab = useSceneStore((state) => state.activeTab) as TabType;
   const setActiveTab = useSceneStore((state) => state.setActiveTab);
 
-  const { updateScene, updateSceneProperty, updateLayerProperty, deleteLayer, moveLayer, duplicateLayer } = useScenesActions();
+  const { updateScene, updateSceneProperty, updateLayerProperty, deleteLayer, moveLayer, duplicateLayer } = useScenesActionsWithHistory();
 
   if (!scene) {
     return (

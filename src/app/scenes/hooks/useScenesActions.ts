@@ -67,13 +67,23 @@ export const useScenesActions = () => {
     duplicateLayer: async (params: { sceneId: string; layerId?: string; layer?: Layer }) => {
       // Support both API styles: {layerId} or {layer}
       let layerToDuplicate: Layer | undefined;
+      let layerIndex: number = -1;
       
       if (params.layerId) {
         const scenes = useSceneStore.getState().scenes;
         const scene = scenes.find(s => s.id === params.sceneId);
-        layerToDuplicate = scene?.layers?.find(l => l.id === params.layerId);
+        if (scene?.layers) {
+          layerIndex = scene.layers.findIndex(l => l.id === params.layerId);
+          layerToDuplicate = scene.layers[layerIndex];
+        }
       } else if (params.layer) {
         layerToDuplicate = params.layer;
+        // Try to find the index of the layer in the scene
+        const scenes = useSceneStore.getState().scenes;
+        const scene = scenes.find(s => s.id === params.sceneId);
+        if (scene?.layers) {
+          layerIndex = scene.layers.findIndex(l => l.id === params.layer.id);
+        }
       }
       
       if (!layerToDuplicate) return;
@@ -85,7 +95,8 @@ export const useScenesActions = () => {
         name: `${layerToDuplicate.name} (copie)`,
       };
       
-      duplicateLayer(params.sceneId, newLayer);
+      // Insert the duplicated layer right after the original layer
+      duplicateLayer(params.sceneId, newLayer, layerIndex);
     },
     isCreating: loading,
     isUpdating: loading,
@@ -96,10 +107,15 @@ export const useScenesActions = () => {
 
     // Ajout duplication de scène
     duplicateScene: async (sceneId: string) => {
-  const duplicated = await scenesService.duplicate(sceneId);
-  console.log('[duplicateScene] duplicated:', duplicated);
-  addScene(duplicated);
-  return duplicated;
+      const scenes = useSceneStore.getState().scenes;
+      const sceneIndex = scenes.findIndex(s => s.id === sceneId);
+      
+      const duplicated = await scenesService.duplicate(sceneId);
+      console.log('[duplicateScene] duplicated:', duplicated);
+      
+      // Insert the duplicated scene right after the original scene
+      addScene(duplicated, sceneIndex);
+      return duplicated;
     },
   };
 };

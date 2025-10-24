@@ -50,10 +50,9 @@ const ScenePanel: React.FC = () => {
 
   const handleDuplicateScene = useCallback(async (index: number) => {
     const scene = scenes[index];
-    const currentLength = scenes.length;
     await duplicateScene(scene.id);
-    // After duplication, the new scene will be at the end of the array
-    setSelectedSceneIndex(currentLength);
+    // After duplication, the new scene is inserted right after the current one
+    setSelectedSceneIndex(index + 1);
   }, [scenes, duplicateScene, setSelectedSceneIndex]);
 
   const handleDeleteScene = useCallback(async (index: number) => {

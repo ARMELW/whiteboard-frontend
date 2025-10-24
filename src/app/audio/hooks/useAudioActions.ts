@@ -50,15 +50,19 @@ export const useAudioActions = () => {
     },
   });
 
+  const storeIsUploading = useAudioLibraryStore((state) => state.isUploading);
+  const uploadProgress = useAudioLibraryStore((state) => state.uploadProgress);
+  const error = useAudioLibraryStore((state) => state.error);
+
   return {
     upload: uploadMutation.mutate,
     uploadAsync: uploadMutation.mutateAsync,
-    isUploading: uploadMutation.isPending || useAudioLibraryStore((state) => state.isUploading),
-    uploadProgress: useAudioLibraryStore((state) => state.uploadProgress),
+    isUploading: uploadMutation.isPending || storeIsUploading,
+    uploadProgress,
     
     deleteAudio: deleteMutation.mutate,
     isDeleting: deleteMutation.isPending,
     
-    error: useAudioLibraryStore((state) => state.error),
+    error,
   };
 };

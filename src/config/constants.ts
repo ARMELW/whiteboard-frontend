@@ -3,6 +3,7 @@ export const STORAGE_KEYS = {
   ASSETS: 'whiteboard-assets',
   ASSET_CACHE: 'whiteboard-asset-cache',
   SETTINGS: 'whiteboard-settings',
+  TEMPLATES: 'whiteboard-templates',
 } as const;
 
 export const DEFAULT_SCENE_DURATION = 5;

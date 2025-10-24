@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AnimationHeader from './AnimationHeader';
 import { LayersList } from '../molecules';
 import LayerEditor from './LayerEditor';
@@ -8,6 +8,8 @@ import ShapeToolbar from './ShapeToolbar';
 import ScenePanel from './ScenePanel';
 import ContextTabs from './ContextTabs';
 import HistoryPanel from './HistoryPanel';
+import TemplateLibrary from './TemplateLibrary';
+import SaveAsTemplateDialog from './SaveAsTemplateDialog';
 import { useScenes, useSceneStore, useCurrentScene } from '@/app/scenes';
 
 const AnimationContainer: React.FC = () => {
@@ -16,14 +18,34 @@ const AnimationContainer: React.FC = () => {
   const showAssetLibrary = useSceneStore((state: any) => state.showAssetLibrary);
   const showHistoryPanel = useSceneStore((state: any) => state.showHistoryPanel);
   const setShowHistoryPanel = useSceneStore((state: any) => state.setShowHistoryPanel);
+  
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
+  const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false);
 
   return (
     <div className="animation-container flex flex-col h-screen">
       {showAssetLibrary && <AssetLibrary />}
       {showShapeToolbar && <ShapeToolbar />}
+      {showTemplateLibrary && (
+        <TemplateLibrary 
+          isOpen={showTemplateLibrary} 
+          onClose={() => setShowTemplateLibrary(false)} 
+        />
+      )}
+      {showSaveAsTemplate && currentScene && (
+        <SaveAsTemplateDialog
+          isOpen={showSaveAsTemplate}
+          onClose={() => setShowSaveAsTemplate(false)}
+          scene={currentScene}
+        />
+      )}
       
       {/* Header */}
-      <AnimationHeader />
+      <AnimationHeader 
+        onOpenTemplateLibrary={() => setShowTemplateLibrary(true)}
+        onSaveAsTemplate={() => setShowSaveAsTemplate(true)}
+        hasCurrentScene={!!currentScene}
+      />
 
       {/* Main Content */}
       <div className="flex flex-col flex-1 overflow-hidden">

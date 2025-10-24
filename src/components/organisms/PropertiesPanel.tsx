@@ -1,13 +1,12 @@
 import React, { useCallback, useMemo } from 'react';
-import { Settings, FolderKanban, Music, Hand, Layers as LayersIcon, Film } from 'lucide-react';
+import { Settings, Layers as LayersIcon, Film } from 'lucide-react';
 import ScenePropertiesPanel from '../atoms/ScenePropertiesPanel';
-import AudioManager from '../audio/AudioManager';
 import { LayerPropertiesForm, LayersListPanel } from '../molecules';
 import { useCurrentScene, useSceneStore } from '@/app/scenes';
 import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import VideoGenerationPanel from './VideoGenerationPanel';
 
-type TabType = 'properties' | 'project' | 'soundtrack' | 'hands' | 'layers' | 'export';
+type TabType = 'properties' | 'layers' | 'export';
 
 const PropertiesPanel: React.FC = () => {
   const scene = useCurrentScene();
@@ -51,11 +50,8 @@ const PropertiesPanel: React.FC = () => {
 
   const tabs = [
     { id: 'properties' as TabType, label: 'Properties', icon: Settings },
-    { id: 'export' as TabType, label: 'Export', icon: Film },
-    { id: 'project' as TabType, label: 'Project', icon: FolderKanban },
-    { id: 'soundtrack' as TabType, label: 'Soundtrack', icon: Music },
-    { id: 'hands' as TabType, label: 'Hands', icon: Hand },
     { id: 'layers' as TabType, label: 'Layers', icon: LayersIcon },
+    { id: 'export' as TabType, label: 'Export', icon: Film },
   ];
 
   return (
@@ -129,38 +125,6 @@ const PropertiesPanel: React.FC = () => {
         {activeTab === 'export' && (
           <div className="space-y-4">
             <VideoGenerationPanel />
-          </div>
-        )}
-
-        {activeTab === 'project' && (
-          <div className="space-y-4">
-            <div className="text-center py-8">
-              <FolderKanban className="w-12 h-12 mx-auto mb-2 text-muted-foreground opacity-50" />
-              <p className="text-sm text-muted-foreground">Project settings coming soon</p>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'soundtrack' && (
-          <div className="space-y-4">
-            <AudioManager
-              scene={scene}
-              onSceneUpdate={(updates: any) => {
-                if (!scene.id) return;
-                updateScene({ id: scene.id, data: updates });
-              }}
-              currentTime={0}
-              isPlaying={false}
-            />
-          </div>
-        )}
-
-        {activeTab === 'hands' && (
-          <div className="space-y-4">
-            <div className="text-center py-8">
-              <Hand className="w-12 h-12 mx-auto mb-2 text-muted-foreground opacity-50" />
-              <p className="text-sm text-muted-foreground">Hand animations coming soon</p>
-            </div>
           </div>
         )}
 

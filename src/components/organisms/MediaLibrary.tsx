@@ -113,20 +113,21 @@ const MediaLibrary: React.FC = () => {
   }, [allMedia, debouncedSearchQuery]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = e.target.files;
-    if (!selectedFiles || selectedFiles.length === 0) return;
-
-    for (let i = 0; i < selectedFiles.length; i++) {
-      const file = selectedFiles[i];
-      try {
-        await upload({ file });
-        toast.success(`Uploaded ${file.name}`);
-      } catch (err) {
-        console.error('Failed to upload image:', err);
-        toast.error(`Failed to upload ${file.name}`);
-      }
-    }
-
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setPendingImageData({
+        imageUrl: event.target?.result,
+        fileName: file.name,
+        originalUrl: event.target?.result,
+        fileType: file.type
+      });
+      setShowCropModal(true);
+    };
+    reader.readAsDataURL(file);
+    
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -225,23 +226,6 @@ const MediaLibrary: React.FC = () => {
     }
   };
 
-  const handleImageFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setPendingImageData({
-        imageUrl: event.target?.result,
-        fileName: file.name,
-        originalUrl: event.target?.result,
-        fileType: file.type
-      });
-      setShowCropModal(true);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  }, [setPendingImageData, setShowCropModal]);
-
   const handleCropComplete = useCallback((croppedImageUrl: string, imageDimensions?: { width: number; height: number }) => {
     const scene = scenes[selectedSceneIndex];
     if (!scene) return;
@@ -320,7 +304,6 @@ const MediaLibrary: React.FC = () => {
             ref={fileInputRef}
             type="file"
             accept={IMAGE_CONFIG.ALLOWED_EXTENSIONS.join(',')}
-            multiple
             onChange={handleFileSelect}
             className="hidden"
           />

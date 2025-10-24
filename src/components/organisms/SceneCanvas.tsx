@@ -234,6 +234,31 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
 
   return (
     <div className="flex relative flex-col h-full bg-secondary">
+      {/* Camera Toolbar in header (now SceneHeader) */}
+      <SceneHeader
+        sceneCameras={sceneCameras}
+        selectedCameraId={selectedCameraId}
+        onAddCamera={handleAddCamera}
+        onSelectCamera={(id: string | null) => setSelectedCameraId(id || 'default-camera')}
+        onZoomCamera={() => { }}
+        onToggleLock={handleToggleLock}
+        sceneZoom={sceneZoom}
+        onSceneZoom={setSceneZoom}
+        onFitToViewport={() => setSceneZoom(calculateFitZoom())}
+        showCameraManager={showCameraManager}
+        setShowCameraManager={setShowCameraManager}
+        onSaveCameras={async (updated: any[]) => {
+          setSceneCameras(updated.map((c: any) => ({ ...c })));
+          onUpdateScene({ sceneCameras: updated });
+          try {
+            if (scene && scene.id) {
+              await updateScene({ id: scene.id, data: { sceneCameras: updated } });
+            }
+          } catch (err) {
+            console.error('Failed to persist cameras:', err);
+          }
+        }}
+      />
 
       <div className="flex flex-1 min-h-0 bg-white" style={{ height: '100%' }}>
         {/* Canvas Area - Centered viewport */}
@@ -367,31 +392,6 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
           </div>
         </div>
       </div>
-      {/* Camera Toolbar in header (now SceneHeader) */}
-      <SceneHeader
-        sceneCameras={sceneCameras}
-        selectedCameraId={selectedCameraId}
-        onAddCamera={handleAddCamera}
-        onSelectCamera={(id: string | null) => setSelectedCameraId(id || 'default-camera')}
-        onZoomCamera={() => { }}
-        onToggleLock={handleToggleLock}
-        sceneZoom={sceneZoom}
-        onSceneZoom={setSceneZoom}
-        onFitToViewport={() => setSceneZoom(calculateFitZoom())}
-        showCameraManager={showCameraManager}
-        setShowCameraManager={setShowCameraManager}
-        onSaveCameras={async (updated: any[]) => {
-          setSceneCameras(updated.map((c: any) => ({ ...c })));
-          onUpdateScene({ sceneCameras: updated });
-          try {
-            if (scene && scene.id) {
-              await updateScene({ id: scene.id, data: { sceneCameras: updated } });
-            }
-          } catch (err) {
-            console.error('Failed to persist cameras:', err);
-          }
-        }}
-      />
       {/* Main Content Area */}
 
       {/* Text Editing Modal 

@@ -9,7 +9,7 @@ export function useVideoGeneration() {
   const [error, setError] = useState<string | null>(null);
 
   const generateVideo = useCallback(
-    async (audioFile?: File) => {
+    async (audioFile?: File, config?: { format?: string; quality?: string; fps?: number }) => {
       if (scenes.length === 0) {
         setError('No scenes to export');
         return;
@@ -29,9 +29,9 @@ export function useVideoGeneration() {
               }
             : undefined,
           config: {
-            format: 'mp4',
-            quality: 'hd',
-            fps: 30,
+            format: config?.format || 'mp4',
+            quality: config?.quality || 'fullhd',
+            fps: config?.fps || 30,
           },
         };
 

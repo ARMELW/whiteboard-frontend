@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
  * @param currentState L'état courant à surveiller (ex: scenes)
  * @param maxHistory Nombre maximum d'états à conserver
  */
-export function useHistory<T>(currentState: T, maxHistory: number = 30) {
+export function useHistory<T>(currentState: T, maxHistory: number = 10) {
   const [history, setHistory] = useState<T[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const isUndoRedoAction = useRef(false);
@@ -31,7 +31,9 @@ export function useHistory<T>(currentState: T, maxHistory: number = 30) {
     if (historyIndex > 0) {
       isUndoRedoAction.current = true;
       setHistoryIndex(historyIndex - 1);
+      return history[historyIndex - 1];
     }
+    return null;
   };
 
   // Redo
@@ -39,7 +41,9 @@ export function useHistory<T>(currentState: T, maxHistory: number = 30) {
     if (historyIndex < history.length - 1) {
       isUndoRedoAction.current = true;
       setHistoryIndex(historyIndex + 1);
+      return history[historyIndex + 1];
     }
+    return null;
   };
 
   // L'état courant de l'historique (pour affichage ou restauration)

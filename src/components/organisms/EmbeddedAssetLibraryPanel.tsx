@@ -37,18 +37,58 @@ const EmbeddedAssetLibraryPanel: React.FC = () => {
     e.target.value = '';
   }, [setPendingImageData, setShowCropModal]);
 
-  // Handler to show crop modal for selected asset
-  const handleSelectAsset = (asset: any) => {
-    // Open the crop modal with the selected asset's data
-    setPendingImageData({
-      imageUrl: asset.dataUrl,
-      fileName: asset.name || 'Image',
-      originalUrl: asset.dataUrl,
-      fileType: 'image/png',
-      assetId: asset.id
-    });
-    setShowCropModal(true);
-  };
+  // Handler to add selected asset directly to scene (bypass crop)
+  const handleSelectAsset = useCallback((asset: any) => {
+    const scene = scenes[selectedSceneIndex];
+    if (!scene) return;
+    
+    // Find default camera
+    const defaultCamera = (scene.sceneCameras || []).find((c) => c.isDefault) || (scene.cameras || []).find((c) => c.isDefault);
+    
+    // Calculate position based on default camera center
+    let position = { x: 0.5, y: 0.5 };
+    
+    if (defaultCamera) {
+      // Center the image at the camera's center position
+      if (defaultCamera.position) {
+        // If camera uses normalized coordinates (0-1), use as is
+        if (
+          typeof defaultCamera.position.x === 'number' &&
+          defaultCamera.position.x >= 0 &&
+          defaultCamera.position.x <= 1 &&
+          defaultCamera.position.y >= 0 &&
+          defaultCamera.position.y <= 1
+        ) {
+          position = { 
+            x: defaultCamera.position.x, 
+            y: defaultCamera.position.y 
+          };
+        } else {
+          // If absolute coordinates, normalize them
+          const canvasWidth = 1920;
+          const canvasHeight = 1080;
+          position = {
+            x: defaultCamera.position.x / canvasWidth,
+            y: defaultCamera.position.y / canvasHeight,
+          };
+        }
+      }
+    }
+    
+    const newLayer = {
+      id: uuidv4(),
+      name: asset.name || 'Image',
+      type: LayerType.IMAGE,
+      mode: LayerMode.STATIC,
+      position,
+      z_index: (scene.layers?.length || 0) + 1,
+      scale: 1,
+      opacity: 1,
+      image_path: asset.dataUrl,
+    };
+    
+    addLayer(scene.id, newLayer);
+  }, [scenes, selectedSceneIndex, addLayer]);
 
   // Handler for crop completion - adds the cropped image to the scene
   const handleCropComplete = useCallback((croppedImageUrl: string, imageDimensions?: { width: number; height: number }, tags?: string[]) => {

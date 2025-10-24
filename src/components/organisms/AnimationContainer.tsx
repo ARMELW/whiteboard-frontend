@@ -10,7 +10,9 @@ import ContextTabs from './ContextTabs';
 import HistoryPanel from './HistoryPanel';
 import TemplateLibrary from './TemplateLibrary';
 import SaveAsTemplateDialog from './SaveAsTemplateDialog';
+import CameraManagerModal from './CameraManagerModal';
 import { useScenes, useSceneStore, useCurrentScene } from '@/app/scenes';
+import type { Camera } from '@/app/scenes/types';
 
 const AnimationContainer: React.FC = () => {
   const currentScene = useCurrentScene();
@@ -21,6 +23,17 @@ const AnimationContainer: React.FC = () => {
   
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false);
+  const [showCameraManager, setShowCameraManager] = useState(false);
+  
+  // Camera state lifted from SceneCanvas
+  const [cameras, setCameras] = useState<Camera[]>([]);
+  const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
+  const [sceneZoom, setSceneZoom] = useState<number>(0.8);
+  const [cameraCallbacks, setCameraCallbacks] = useState<{
+    onAddCamera?: () => void;
+    onToggleLock?: (cameraId: string) => void;
+    onSaveCameras?: (cameras: Camera[]) => Promise<void>;
+  }>({});
 
   return (
     <div className="animation-container flex flex-col h-screen">
@@ -39,12 +52,32 @@ const AnimationContainer: React.FC = () => {
           scene={currentScene}
         />
       )}
+      {showCameraManager && (
+        <CameraManagerModal
+          cameras={cameras}
+          onClose={() => setShowCameraManager(false)}
+          onSave={async (updatedCameras) => {
+            setCameras(updatedCameras);
+            if (cameraCallbacks.onSaveCameras) {
+              await cameraCallbacks.onSaveCameras(updatedCameras);
+            }
+          }}
+        />
+      )}
       
       {/* Header */}
       <AnimationHeader 
         onOpenTemplateLibrary={() => setShowTemplateLibrary(true)}
         onSaveAsTemplate={() => setShowSaveAsTemplate(true)}
         hasCurrentScene={!!currentScene}
+        cameras={cameras}
+        selectedCameraId={selectedCameraId}
+        onAddCamera={cameraCallbacks.onAddCamera}
+        onSelectCamera={setSelectedCameraId}
+        onToggleLock={cameraCallbacks.onToggleLock}
+        sceneZoom={sceneZoom}
+        onSceneZoom={setSceneZoom}
+        onOpenCameraManager={() => setShowCameraManager(true)}
       />
 
       {/* Main Content */}
@@ -58,7 +91,19 @@ const AnimationContainer: React.FC = () => {
           
           {/* Center: Layer Editor */}
           <div className="flex-1 overflow-y-auto bg-white">
-            {currentScene && <LayerEditor />}
+            {currentScene && (
+              <LayerEditor 
+                sceneZoom={sceneZoom}
+                onSceneZoomChange={setSceneZoom}
+                selectedCameraId={selectedCameraId}
+                onCameraStateChange={(state) => {
+                  setCameras(state.cameras);
+                  setSelectedCameraId(state.selectedCameraId);
+                  // Don't set sceneZoom here since it's now controlled
+                  setCameraCallbacks(state.callbacks);
+                }}
+              />
+            )}
           </div>
           
           {/* Right: Properties Panel or History Panel */}

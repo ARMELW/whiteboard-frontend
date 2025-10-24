@@ -1,6 +1,7 @@
 import React from 'react';
 import { Save } from 'lucide-react';
 import SceneCanvas from './SceneCanvas';
+import type { Camera } from '@/app/scenes/types';
 
 interface LayerEditorCanvasProps {
   scene: any;
@@ -10,6 +11,18 @@ interface LayerEditorCanvasProps {
   onSelectLayer: (layerId: string | null) => void;
   onSelectCamera: (camera: any) => void;
   onSave: () => void;
+  sceneZoom?: number;
+  onSceneZoomChange?: (zoom: number) => void;
+  selectedCameraId?: string | null;
+  onCameraStateChange?: (state: {
+    cameras: Camera[];
+    selectedCameraId: string | null;
+    callbacks: {
+      onAddCamera?: () => void;
+      onToggleLock?: (cameraId: string) => void;
+      onSaveCameras?: (cameras: Camera[]) => Promise<void>;
+    };
+  }) => void;
 }
 
 const LayerEditorCanvas: React.FC<LayerEditorCanvasProps> = ({
@@ -19,7 +32,11 @@ const LayerEditorCanvas: React.FC<LayerEditorCanvasProps> = ({
   onUpdateLayer,
   onSelectLayer,
   onSelectCamera,
-  onSave
+  onSave,
+  sceneZoom,
+  onSceneZoomChange,
+  selectedCameraId,
+  onCameraStateChange
 }) => {
   return (
     <div className="bg-secondary/20 dark:bg-secondary flex flex-col flex-1 w-full h-full min-w-0 relative">
@@ -30,6 +47,10 @@ const LayerEditorCanvas: React.FC<LayerEditorCanvasProps> = ({
         selectedLayerId={selectedLayerId}
         onSelectLayer={onSelectLayer}
         onSelectCamera={onSelectCamera}
+        sceneZoom={sceneZoom}
+        onSceneZoomChange={onSceneZoomChange}
+        selectedCameraId={selectedCameraId}
+        onCameraStateChange={onCameraStateChange}
       />
       
       {/**<button

@@ -16,3 +16,4 @@ export * from './layer-management';
 export * from './canvas';
 export * from './thumbnail';
 export * from './properties';
+export * from './text';

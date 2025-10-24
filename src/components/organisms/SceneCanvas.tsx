@@ -223,30 +223,50 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
     }
   }, [scene.sceneCameras]);
 
+  // Memoize onSaveCameras callback to prevent infinite loops
+  const handleSaveCameras = useCallback(async (updatedCameras: Camera[]) => {
+    setSceneCameras(updatedCameras);
+    onUpdateScene({ sceneCameras: updatedCameras });
+    try {
+      if (scene && scene.id) {
+        await updateScene({ id: scene.id, data: { sceneCameras: updatedCameras } });
+      }
+    } catch (err) {
+      console.error('Failed to persist cameras:', err);
+    }
+  }, [onUpdateScene, scene, updateScene]);
+
   // Propagate camera state upward to AnimationContainer
+  const prevCameraStateRef = useRef<{
+    cameras: Camera[];
+    selectedCameraId: string | null;
+  } | null>(null);
+  
   useEffect(() => {
     if (onCameraStateChange) {
-      onCameraStateChange({
-        cameras: sceneCameras,
-        selectedCameraId: effectiveSelectedCameraId,
-        callbacks: {
-          onAddCamera: handleAddCamera,
-          onToggleLock: handleToggleLock,
-          onSaveCameras: async (updatedCameras: Camera[]) => {
-            setSceneCameras(updatedCameras);
-            onUpdateScene({ sceneCameras: updatedCameras });
-            try {
-              if (scene && scene.id) {
-                await updateScene({ id: scene.id, data: { sceneCameras: updatedCameras } });
-              }
-            } catch (err) {
-              console.error('Failed to persist cameras:', err);
-            }
+      // Only update if cameras or selectedCameraId actually changed
+      const camerasChanged = !prevCameraStateRef.current || 
+        JSON.stringify(prevCameraStateRef.current.cameras) !== JSON.stringify(sceneCameras) ||
+        prevCameraStateRef.current.selectedCameraId !== effectiveSelectedCameraId;
+      
+      if (camerasChanged) {
+        prevCameraStateRef.current = {
+          cameras: sceneCameras,
+          selectedCameraId: effectiveSelectedCameraId
+        };
+        
+        onCameraStateChange({
+          cameras: sceneCameras,
+          selectedCameraId: effectiveSelectedCameraId,
+          callbacks: {
+            onAddCamera: handleAddCamera,
+            onToggleLock: handleToggleLock,
+            onSaveCameras: handleSaveCameras
           }
-        }
-      });
+        });
+      }
     }
-  }, [sceneCameras, effectiveSelectedCameraId, handleAddCamera, handleToggleLock, onCameraStateChange, onUpdateScene, scene, updateScene]);
+  }, [sceneCameras, effectiveSelectedCameraId, handleAddCamera, handleToggleLock, handleSaveCameras, onCameraStateChange]);
 
   // Reset centering flag when scene ID changes
   React.useEffect(() => {

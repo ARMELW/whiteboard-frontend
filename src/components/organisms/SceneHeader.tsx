@@ -32,7 +32,7 @@ const SceneHeader: React.FC<SceneHeaderProps> = ({
   setShowCameraManager,
   onSaveCameras,
 }) => (
-  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white border border-border rounded-xl px-6 py-3 flex items-center gap-2 z-50 shadow-xl backdrop-blur-md">
+  <div className="bg-white border-b border-border">
     <CameraToolbar
       cameras={sceneCameras}
       selectedCameraId={selectedCameraId}

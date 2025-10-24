@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Sparkles, Layers as LayersIcon, Type, Music, Images } from 'lucide-react';
+import { Sparkles, Layers as LayersIcon, Type, Music, Hand } from 'lucide-react';
 import MediaTab from './tabs/MediaTab';
 import LayersTab from './tabs/LayersTab';
 import TextTab from './tabs/TextTab';
 import AudioTab from './tabs/AudioTab';
+import HandTab from './tabs/HandTab';
 
-type TabType = 'media' | 'layers' | 'text' | 'audio';
+type TabType = 'media' | 'layers' | 'text' | 'audio' | 'hand';
 
 const ContextTabs: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('layers');
@@ -15,6 +16,7 @@ const ContextTabs: React.FC = () => {
     { id: 'layers' as TabType, label: 'Layers', icon: LayersIcon },
     { id: 'text' as TabType, label: 'Text', icon: Type },
     { id: 'audio' as TabType, label: 'Audio', icon: Music },
+    { id: 'hand' as TabType, label: 'Hand', icon: Hand },
   ];
 
   return (
@@ -47,6 +49,7 @@ const ContextTabs: React.FC = () => {
         {activeTab === 'layers' && <LayersTab />}
         {activeTab === 'text' && <TextTab />}
         {activeTab === 'audio' && <AudioTab />}
+        {activeTab === 'hand' && <HandTab />}
       </div>
     </div>
   );

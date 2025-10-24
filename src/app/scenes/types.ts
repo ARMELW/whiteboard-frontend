@@ -36,6 +36,10 @@ export interface Layer {
   skip_rate?: number;
   image_path?: string;
   text?: string;
+  locked?: boolean;
+  animation_type?: string;
+  animation_speed?: number;
+  end_delay?: number;
   [key: string]: any;
 }
 
@@ -94,6 +98,10 @@ export interface Scene {
   sceneAudio?: SceneAudioConfig | null;
   createdAt: string;
   updatedAt: string;
+  transition_type?: string;
+  dragging_speed?: number;
+  slide_duration?: number;
+  sync_slide_with_voice?: boolean;
 }
 
 export interface ScenePayload {
@@ -109,4 +117,8 @@ export interface ScenePayload {
   multiTimeline?: MultiTimeline;
   audio?: AudioConfig;
   sceneAudio?: SceneAudioConfig | null;
+  transition_type?: string;
+  dragging_speed?: number;
+  slide_duration?: number;
+  sync_slide_with_voice?: boolean;
 }

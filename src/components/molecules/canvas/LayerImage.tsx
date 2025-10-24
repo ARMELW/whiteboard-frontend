@@ -66,7 +66,7 @@ export const LayerImage: React.FC<LayerImageProps> = ({
         offsetY={layer.flipY ? img.height : 0}
         rotation={layer.rotation || 0}
         opacity={layer.opacity || 1.0}
-        draggable
+        draggable={!layer.locked}
         dragBoundFunc={dragBoundFunc}
         onClick={(e) => onSelect(e)}
         onTap={(e) => onSelect(e)}
@@ -137,7 +137,7 @@ export const LayerImage: React.FC<LayerImageProps> = ({
           node.scaleY(1);
         }}
       />
-      {isSelected && (
+      {isSelected && !layer.locked && (
         <Transformer
           ref={transformerRef}
           rotateEnabled={true}

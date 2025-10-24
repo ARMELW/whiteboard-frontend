@@ -5,7 +5,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Move, Sliders, RotateCw, Zap, FlipHorizontal, FlipVertical } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Move, Sliders, RotateCw, Zap, FlipHorizontal, FlipVertical, Lock, Unlock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ImagePropertiesFormProps {
@@ -55,6 +62,23 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = ({ layer,
                 className="w-full"
               />
             </div>
+            <div className="flex items-center justify-between pt-2">
+              <label className="text-foreground text-xs font-medium">
+                {layer.locked ? 'Verrouillé' : 'Déverrouillé'}
+              </label>
+              <Button
+                variant={layer.locked ? "default" : "outline"}
+                size="sm"
+                onClick={() => onPropertyChange(layer.id, 'locked', !layer.locked)}
+                className="h-8 px-3"
+              >
+                {layer.locked ? (
+                  <><Lock className="w-4 h-4 mr-1" /> Verrouillé</>
+                ) : (
+                  <><Unlock className="w-4 h-4 mr-1" /> Déverrouillé</>
+                )}
+              </Button>
+            </div>
           </div>
         </AccordionContent>
       </AccordionItem>
@@ -77,6 +101,7 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = ({ layer,
                   value={Math.round(layer.position?.x || 0)}
                   onChange={(e) => handlePositionChange('x', Number(e.target.value))}
                   className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  disabled={layer.locked}
                 />
               </div>
               <div>
@@ -86,6 +111,7 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = ({ layer,
                   value={Math.round(layer.position?.y || 0)}
                   onChange={(e) => handlePositionChange('y', Number(e.target.value))}
                   className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  disabled={layer.locked}
                 />
               </div>
             </div>
@@ -101,6 +127,7 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = ({ layer,
                 value={layer.scale || 1.0}
                 onChange={(e) => onPropertyChange(layer.id, 'scale', Number(e.target.value))}
                 className="w-full"
+                disabled={layer.locked}
               />
             </div>
             <div>
@@ -115,6 +142,7 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = ({ layer,
                 value={layer.rotation || 0}
                 onChange={(e) => onPropertyChange(layer.id, 'rotation', Number(e.target.value))}
                 className="w-full"
+                disabled={layer.locked}
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -130,6 +158,7 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = ({ layer,
                   value={layer.scaleX || 1.0}
                   onChange={(e) => onPropertyChange(layer.id, 'scaleX', Number(e.target.value))}
                   className="w-full"
+                  disabled={layer.locked}
                 />
               </div>
               <div>
@@ -144,6 +173,7 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = ({ layer,
                   value={layer.scaleY || 1.0}
                   onChange={(e) => onPropertyChange(layer.id, 'scaleY', Number(e.target.value))}
                   className="w-full"
+                  disabled={layer.locked}
                 />
               </div>
             </div>
@@ -153,6 +183,7 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = ({ layer,
                 size="sm"
                 onClick={() => onPropertyChange(layer.id, 'flipX', !layer.flipX)}
                 className="w-full"
+                disabled={layer.locked}
               >
                 <FlipHorizontal className="w-4 h-4 mr-2" />
                 Flip H
@@ -162,6 +193,7 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = ({ layer,
                 size="sm"
                 onClick={() => onPropertyChange(layer.id, 'flipY', !layer.flipY)}
                 className="w-full"
+                disabled={layer.locked}
               >
                 <FlipVertical className="w-4 h-4 mr-2" />
                 Flip V
@@ -171,18 +203,51 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = ({ layer,
         </AccordionContent>
       </AccordionItem>
 
-      {/* Drawing Speed */}
+      {/* Animation */}
       <AccordionItem value="animation">
         <AccordionTrigger>
           <div className="flex items-center gap-2">
             <Zap className="w-4 h-4" />
-            <span>Drawing speed</span>
+            <span>Animation</span>
           </div>
         </AccordionTrigger>
         <AccordionContent>
           <div className="space-y-3">
             <div>
-              <label className="block text-foreground text-xs mb-1.5">Skip Rate</label>
+              <label className="block text-foreground text-xs mb-1.5">Type d'animation</label>
+              <Select
+                value={layer.animation_type || 'none'}
+                onValueChange={(value) => onPropertyChange(layer.id, 'animation_type', value)}
+              >
+                <SelectTrigger className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm">
+                  <SelectValue placeholder="Sélectionner un type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucune</SelectItem>
+                  <SelectItem value="draw">Draw (dessin)</SelectItem>
+                  <SelectItem value="fade">Fade In</SelectItem>
+                  <SelectItem value="slide">Slide</SelectItem>
+                  <SelectItem value="zoom">Zoom</SelectItem>
+                  <SelectItem value="bounce">Bounce</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-foreground text-xs mb-1.5">
+                Vitesse d'animation: <span className="font-mono">{layer.animation_speed || 1}x</span>
+              </label>
+              <input
+                type="range"
+                min="0.1"
+                max="3"
+                step="0.1"
+                value={layer.animation_speed || 1}
+                onChange={(e) => onPropertyChange(layer.id, 'animation_speed', Number(e.target.value))}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-foreground text-xs mb-1.5">Skip Rate (Drawing Speed)</label>
               <input
                 type="number"
                 min="1"
@@ -192,6 +257,21 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = ({ layer,
                 className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <p className="text-gray-500 text-xs mt-1">Plus élevé = dessin plus rapide</p>
+            </div>
+            <div>
+              <label className="block text-foreground text-xs mb-1.5">
+                Délai de fin (secondes): <span className="font-mono">{layer.end_delay || 0}s</span>
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="5"
+                step="0.1"
+                value={layer.end_delay || 0}
+                onChange={(e) => onPropertyChange(layer.id, 'end_delay', Number(e.target.value))}
+                className="w-full"
+              />
+              <p className="text-gray-500 text-xs mt-1">Pause après l'animation</p>
             </div>
           </div>
         </AccordionContent>

@@ -1,4 +1,5 @@
 import { useSceneStore } from '@/app/scenes';
+import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import { useState, useCallback, useEffect } from 'react';
 
 export interface LayerEditorState {
@@ -20,6 +21,7 @@ export const useLayerEditor = ({
   const [editedScene, setEditedScene] = useState(scene);
   const [internalSelectedLayerId, setInternalSelectedLayerId] = useState<string | null>(null);
   const [showThumbnailMaker, setShowThumbnailMaker] = useState(false);
+  const { updateSceneProperty, updateLayer, addLayer } = useScenesActionsWithHistory();
 
   const selectedLayerId = externalSelectedLayerId !== undefined ? externalSelectedLayerId : internalSelectedLayerId;
   
@@ -47,14 +49,14 @@ export const useLayerEditor = ({
     setEditedScene((prev: any) => {
       const newScene = { ...prev, ...updates };
       
-      // Persist sceneCameras to store if they are updated
+      // Persist sceneCameras to store if they are updated (with history tracking)
       if (updates.sceneCameras && prev.id) {
-        useSceneStore.getState().updateSceneProperty(prev.id, 'sceneCameras', updates.sceneCameras);
+        updateSceneProperty(prev.id, 'sceneCameras', updates.sceneCameras);
       }
       
       return newScene;
     });
-  }, []);
+  }, [updateSceneProperty]);
 
   const handleUpdateLayer = useCallback((updatedLayer: any) => {
     setEditedScene((prev: any) => {
@@ -64,12 +66,12 @@ export const useLayerEditor = ({
       const newScene = { ...prev, layers: newLayers };
       
       if (prev.id) {
-        useSceneStore.getState().updateLayer(prev.id, updatedLayer);
+        updateLayer({ sceneId: prev.id, layer: updatedLayer });
       }
       
       return newScene;
     });
-  }, []);
+  }, [updateLayer]);
 
   const handleAddLayer = useCallback((newLayer: any) => {
     setEditedScene((prev: any) => {
@@ -78,14 +80,14 @@ export const useLayerEditor = ({
         ...prev,
         layers: [...prev.layers, newLayer]
       };
-      // Persiste dans le store global si la scène a un id
+      // Persiste dans le store global si la scène a un id (with history tracking)
       if (prev.id) {
-        useSceneStore.getState().addLayer(prev.id, newLayer);
+        addLayer({ sceneId: prev.id, layer: newLayer });
       }
       return updated;
     });
     setSelectedLayerId(newLayer.id);
-  }, [setSelectedLayerId]);
+  }, [setSelectedLayerId, addLayer]);
 
   const handleDeleteLayer = useCallback((layerId: string) => {
     setEditedScene((prev: any) => ({
@@ -152,13 +154,13 @@ export const useLayerEditor = ({
       if (prev.id) {
         const updatedLayer = newLayers.find((l: any) => l.id === layerId);
         if (updatedLayer) {
-          useSceneStore.getState().updateLayer(prev.id, updatedLayer);
+          updateLayer({ sceneId: prev.id, layer: updatedLayer });
         }
       }
       
       return newScene;
     });
-  }, []);
+  }, [updateLayer]);
 
   const selectedLayer = editedScene?.layers?.find((layer: any) => layer.id === selectedLayerId);
 

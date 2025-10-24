@@ -1,9 +1,9 @@
-
 import React, { useRef, useCallback } from 'react';
 import EmbeddedAssetLibrary from '../molecules/EmbeddedAssetLibrary';
 import { ImageCropModal } from '../molecules';
 import { v4 as uuidv4 } from 'uuid';
 import { useSceneStore } from '@/app/scenes';
+import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import { LayerType, LayerMode } from '@/app/scenes/types';
 import { ImagePlus } from 'lucide-react';
 
@@ -13,7 +13,7 @@ const EmbeddedAssetLibraryPanel: React.FC = () => {
   const setShowCropModal = useSceneStore((state) => state.setShowCropModal);
   const pendingImageData = useSceneStore((state) => state.pendingImageData);
   const setPendingImageData = useSceneStore((state) => state.setPendingImageData);
-  const addLayer = useSceneStore((state) => state.addLayer);
+  const { addLayer } = useScenesActionsWithHistory();
   const selectedSceneIndex = useSceneStore((state) => state.selectedSceneIndex);
   const scenes = useSceneStore((state) => state.scenes);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -87,7 +87,7 @@ const EmbeddedAssetLibraryPanel: React.FC = () => {
       image_path: asset.dataUrl,
     };
     
-    addLayer(scene.id, newLayer);
+    addLayer({ sceneId: scene.id, layer: newLayer });
   }, [scenes, selectedSceneIndex, addLayer]);
 
   // Handler for crop completion - adds the cropped image to the scene
@@ -140,7 +140,7 @@ const EmbeddedAssetLibraryPanel: React.FC = () => {
       image_path: croppedImageUrl,
     };
     
-    addLayer(scene.id, newLayer);
+    addLayer({ sceneId: scene.id, layer: newLayer });
     setShowCropModal(false);
     setPendingImageData(null);
   }, [scenes, selectedSceneIndex, pendingImageData, addLayer, setShowCropModal, setPendingImageData]);

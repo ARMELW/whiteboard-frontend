@@ -21,7 +21,7 @@ interface SceneState {
   
   // Data Actions
   setScenes: (scenes: Scene[]) => void;
-  addScene: (scene: Scene) => void;
+  addScene: (scene: Scene, afterIndex?: number) => void;
   updateScene: (scene: Scene) => void;
   updateSceneProperty: (sceneId: string, property: string, value: any) => void;
   deleteScene: (id: string) => void;
@@ -32,7 +32,7 @@ interface SceneState {
   deleteLayer: (sceneId: string, layerId: string) => void;
   addCamera: (sceneId: string, camera: Camera) => void;
   moveLayer: (sceneId: string, from: number, to: number) => void;
-  duplicateLayer: (sceneId: string, layer: Layer) => void;
+  duplicateLayer: (sceneId: string, layer: Layer, afterIndex?: number) => void;
   updateSceneThumbnail: (sceneId: string) => Promise<void>;
   
   // Audio Actions
@@ -79,8 +79,20 @@ export const useSceneStore = create<SceneState>((set) => ({
 
   // Data Actions
   setScenes: (scenes: Scene[]) => set({ scenes }),
-  addScene: (scene: Scene) => {
-    set(state => ({ scenes: [...state.scenes, scene] }));
+  addScene: (scene: Scene, afterIndex?: number) => {
+    set(state => {
+      const scenes = [...state.scenes];
+      
+      // If afterIndex is provided, insert right after that index
+      if (afterIndex !== undefined && afterIndex >= 0 && afterIndex < scenes.length) {
+        scenes.splice(afterIndex + 1, 0, scene);
+      } else {
+        // Otherwise, add at the end (default behavior)
+        scenes.push(scene);
+      }
+      
+      return { scenes };
+    });
     // Do NOT generate thumbnail on scene creation; wait for content.
   },
   updateScene: (scene: Scene) => {
@@ -166,12 +178,23 @@ export const useSceneStore = create<SceneState>((set) => ({
     }));
     setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
   },
-  duplicateLayer: (sceneId: string, layer: Layer) => {
+  duplicateLayer: (sceneId: string, layer: Layer, afterIndex?: number) => {
     set(state => ({
-      scenes: state.scenes.map(s => s.id === sceneId ? {
-        ...s,
-        layers: [...(s.layers || []), layer]
-      } : s)
+      scenes: state.scenes.map(s => {
+        if (s.id !== sceneId) return s;
+        
+        const layers = [...(s.layers || [])];
+        
+        // If afterIndex is provided, insert right after that index
+        if (afterIndex !== undefined && afterIndex >= 0 && afterIndex < layers.length) {
+          layers.splice(afterIndex + 1, 0, layer);
+        } else {
+          // Otherwise, add at the end (default behavior)
+          layers.push(layer);
+        }
+        
+        return { ...s, layers };
+      })
     }));
     setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
   },

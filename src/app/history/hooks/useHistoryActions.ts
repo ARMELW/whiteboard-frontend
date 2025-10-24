@@ -22,7 +22,7 @@ export const useHistoryActions = () => {
   
   return {
     // Scene actions
-    addSceneWithHistory: (scene: Scene) => {
+    addSceneWithHistory: (scene: Scene, afterIndex?: number) => {
       const action = createHistoryAction(
         ActionType.ADD_SCENE,
         `Ajouter scène: ${scene.title}`,
@@ -30,11 +30,11 @@ export const useHistoryActions = () => {
           sceneStore.deleteScene(scene.id);
         },
         () => {
-          sceneStore.addScene(scene);
+          sceneStore.addScene(scene, afterIndex);
         }
       );
       
-      sceneStore.addScene(scene);
+      sceneStore.addScene(scene, afterIndex);
       pushAction(action);
     },
     
@@ -184,7 +184,7 @@ export const useHistoryActions = () => {
       pushAction(action);
     },
     
-    duplicateLayerWithHistory: (sceneId: string, layer: Layer) => {
+    duplicateLayerWithHistory: (sceneId: string, layer: Layer, afterIndex?: number) => {
       const action = createHistoryAction(
         ActionType.DUPLICATE_LAYER,
         `Dupliquer calque: ${layer.name}`,
@@ -192,11 +192,11 @@ export const useHistoryActions = () => {
           sceneStore.deleteLayer(sceneId, layer.id);
         },
         () => {
-          sceneStore.duplicateLayer(sceneId, layer);
+          sceneStore.duplicateLayer(sceneId, layer, afterIndex);
         }
       );
       
-      sceneStore.duplicateLayer(sceneId, layer);
+      sceneStore.duplicateLayer(sceneId, layer, afterIndex);
       pushAction(action);
     },
     

@@ -62,13 +62,23 @@ export const useScenesActionsWithHistory = () => {
     duplicateLayer: (params: { sceneId: string; layerId?: string; layer?: Layer }) => {
       // Support both API styles: {layerId} or {layer}
       let layerToDuplicate: Layer | undefined;
+      let layerIndex: number = -1;
       
       if (params.layerId) {
         const scenes = useSceneStore.getState().scenes;
         const scene = scenes.find(s => s.id === params.sceneId);
-        layerToDuplicate = scene?.layers?.find(l => l.id === params.layerId);
+        if (scene?.layers) {
+          layerIndex = scene.layers.findIndex(l => l.id === params.layerId);
+          layerToDuplicate = scene.layers[layerIndex];
+        }
       } else if (params.layer) {
         layerToDuplicate = params.layer;
+        // Try to find the index of the layer in the scene
+        const scenes = useSceneStore.getState().scenes;
+        const scene = scenes.find(s => s.id === params.sceneId);
+        if (scene?.layers) {
+          layerIndex = scene.layers.findIndex(l => l.id === params.layer.id);
+        }
       }
       
       if (!layerToDuplicate) return;
@@ -80,7 +90,8 @@ export const useScenesActionsWithHistory = () => {
         name: `${layerToDuplicate.name} (copie)`,
       };
       
-      duplicateLayerWithHistory(params.sceneId, newLayer);
+      // Insert the duplicated layer right after the original layer
+      duplicateLayerWithHistory(params.sceneId, newLayer, layerIndex);
     },
     
     // Property operations with history

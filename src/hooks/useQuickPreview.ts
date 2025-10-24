@@ -7,6 +7,10 @@ import { toast } from 'sonner';
  * Hook for quick preview generation
  * Provides instant preview without backend processing
  */
+
+const ERROR_NO_SCENES = 'Aucune scène à prévisualiser';
+const ERROR_GENERATION_FAILED = 'Échec de la génération de la prévisualisation';
+
 export function useQuickPreview() {
   const scenes = useSceneStore((state) => state.scenes);
   const startPreview = useSceneStore((state) => state.startPreview);
@@ -18,8 +22,8 @@ export function useQuickPreview() {
    */
   const generatePreview = useCallback(async () => {
     if (scenes.length === 0) {
-      toast.error('Aucune scène à prévisualiser');
-      setError('Aucune scène à prévisualiser');
+      toast.error(ERROR_NO_SCENES);
+      setError(ERROR_NO_SCENES);
       return;
     }
 
@@ -41,7 +45,7 @@ export function useQuickPreview() {
       toast.success('Prévisualisation prête!');
     } catch (err: any) {
       console.error('Preview generation error:', err);
-      const errorMessage = err.message || 'Échec de la génération de la prévisualisation';
+      const errorMessage = err.message || ERROR_GENERATION_FAILED;
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {

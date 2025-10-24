@@ -97,8 +97,8 @@ export const createQuickPreview = async (
         const img = await loadImage(sceneDataUrl);
         
         // Calculate frames for this scene
-        const frames = Math.ceil((duration / 1000) * fps);
         const frameDuration = 1000 / fps;
+        const frames = Math.ceil((duration / 1000) * fps);
         
         // Render frames for this scene
         for (let i = 0; i < frames; i++) {

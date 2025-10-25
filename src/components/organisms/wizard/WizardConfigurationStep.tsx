@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useWizard } from '@/app/wizard';
-import { VoiceType, DoodleStyle, Language } from '@/app/wizard/types';
-import { Settings, ArrowLeft } from 'lucide-react';
+import { VoiceType, DoodleStyle, Language, ImagePlacementStrategy, TextImageBalance } from '@/app/wizard/types';
+import { Settings, ArrowLeft, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   DialogHeader,
   DialogTitle,
@@ -17,9 +17,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 export const WizardConfigurationStep: React.FC = () => {
   const { configuration, setConfiguration, previousStep, startGeneration } = useWizard();
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleContinue = () => {
     startGeneration();
@@ -166,6 +168,165 @@ export const WizardConfigurationStep: React.FC = () => {
               onCheckedChange={(checked) => setConfiguration({ autoGenerateScenes: checked })}
             />
           </div>
+        </div>
+
+        {/* Advanced Settings Accordion */}
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="advanced">
+            <AccordionTrigger className="text-base font-medium">
+              <div className="flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                Paramètres Avancés
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-6 pt-4">
+              {/* Image Placement Strategy */}
+              <div className="space-y-3">
+                <Label htmlFor="imagePlacement" className="text-base font-medium flex items-center gap-2">
+                  Stratégie de placement des images
+                  <div className="group relative">
+                    <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                    <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-10">
+                      Détermine comment l'IA positionne les images dans chaque scène
+                    </div>
+                  </div>
+                </Label>
+                <Select
+                  value={configuration.imagePlacementStrategy}
+                  onValueChange={(value) => setConfiguration({ imagePlacementStrategy: value as ImagePlacementStrategy })}
+                >
+                  <SelectTrigger id="imagePlacement">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ImagePlacementStrategy.AUTO}>Automatique (recommandé)</SelectItem>
+                    <SelectItem value={ImagePlacementStrategy.CENTERED}>Centré</SelectItem>
+                    <SelectItem value={ImagePlacementStrategy.GRID}>Grille</SelectItem>
+                    <SelectItem value={ImagePlacementStrategy.SCATTERED}>Dispersé</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">
+                  {configuration.imagePlacementStrategy === ImagePlacementStrategy.AUTO && "L'IA choisit automatiquement le meilleur placement selon le contenu"}
+                  {configuration.imagePlacementStrategy === ImagePlacementStrategy.CENTERED && "Images centrées pour un impact maximum"}
+                  {configuration.imagePlacementStrategy === ImagePlacementStrategy.GRID && "Disposition en grille pour la clarté"}
+                  {configuration.imagePlacementStrategy === ImagePlacementStrategy.SCATTERED && "Disposition naturelle et dynamique"}
+                </p>
+              </div>
+
+              {/* Text/Image Balance */}
+              <div className="space-y-3">
+                <Label htmlFor="textImageBalance" className="text-base font-medium flex items-center gap-2">
+                  Équilibre Texte/Image
+                  <div className="group relative">
+                    <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                    <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-10">
+                      Contrôle la proportion de texte vs images dans les scènes
+                    </div>
+                  </div>
+                </Label>
+                <Select
+                  value={configuration.textImageBalance}
+                  onValueChange={(value) => setConfiguration({ textImageBalance: value as TextImageBalance })}
+                >
+                  <SelectTrigger id="textImageBalance">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={TextImageBalance.AUTO}>Automatique</SelectItem>
+                    <SelectItem value={TextImageBalance.TEXT_HEAVY}>Priorité texte (70/30)</SelectItem>
+                    <SelectItem value={TextImageBalance.BALANCED}>Équilibré (50/50)</SelectItem>
+                    <SelectItem value={TextImageBalance.IMAGE_HEAVY}>Priorité images (30/70)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Images per Scene */}
+              <div className="space-y-3">
+                <Label className="text-base font-medium">Nombre d'images par scène</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="minImages" className="text-sm">Minimum</Label>
+                    <input
+                      id="minImages"
+                      type="number"
+                      min="0"
+                      max="10"
+                      value={configuration.minImagesPerScene}
+                      onChange={(e) => setConfiguration({ minImagesPerScene: parseInt(e.target.value, 10) || 0 })}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="maxImages" className="text-sm">Maximum</Label>
+                    <input
+                      id="maxImages"
+                      type="number"
+                      min="1"
+                      max="10"
+                      value={configuration.maxImagesPerScene}
+                      onChange={(e) => setConfiguration({ maxImagesPerScene: parseInt(e.target.value, 10) || 1 })}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">
+                  L'IA ajustera le nombre exact selon la complexité du contenu
+                </p>
+              </div>
+
+              {/* Image Size */}
+              <div className="space-y-3">
+                <Label htmlFor="imageSize" className="text-base font-medium">
+                  Taille des images
+                </Label>
+                <Select
+                  value={configuration.imageSize}
+                  onValueChange={(value) => setConfiguration({ imageSize: value as 'small' | 'medium' | 'large' })}
+                >
+                  <SelectTrigger id="imageSize">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="small">Petite (400x300)</SelectItem>
+                    <SelectItem value="medium">Moyenne (600x450)</SelectItem>
+                    <SelectItem value="large">Grande (800x600)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Use Text Layers */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="useTextLayers" className="text-base font-medium">
+                    Utiliser des calques de texte
+                  </Label>
+                  <p className="text-sm text-gray-500">
+                    Ajoute du texte superposé aux images pour renforcer les messages clés
+                  </p>
+                </div>
+                <Switch
+                  id="useTextLayers"
+                  checked={configuration.useTextLayers}
+                  onCheckedChange={(checked) => setConfiguration({ useTextLayers: checked })}
+                />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+
+        {/* AI Decision Info Panel */}
+        <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+          <h4 className="text-sm font-semibold text-purple-900 mb-2 flex items-center gap-2">
+            <Info className="w-4 h-4" />
+            Comment l'IA prend ses décisions
+          </h4>
+          <ul className="text-sm text-purple-800 space-y-1.5">
+            <li>• <strong>Analyse du contenu:</strong> L'IA analyse le ton, la structure et les mots-clés de votre scénario</li>
+            <li>• <strong>Nombre d'images:</strong> Déterminé par la densité d'information et la durée de la scène</li>
+            <li>• <strong>Positionnement:</strong> Basé sur la hiérarchie visuelle et le flux de lecture naturel</li>
+            <li>• <strong>Choix texte/image:</strong> Les concepts abstraits utilisent plus de texte, les concepts concrets plus d'images</li>
+            <li>• <strong>Style:</strong> Adapté au contexte (professionnel, éducatif, créatif, etc.)</li>
+          </ul>
         </div>
       </div>
 

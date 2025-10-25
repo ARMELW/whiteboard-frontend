@@ -1,9 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
-import { Save, Download, Undo, Redo, FileVideo, Play, Clock, Library, BookmarkPlus, Camera, Plus, ZoomIn, ZoomOut, Lock, Unlock, Sparkles } from 'lucide-react';
+import { Save, Download, Undo, Redo, FileVideo, Play, Clock, Library, BookmarkPlus, Camera, Plus, ZoomIn, ZoomOut, Lock, Unlock, Sparkles, Loader2 } from 'lucide-react';
 import { useSceneStore } from '@/app/scenes';
 import { useWizardStore } from '@/app/wizard';
-import { Save, Download, Undo, Redo, FileVideo, Play, Clock, Library, BookmarkPlus, Camera, Plus, ZoomIn, ZoomOut, Lock, Unlock, Loader2 } from 'lucide-react';
-import { useSceneStore } from '@/app/scenes';
 import { useHistory } from '@/app/history';
 import { useQuickPreview } from '@/hooks/useQuickPreview';
 import {

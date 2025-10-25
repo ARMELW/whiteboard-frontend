@@ -76,6 +76,7 @@ export const useWizardStore = create<WizardStore>((set, get) => ({
     const { currentStep } = get();
     const steps = [
       WizardStep.PROMPT,
+      WizardStep.IMPORT,
       WizardStep.CONFIGURATION,
       WizardStep.GENERATION,
       WizardStep.REVIEW,
@@ -90,6 +91,7 @@ export const useWizardStore = create<WizardStore>((set, get) => ({
     const { currentStep } = get();
     const steps = [
       WizardStep.PROMPT,
+      WizardStep.IMPORT,
       WizardStep.CONFIGURATION,
       WizardStep.GENERATION,
       WizardStep.REVIEW,

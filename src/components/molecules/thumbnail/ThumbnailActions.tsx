@@ -14,15 +14,15 @@ export const ThumbnailActions: React.FC<ThumbnailActionsProps> = ({
     <div className="flex gap-3">
       <button
         onClick={onDownload}
-        className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-lg"
+        className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl"
       >
         <Download className="w-5 h-5" />
-        Télécharger PNG
+        Télécharger
       </button>
       {onSave && (
         <button
           onClick={onSave}
-          className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-lg"
+          className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 px-4 rounded-lg transition-all shadow-lg hover:shadow-xl"
         >
           <ImageIcon className="w-5 h-5" />
           Enregistrer

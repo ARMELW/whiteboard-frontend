@@ -61,21 +61,21 @@ export const ThumbnailLayersList: React.FC<ThumbnailLayersListProps> = ({
   };
 
   return (
-    <div className="bg-secondary/30 rounded-lg p-4 border border-border">
+    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
       <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-        <Layers className="w-4 h-4" />
+        <Layers className="w-4 h-4 text-purple-400" />
         Calques ({layers.length})
       </h3>
       
-      <div className="space-y-2 max-h-48 overflow-y-auto">
+      <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
         {layers.slice().reverse().map((layer, index) => (
           <div
             key={layer.id}
             onClick={() => onSelectLayer(layer.id)}
-            className={`p-3 rounded-lg cursor-pointer transition-colors ${
+            className={`p-3 rounded-lg cursor-pointer transition-all ${
               layer.id === selectedLayerId
-                ? 'bg-primary text-white'
-                : 'bg-secondary text-foreground hover:bg-secondary/80'
+                ? 'bg-purple-600 text-white shadow-md'
+                : 'bg-gray-900/50 text-gray-300 hover:bg-gray-900/80 border border-gray-700'
             }`}
           >
             <div className="flex items-center justify-between">
@@ -91,8 +91,9 @@ export const ThumbnailLayersList: React.FC<ThumbnailLayersListProps> = ({
                     e.stopPropagation();
                     onMoveLayer(layer.id, 'up');
                   }}
-                  className="p-1 hover:bg-white/10 rounded"
+                  className="p-1 hover:bg-white/10 rounded transition-colors"
                   disabled={index === 0}
+                  title="Monter le calque"
                 >
                   <span className="text-xs">▲</span>
                 </button>
@@ -101,8 +102,9 @@ export const ThumbnailLayersList: React.FC<ThumbnailLayersListProps> = ({
                     e.stopPropagation();
                     onMoveLayer(layer.id, 'down');
                   }}
-                  className="p-1 hover:bg-white/10 rounded"
+                  className="p-1 hover:bg-white/10 rounded transition-colors"
                   disabled={index === layers.length - 1}
+                  title="Descendre le calque"
                 >
                   <span className="text-xs">▼</span>
                 </button>
@@ -111,7 +113,8 @@ export const ThumbnailLayersList: React.FC<ThumbnailLayersListProps> = ({
                     e.stopPropagation();
                     onDeleteLayer(layer.id);
                   }}
-                  className="p-1 hover:bg-red-600 rounded"
+                  className="p-1 hover:bg-red-600 rounded transition-colors"
+                  title="Supprimer le calque"
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>
@@ -122,7 +125,7 @@ export const ThumbnailLayersList: React.FC<ThumbnailLayersListProps> = ({
       </div>
       
       {layers.length === 0 && (
-        <p className="text-muted-foreground text-sm text-center py-4">
+        <p className="text-gray-400 text-sm text-center py-4">
           Aucun calque. Ajoutez une image, du texte ou une forme.
         </p>
       )}

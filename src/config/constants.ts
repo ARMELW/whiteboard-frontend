@@ -1,9 +1,16 @@
 export const STORAGE_KEYS = {
   SCENES: 'whiteboard-scenes',
+  PROJECTS: 'whiteboard-projects',
   ASSETS: 'whiteboard-assets',
   ASSET_CACHE: 'whiteboard-asset-cache',
   SETTINGS: 'whiteboard-settings',
   TEMPLATES: 'whiteboard-templates',
+} as const;
+
+export const DEFAULT_IDS = {
+  PROJECT: 'default-project',
+  USER: 'user_123',
+  CHANNEL: 'chn_456',
 } as const;
 
 export const DEFAULT_SCENE_DURATION = 5;
@@ -33,6 +40,7 @@ export const CANVAS_DEFAULTS = {
 
 export default {
   STORAGE_KEYS,
+  DEFAULT_IDS,
   DEFAULT_SCENE_DURATION,
   ANIMATION_TYPES,
   EXPORT_FORMATS,

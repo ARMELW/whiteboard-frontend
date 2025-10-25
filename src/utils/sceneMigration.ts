@@ -1,4 +1,4 @@
-import { STORAGE_KEYS } from '@/config/constants';
+import { STORAGE_KEYS, DEFAULT_IDS } from '@/config/constants';
 import type { Scene } from '@/app/scenes/types';
 
 /**
@@ -18,7 +18,7 @@ export function migrateScenesToProjectHierarchy(): void {
         needsMigration = true;
         return {
           ...scene,
-          project_id: 'default-project', // Assign all old scenes to a default project
+          project_id: DEFAULT_IDS.PROJECT, // Assign all old scenes to a default project
         };
       }
       return scene;
@@ -37,17 +37,15 @@ export function migrateScenesToProjectHierarchy(): void {
  * Get or create a default project for backwards compatibility
  */
 export function ensureDefaultProject(): string {
-  const defaultProjectId = 'default-project';
-  
   // Check if we need to create mock projects in localStorage
   try {
-    const projectsJson = localStorage.getItem('whiteboard-projects');
+    const projectsJson = localStorage.getItem(STORAGE_KEYS.PROJECTS);
     if (!projectsJson) {
       // Create a default project for existing scenes
       const defaultProject = {
-        id: defaultProjectId,
-        user_id: 'user_123',
-        channel_id: 'chn_456', // Assign to first mock channel
+        id: DEFAULT_IDS.PROJECT,
+        user_id: DEFAULT_IDS.USER,
+        channel_id: DEFAULT_IDS.CHANNEL, // Assign to first mock channel
         title: 'Projet par défaut',
         description: 'Projet créé automatiquement pour les scènes existantes',
         thumbnail_url: null,
@@ -61,12 +59,12 @@ export function ensureDefaultProject(): string {
         deleted_at: null,
       };
       
-      localStorage.setItem('whiteboard-projects', JSON.stringify([defaultProject]));
+      localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify([defaultProject]));
       console.log('[Migration] Created default project for existing scenes');
     }
   } catch (error) {
     console.error('[Migration] Failed to create default project:', error);
   }
   
-  return defaultProjectId;
+  return DEFAULT_IDS.PROJECT;
 }

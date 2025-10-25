@@ -1,6 +1,6 @@
 import BaseService from '../../../services/api/baseService';
 import API_ENDPOINTS from '../../../config/api';
-import { STORAGE_KEYS } from '../../../config/constants';
+import { STORAGE_KEYS, DEFAULT_IDS } from '../../../config/constants';
 import { createMultiTimeline } from '../../../utils/multiTimelineSystem';
 import { createSceneAudioConfig } from '../../../utils/audioManager';
 import { createCamera } from '../../../utils/cameraAnimator';
@@ -35,7 +35,7 @@ class ScenesService extends BaseService<Scene> {
 
     // For backwards compatibility, use a default project_id if not provided
     // TODO: Remove this fallback once all scene creation flows are updated
-    const projectId = payload.project_id || 'default-project';
+    const projectId = payload.project_id || DEFAULT_IDS.PROJECT;
 
     const defaultScene: Partial<Scene> = {
       id: `scene-${Date.now()}`,

@@ -86,13 +86,13 @@ export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = memo(({
                 <span style={{ fontFamily: 'Verdana' }}>Verdana</span>
               </SelectItem>
               <SelectItem value="Times New Roman" className="cursor-pointer hover:bg-secondary/50">
-                <span style={{ fontFamily: 'Times New Roman' }}>Times</span>
+                <span style={{ fontFamily: 'Times New Roman' }}>Times New Roman</span>
               </SelectItem>
               <SelectItem value="Georgia" className="cursor-pointer hover:bg-secondary/50">
                 <span style={{ fontFamily: 'Georgia' }}>Georgia</span>
               </SelectItem>
               <SelectItem value="Courier New" className="cursor-pointer hover:bg-secondary/50">
-                <span style={{ fontFamily: 'Courier New' }}>Courier</span>
+                <span style={{ fontFamily: 'Courier New' }}>Courier New</span>
               </SelectItem>
               <SelectItem value="Comic Sans MS" className="cursor-pointer hover:bg-secondary/50">
                 <span style={{ fontFamily: 'Comic Sans MS' }}>Comic Sans</span>

@@ -115,7 +115,7 @@ const AnimationContainer: React.FC = () => {
               variant="outline"
               size="sm"
               className="gap-2"
-              disabled={scenes.length === 0 || selectedSceneIndex >= scenes.length - 1}
+              disabled={scenes.length === 0 || selectedSceneIndex < 0}
             >
               <Play className="w-4 h-4" />
               Depuis cette scène

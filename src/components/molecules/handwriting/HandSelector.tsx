@@ -30,17 +30,19 @@ const HAND_OPTIONS: HandOption[] = [
   },
   {
     id: 'hand-2',
-    name: 'Main 2 (bientôt disponible)',
+    name: 'Main 2',
     imagePath: '/data/images/drawing-hand.png',
     maskPath: '/data/images/hand-mask.png',
   },
   {
     id: 'hand-3',
-    name: 'Main 3 (bientôt disponible)',
+    name: 'Main 3',
     imagePath: '/data/images/drawing-hand.png',
     maskPath: '/data/images/hand-mask.png',
   },
 ];
+
+const COMING_SOON_TEXT = '(à venir)';
 
 export const HandSelector: React.FC<HandSelectorProps> = ({
   selectedHandId,
@@ -70,7 +72,7 @@ export const HandSelector: React.FC<HandSelectorProps> = ({
               <div className="flex items-center gap-2">
                 <span>{hand.name}</span>
                 {hand.id !== 'default' && (
-                  <span className="text-xs text-muted-foreground">(à venir)</span>
+                  <span className="text-xs text-muted-foreground">{COMING_SOON_TEXT}</span>
                 )}
               </div>
             </SelectItem>

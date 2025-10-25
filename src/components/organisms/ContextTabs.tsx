@@ -227,29 +227,33 @@ const ContextTabs: React.FC = () => {
         {activeTab === 'text' && (
           <div className="p-3">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold">Text Tools</h3>
+              <h3 className="text-sm font-bold">Polices disponibles</h3>
               <Button
                 onClick={handleAddText}
                 size="sm"
                 className="gap-1"
               >
                 <Plus className="w-3 h-3" />
-                Add
+                Ajouter
               </Button>
             </div>
             <div className="space-y-2">
               <p className="text-xs text-muted-foreground mb-3">
-                Add and format text layers for your scene
+                Sélectionnez une police pour votre texte
               </p>
-              <Button
-                onClick={handleAddText}
-                variant="outline"
-                className="w-full gap-2"
-                size="sm"
-              >
-                <Type className="w-4 h-4" />
-                Add Text Layer
-              </Button>
+              {/* Font List */}
+              <div className="space-y-1">
+                {['Arial', 'Arial Black', 'Verdana', 'Times New Roman', 'Georgia', 'Courier New', 'Comic Sans MS', 'Impact', 'Trebuchet MS', 'Palatino', 'Garamond', 'Bookman', 'Tahoma', 'Lucida Console'].map((font) => (
+                  <button
+                    key={font}
+                    onClick={handleAddText}
+                    className="w-full text-left px-3 py-2 bg-secondary/30 hover:bg-secondary/50 rounded border border-border transition-colors text-sm"
+                    style={{ fontFamily: font }}
+                  >
+                    {font}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}

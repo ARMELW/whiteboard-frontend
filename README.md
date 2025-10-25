@@ -42,12 +42,12 @@ Une application web interactive pour créer des vidéos d'animation structurées
 - **Animations fluides** : Transitions élégantes entre les scènes
 - **Contrôles de lecture** : Play, pause, et navigation entre les scènes
 - **Système de sauvegarde backend** ⭐ NOUVEAU
-  - Sauvegarde automatique et manuelle des données
-  - Support backend API avec fallback localStorage
+  - Sauvegarde manuelle des données via bouton ou raccourci clavier
+  - Support backend API avec fallback localStorage automatique
   - Mode hybride intelligent (backend + cache local)
   - Raccourcis clavier (Ctrl+S / Cmd+S)
-  - Indicateurs visuels de sauvegarde
-  - Synchronisation automatique des données
+  - Indicateurs visuels de sauvegarde en temps réel
+  - Synchronisation des données avec le backend
 - **Persistance des données** : Vos scènes sont sauvegardées automatiquement dans le navigateur
 - **Interface intuitive** : Interface utilisateur moderne construite avec React et Tailwind CSS
 - **Responsive** : Fonctionne sur tous les écrans

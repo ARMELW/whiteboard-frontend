@@ -119,7 +119,7 @@ Le système affiche automatiquement des toasts pour:
 
 **Succès:**
 ```
-✅ 3 scène(s) sauvegardée(s) avec succès
+✅ 3 scènes sauvegardées avec succès
 ```
 
 **Avertissement:**
@@ -169,7 +169,8 @@ Le système affiche automatiquement des toasts pour:
 
 1. Vérifier que le backend tourne:
 ```bash
-curl http://localhost:3000/api/health
+# Tester avec une requête directe vers votre backend
+curl http://localhost:3000/api/scenes
 ```
 
 2. Vérifier le fichier `.env`:
@@ -324,10 +325,10 @@ function SaveStatus() {
 
 ### Ajouter l'authentification
 
-Éditez `src/services/api/httpClient.ts`:
+Pour ajouter l'authentification, modifiez `src/services/api/httpClient.ts`:
 
 ```typescript
-// Décommenter ces lignes dans setupInterceptors()
+// Dans setupInterceptors(), ajoutez:
 this.client.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token');
   if (token) {
@@ -336,6 +337,8 @@ this.client.interceptors.request.use((config) => {
   return config;
 });
 ```
+
+Note: Ce code n'est pas encore implémenté. Vous devrez l'ajouter si vous avez besoin d'authentification.
 
 ### Configuration CORS Backend
 

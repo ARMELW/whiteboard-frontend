@@ -18,7 +18,11 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-export function ProjectsPage() {
+interface ProjectsPageProps {
+  onOpenEditor: (project: Project) => void;
+}
+
+export function ProjectsPage({ onOpenEditor }: ProjectsPageProps) {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
@@ -28,8 +32,7 @@ export function ProjectsPage() {
   const { deleteProject, duplicateProject } = useProjectsActions();
 
   const handleEditProject = (project: Project) => {
-    console.log('Edit project:', project);
-    // TODO: Navigate to editor
+    onOpenEditor(project);
   };
 
   const handleDuplicateProject = (project: Project) => {
@@ -89,7 +92,7 @@ export function ProjectsPage() {
         onOpenChange={setCreateModalOpen}
         onSuccess={(projectId) => {
           console.log('Project created:', projectId);
-          // TODO: Navigate to editor
+          // Project will be available in the list to click and open
         }}
       />
 

@@ -3,11 +3,18 @@ import { DashboardApp } from './DashboardApp';
 import { AnimationContainer } from '@/components/organisms';
 import { Button } from '@/components/ui/button';
 import { LayoutDashboard, Palette } from 'lucide-react';
+import { Project } from '@/app/projects/types';
 
 type View = 'dashboard' | 'editor';
 
 export function MainApp() {
   const [currentView, setCurrentView] = useState<View>('dashboard');
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
+  const handleOpenEditor = (project: Project) => {
+    setSelectedProject(project);
+    setCurrentView('editor');
+  };
 
   return (
     <div className="min-h-screen">
@@ -30,7 +37,11 @@ export function MainApp() {
         </Button>
       </div>
 
-      {currentView === 'dashboard' ? <DashboardApp /> : <AnimationContainer />}
+      {currentView === 'dashboard' ? (
+        <DashboardApp onOpenEditor={handleOpenEditor} />
+      ) : (
+        <AnimationContainer />
+      )}
     </div>
   );
 }

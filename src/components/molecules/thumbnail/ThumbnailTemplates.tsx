@@ -234,9 +234,9 @@ export const ThumbnailTemplates: React.FC<ThumbnailTemplatesProps> = ({
   onSelectTemplate,
 }) => {
   return (
-    <div className="bg-secondary/30 rounded-lg p-4 border border-border">
+    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
       <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-        <Sparkles className="w-4 h-4" />
+        <Sparkles className="w-4 h-4 text-purple-400" />
         Templates Prédéfinis
       </h3>
       
@@ -245,11 +245,11 @@ export const ThumbnailTemplates: React.FC<ThumbnailTemplatesProps> = ({
           <button
             key={template.id}
             onClick={() => onSelectTemplate(template)}
-            className="group relative overflow-hidden rounded-lg border border-border hover:border-primary transition-all text-left"
+            className="group relative overflow-hidden rounded-lg border border-gray-600 hover:border-purple-500 transition-all text-left hover:shadow-lg"
           >
             {/* Preview miniature */}
             <div 
-              className="h-20 flex items-center justify-center"
+              className="h-20 flex items-center justify-center relative"
               style={{ 
                 background: template.backgroundColor,
               }}
@@ -260,14 +260,14 @@ export const ThumbnailTemplates: React.FC<ThumbnailTemplatesProps> = ({
             </div>
             
             {/* Info */}
-            <div className="bg-secondary p-2">
+            <div className="bg-gray-900/80 p-2 border-t border-gray-700">
               <h4 className="text-white font-semibold text-sm">{template.name}</h4>
-              <p className="text-foreground text-xs mt-0.5">{template.description}</p>
+              <p className="text-gray-400 text-xs mt-0.5">{template.description}</p>
             </div>
             
             {/* Hover overlay */}
-            <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <span className="text-white font-semibold text-sm bg-primary px-3 py-1 rounded">
+            <div className="absolute inset-0 bg-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <span className="text-white font-semibold text-sm bg-purple-600 px-4 py-2 rounded-lg shadow-lg">
                 Appliquer
               </span>
             </div>
@@ -275,9 +275,9 @@ export const ThumbnailTemplates: React.FC<ThumbnailTemplatesProps> = ({
         ))}
       </div>
       
-      <div className="mt-3 pt-3 border-t border-border">
-        <p className="text-foreground text-xs">
-          💡 Astuce: Vous pouvez personnaliser chaque template après l'avoir appliqué
+      <div className="mt-3 pt-3 border-t border-gray-700">
+        <p className="text-gray-400 text-xs">
+          💡 Astuce: Personnalisez chaque template après application
         </p>
       </div>
     </div>

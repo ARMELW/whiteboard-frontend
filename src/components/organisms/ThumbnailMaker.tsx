@@ -250,26 +250,27 @@ const ThumbnailMaker = ({ scene, onClose, onSave }: ThumbnailMakerProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[95vh] overflow-hidden flex flex-col">
-  <ThumbnailHeader onClose={onClose ?? (() => {})} />
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl shadow-2xl w-full max-w-7xl max-h-[95vh] overflow-hidden flex flex-col border border-gray-700">
+        <ThumbnailHeader onClose={onClose ?? (() => {})} />
 
         <div className="flex-1 overflow-hidden flex">
           {/* Left Panel - Canvas */}
-          <div className="flex-1 p-6 overflow-auto bg-secondary/30">
+          <div className="flex-1 p-6 overflow-auto bg-gradient-to-br from-gray-800 to-gray-900">
             <div className="space-y-4">
-              {/* Konva Stage */}
-              <div className="bg-secondary rounded-xl p-4">
-                <div className="relative" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+              {/* Konva Stage Container */}
+              <div className="bg-gray-900/50 rounded-lg p-6 border border-gray-700 shadow-xl">
+                <div className="relative mx-auto bg-black/30 rounded-lg p-4" style={{ maxWidth: 'fit-content' }}>
                   <Stage
                     width={WIDTH}
                     height={HEIGHT}
                     ref={stageRef}
-                    className="border-2 border-border rounded-lg shadow-2xl"
+                    className="rounded-lg shadow-2xl ring-2 ring-purple-500/50"
                     style={{ 
                       maxWidth: '100%', 
                       height: 'auto',
-                      display: 'block'
+                      display: 'block',
+                      backgroundColor: 'transparent'
                     }}
                     onMouseDown={(e) => {
                       // Deselect when clicking on empty area
@@ -365,12 +366,8 @@ const ThumbnailMaker = ({ scene, onClose, onSave }: ThumbnailMakerProps) => {
           </div>
 
           {/* Right Panel - Controls */}
-          <div className="w-96 bg-gray-850 border-l border-border overflow-auto">
-            <div className="p-6 space-y-6">
-              <ThumbnailTemplates
-                onSelectTemplate={handleApplyTemplate}
-              />
-
+          <div className="w-96 bg-gray-900 border-l border-gray-700 overflow-auto">
+            <div className="p-6 space-y-4">
               <ThumbnailAddElements
                 onImageUpload={() => imageUploadRef.current?.click()}
                 onAddText={handleAddText}
@@ -399,14 +396,18 @@ const ThumbnailMaker = ({ scene, onClose, onSave }: ThumbnailMakerProps) => {
                 />
               )}
 
+              <ThumbnailTemplates
+                onSelectTemplate={handleApplyTemplate}
+              />
+
               {/* Utilities */}
-              <div className="bg-secondary/30 rounded-lg p-4 border border-border">
-                <label className="flex items-center gap-2 text-foreground text-sm cursor-pointer">
+              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                <label className="flex items-center gap-2 text-gray-300 text-sm cursor-pointer hover:text-white transition-colors">
                   <input
                     type="checkbox"
                     checked={showGrid}
                     onChange={(e) => setShowGrid(e.target.checked)}
-                    className="w-4 h-4 accent-blue-500"
+                    className="w-4 h-4 accent-purple-500 rounded"
                   />
                   Afficher la grille de composition
                 </label>

@@ -23,25 +23,25 @@ export const ThumbnailTextProperties: React.FC<ThumbnailTextPropertiesProps> = (
   onTextChange
 }) => {
   return (
-    <div className="bg-secondary/30 rounded-lg p-4 border border-border">
+    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
       <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-        <Type className="w-4 h-4" />
+        <Type className="w-4 h-4 text-purple-400" />
         Propriétés du texte
       </h3>
       
       <div className="space-y-3">
         <div>
-          <label className="block text-foreground text-sm mb-2">Texte</label>
+          <label className="block text-gray-300 text-sm mb-2">Texte</label>
           <input
             type="text"
             value={layer.text}
             onChange={(e) => onTextChange('text', e.target.value)}
-            className="w-full bg-secondary text-white border border-border rounded-lg px-3 py-2"
+            className="w-full bg-gray-900 text-white border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
           />
         </div>
         
         <div>
-          <label className="block text-foreground text-sm mb-2">
+          <label className="block text-gray-300 text-sm mb-2">
             Taille: {Math.round(layer.fontSize)}px
           </label>
           <input
@@ -50,33 +50,33 @@ export const ThumbnailTextProperties: React.FC<ThumbnailTextPropertiesProps> = (
             max="120"
             value={layer.fontSize}
             onChange={(e) => onTextChange('fontSize', parseInt(e.target.value))}
-            className="w-full accent-blue-500"
+            className="w-full accent-purple-500"
           />
         </div>
         
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-foreground text-sm mb-2">Couleur</label>
+            <label className="block text-gray-300 text-sm mb-2">Couleur</label>
             <input
               type="color"
               value={layer.fill}
               onChange={(e) => onTextChange('fill', e.target.value)}
-              className="w-full h-10 rounded cursor-pointer"
+              className="w-full h-10 rounded-lg cursor-pointer border border-gray-600"
             />
           </div>
           <div>
-            <label className="block text-foreground text-sm mb-2">Contour</label>
+            <label className="block text-gray-300 text-sm mb-2">Contour</label>
             <input
               type="color"
               value={layer.stroke}
               onChange={(e) => onTextChange('stroke', e.target.value)}
-              className="w-full h-10 rounded cursor-pointer"
+              className="w-full h-10 rounded-lg cursor-pointer border border-gray-600"
             />
           </div>
         </div>
         
         <div>
-          <label className="block text-foreground text-sm mb-2">
+          <label className="block text-gray-300 text-sm mb-2">
             Épaisseur contour: {layer.strokeWidth}px
           </label>
           <input
@@ -85,17 +85,17 @@ export const ThumbnailTextProperties: React.FC<ThumbnailTextPropertiesProps> = (
             max="20"
             value={layer.strokeWidth}
             onChange={(e) => onTextChange('strokeWidth', parseInt(e.target.value))}
-            className="w-full accent-blue-500"
+            className="w-full accent-purple-500"
           />
         </div>
         
         <div>
-          <label className="flex items-center gap-2 text-foreground text-sm cursor-pointer">
+          <label className="flex items-center gap-2 text-gray-300 text-sm cursor-pointer hover:text-white transition-colors">
             <input
               type="checkbox"
               checked={layer.shadowEnabled}
               onChange={(e) => onTextChange('shadowEnabled', e.target.checked)}
-              className="w-4 h-4 accent-blue-500"
+              className="w-4 h-4 accent-purple-500 rounded"
             />
             Ombre portée
           </label>

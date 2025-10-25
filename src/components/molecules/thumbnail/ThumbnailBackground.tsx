@@ -25,19 +25,19 @@ export const ThumbnailBackground: React.FC<ThumbnailBackgroundProps> = ({
   onColorChange
 }) => {
   return (
-    <div className="bg-secondary/30 rounded-lg p-4 border border-border">
+    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
       <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-        <Palette className="w-4 h-4" />
+        <Palette className="w-4 h-4 text-purple-400" />
         Arrière-plan
       </h3>
       
       <div className="mb-3">
-        <label className="block text-foreground text-sm mb-2">Couleur de fond</label>
+        <label className="block text-gray-300 text-sm mb-2">Couleur de fond</label>
         <input
           type="color"
           value={backgroundColor}
           onChange={(e) => onColorChange(e.target.value)}
-          className="w-full h-10 rounded cursor-pointer"
+          className="w-full h-10 rounded-lg cursor-pointer border border-gray-600"
         />
       </div>
       
@@ -46,7 +46,7 @@ export const ThumbnailBackground: React.FC<ThumbnailBackgroundProps> = ({
           <button
             key={preset.name}
             onClick={() => onColorChange(preset.color)}
-            className="h-10 rounded-lg hover:ring-2 ring-white transition-all"
+            className="h-10 rounded-lg hover:ring-2 ring-purple-400 transition-all shadow-md"
             style={{ background: preset.color }}
             title={preset.name}
           />

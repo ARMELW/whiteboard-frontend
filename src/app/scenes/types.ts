@@ -19,6 +19,28 @@ export enum LayerMode {
   ANIMATED = 'animated',
 }
 
+export enum CameraMovementType {
+  STATIC = 'static',
+  ZOOM_IN = 'zoom_in',
+  ZOOM_OUT = 'zoom_out',
+  PAN_LEFT = 'pan_left',
+  PAN_RIGHT = 'pan_right',
+  PAN_UP = 'pan_up',
+  PAN_DOWN = 'pan_down',
+  FOCUS_POINT = 'focus_point',
+  CIRCULAR = 'circular',
+  CUSTOM = 'custom',
+}
+
+export enum CameraEasing {
+  LINEAR = 'linear',
+  EASE_IN = 'ease_in',
+  EASE_OUT = 'ease_out',
+  EASE_IN_OUT = 'ease_in_out',
+  BOUNCE = 'bounce',
+  ELASTIC = 'elastic',
+}
+
 export interface Position {
   x: number;
   y: number;
@@ -44,7 +66,25 @@ export interface Layer {
   [key: string]: any;
 }
 
+export interface CameraKeyframe {
+  time: number;
+  position: Position;
+  zoom: number;
+  easing?: CameraEasing;
+}
+
+export interface CameraSequence {
+  id: string;
+  name: string;
+  startTime: number;
+  endTime: number;
+  keyframes: CameraKeyframe[];
+  movementType: CameraMovementType;
+  easing: CameraEasing;
+}
+
 export interface CameraAnimation {
+  sequences: CameraSequence[];
   [key: string]: any;
 }
 
@@ -68,6 +108,7 @@ export interface Camera {
 }
 
 export interface MultiTimeline {
+  cameraSequences?: CameraSequence[];
   [key: string]: any;
 }
 

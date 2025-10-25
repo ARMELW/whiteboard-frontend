@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import templatesService from '../api/templatesService';
-import { Template, TemplatePayload } from '../types';
+import { Template, TemplatePayload, TemplateImportValidation } from '../types';
 import { Scene } from '../../scenes/types';
 
 export const useTemplateActions = () => {
@@ -80,6 +80,20 @@ export const useTemplateActions = () => {
     }
   };
 
+  const validateTemplate = async (jsonString: string): Promise<TemplateImportValidation | null> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const validation = await templatesService.validateTemplate(jsonString);
+      return validation;
+    } catch (err) {
+      setError(err as Error);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const importTemplate = async (jsonString: string): Promise<Template | null> => {
     setLoading(true);
     setError(null);
@@ -100,6 +114,7 @@ export const useTemplateActions = () => {
     updateTemplate,
     deleteTemplate,
     exportTemplate,
+    validateTemplate,
     importTemplate,
     loading,
     error,

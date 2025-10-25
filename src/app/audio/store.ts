@@ -4,7 +4,7 @@
  */
 
 import { create } from 'zustand';
-import { AudioFile } from './types';
+import { AudioFile, AudioCategory } from './types';
 import { audioMockService } from './api/audioMockService';
 
 interface AudioLibraryState {
@@ -18,6 +18,10 @@ interface AudioLibraryState {
   setFiles: (files: AudioFile[]) => void;
   addFile: (file: AudioFile) => void;
   removeFile: (id: string) => void;
+  updateFile: (id: string, updates: Partial<AudioFile>) => void;
+  toggleFavorite: (id: string) => void;
+  updateCategory: (id: string, category: AudioCategory) => void;
+  updateTags: (id: string, tags: string[]) => void;
   setUploading: (isUploading: boolean) => void;
   setUploadProgress: (progress: number) => void;
   setError: (error: string | null) => void;
@@ -48,6 +52,24 @@ export const useAudioLibraryStore = create<AudioLibraryState>((set, get) => ({
       currentlyPlaying: state.currentlyPlaying === id ? null : state.currentlyPlaying
     }));
   },
+
+  updateFile: (id, updates) => set((state) => ({
+    files: state.files.map(f => f.id === id ? { ...f, ...updates } : f)
+  })),
+
+  toggleFavorite: (id) => set((state) => ({
+    files: state.files.map(f => 
+      f.id === id ? { ...f, isFavorite: !f.isFavorite } : f
+    )
+  })),
+
+  updateCategory: (id, category) => set((state) => ({
+    files: state.files.map(f => f.id === id ? { ...f, category } : f)
+  })),
+
+  updateTags: (id, tags) => set((state) => ({
+    files: state.files.map(f => f.id === id ? { ...f, tags } : f)
+  })),
   
   setUploading: (isUploading) => set({ isUploading }),
   

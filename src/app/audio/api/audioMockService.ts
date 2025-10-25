@@ -4,7 +4,7 @@
  * Uses FileReader and blob URLs for local file handling
  */
 
-import { AudioFile, AudioUploadOptions } from '../types';
+import { AudioFile, AudioUploadOptions, AudioFilter, AudioCategory, AudioTrimConfig, AudioFadeConfig } from '../types';
 import { AUDIO_CONFIG } from '../config';
 
 class AudioMockService {
@@ -35,6 +35,10 @@ class AudioMockService {
       duration,
       uploadedAt: new Date().toISOString(),
       size: file.size,
+      category: AudioCategory.OTHER,
+      tags: [],
+      isFavorite: false,
+      segments: [],
     };
 
     this.audioFiles.set(audioFile.id, audioFile);
@@ -42,11 +46,37 @@ class AudioMockService {
   }
 
   /**
-   * Get all uploaded audio files
+   * Get all uploaded audio files with optional filters
    */
-  async listAudioFiles(): Promise<AudioFile[]> {
+  async listAudioFiles(filter?: AudioFilter): Promise<AudioFile[]> {
     await this.simulateDelay(100);
-    return Array.from(this.audioFiles.values());
+    let files = Array.from(this.audioFiles.values());
+
+    if (filter) {
+      if (filter.category) {
+        files = files.filter(f => f.category === filter.category);
+      }
+
+      if (filter.favoritesOnly) {
+        files = files.filter(f => f.isFavorite);
+      }
+
+      if (filter.tags && filter.tags.length > 0) {
+        files = files.filter(f => 
+          f.tags && filter.tags!.some(tag => f.tags!.includes(tag))
+        );
+      }
+
+      if (filter.search) {
+        const searchLower = filter.search.toLowerCase();
+        files = files.filter(f =>
+          f.fileName.toLowerCase().includes(searchLower) ||
+          (f.tags && f.tags.some(tag => tag.toLowerCase().includes(searchLower)))
+        );
+      }
+    }
+
+    return files;
   }
 
   /**
@@ -55,6 +85,33 @@ class AudioMockService {
   async getAudioFile(id: string): Promise<AudioFile | null> {
     await this.simulateDelay(50);
     return this.audioFiles.get(id) || null;
+  }
+
+  /**
+   * Update audio file metadata
+   */
+  async updateAudioFile(id: string, updates: Partial<AudioFile>): Promise<AudioFile | null> {
+    await this.simulateDelay(100);
+    const audioFile = this.audioFiles.get(id);
+    if (!audioFile) return null;
+
+    const updated = { ...audioFile, ...updates };
+    this.audioFiles.set(id, updated);
+    return updated;
+  }
+
+  /**
+   * Update audio trim configuration
+   */
+  async updateTrimConfig(id: string, trimConfig: AudioTrimConfig): Promise<AudioFile | null> {
+    return this.updateAudioFile(id, { trimConfig });
+  }
+
+  /**
+   * Update audio fade configuration
+   */
+  async updateFadeConfig(id: string, fadeConfig: AudioFadeConfig): Promise<AudioFile | null> {
+    return this.updateAudioFile(id, { fadeConfig });
   }
 
   /**

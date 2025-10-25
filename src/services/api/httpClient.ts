@@ -33,11 +33,11 @@ class HttpClient {
     // Request interceptor
     this.client.interceptors.request.use(
       (config) => {
-        // Ajouter des headers supplémentaires si nécessaire (ex: token d'authentification)
-        // const token = localStorage.getItem('auth_token');
-        // if (token) {
-        //   config.headers.Authorization = `Bearer ${token}`;
-        // }
+        // Add authentication token if available
+        const token = localStorage.getItem('whiteboard_auth_token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
         return config;
       },
       (error) => {

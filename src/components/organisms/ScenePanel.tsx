@@ -36,9 +36,6 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   const [sceneToSaveAsTemplate, setSceneToSaveAsTemplate] = useState<any>(null);
   const [showNewSceneDialog, setShowNewSceneDialog] = useState(false);
   
-  // Chapter management
-  const [chapters, setChapters] = useState<SceneChapter[]>([]);
-  
   // Refs for scene navigation
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const sceneRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -48,19 +45,30 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   // Use actions from useScenesActionsWithHistory hook for history tracking
   const { createScene, deleteScene, duplicateScene, reorderScenes } = useScenesActionsWithHistory();
 
-  // Group scenes into chapters
-  useEffect(() => {
-    const newChapters = groupScenesIntoChapters(scenes, 5);
-    setChapters(prevChapters => {
-      // Preserve expanded/collapsed state
-      return newChapters.map(newChapter => {
-        const existingChapter = prevChapters.find(c => c.id === newChapter.id);
-        return existingChapter
-          ? { ...newChapter, isExpanded: existingChapter.isExpanded }
-          : newChapter;
-      });
-    });
+  // Group scenes into chapters using useMemo to avoid unnecessary recalculations
+  const chapters = useMemo(() => {
+    return groupScenesIntoChapters(scenes, 5);
   }, [scenes]);
+
+  // Track expanded/collapsed state separately
+  const [expandedChapters, setExpandedChapters] = useState<Record<string, boolean>>({});
+
+  // Initialize expanded state for new chapters
+  useEffect(() => {
+    const newExpandedState = { ...expandedChapters };
+    let hasChanges = false;
+    
+    chapters.forEach(chapter => {
+      if (!(chapter.id in newExpandedState)) {
+        newExpandedState[chapter.id] = true; // Default to expanded
+        hasChanges = true;
+      }
+    });
+    
+    if (hasChanges) {
+      setExpandedChapters(newExpandedState);
+    }
+  }, [chapters]); // Only depend on chapters, not expandedChapters to avoid infinite loop
 
   // Auto-center on scene change
   useEffect(() => {
@@ -100,13 +108,10 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
 
   // Toggle chapter expand/collapse
   const toggleChapter = useCallback((chapterId: string) => {
-    setChapters(prevChapters =>
-      prevChapters.map(chapter =>
-        chapter.id === chapterId
-          ? { ...chapter, isExpanded: !chapter.isExpanded }
-          : chapter
-      )
-    );
+    setExpandedChapters(prev => ({
+      ...prev,
+      [chapterId]: !prev[chapterId]
+    }));
   }, []);
 
   const handleAddScene = useCallback(async () => {
@@ -247,7 +252,7 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
               <button
                 onClick={() => toggleChapter(chapter.id)}
                 className="flex flex-col items-center gap-1 p-2 hover:bg-gray-100 rounded-lg transition-colors group"
-                title={chapter.isExpanded ? 'Réduire' : 'Développer'}
+                title={expandedChapters[chapter.id] ? 'Réduire' : 'Développer'}
               >
                 <div className="text-xs font-semibold text-gray-600 group-hover:text-primary whitespace-nowrap">
                   {chapter.name}
@@ -255,7 +260,7 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
                 <div className="text-xs text-gray-500">
                   {chapter.sceneIds.length} scène{chapter.sceneIds.length > 1 ? 's' : ''}
                 </div>
-                {chapter.isExpanded ? (
+                {expandedChapters[chapter.id] ? (
                   <ChevronUp className="h-4 w-4 text-gray-600 group-hover:text-primary" />
                 ) : (
                   <ChevronDown className="h-4 w-4 text-gray-600 group-hover:text-primary" />
@@ -264,7 +269,7 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
             </div>
 
             {/* Chapter Scenes */}
-            {chapter.isExpanded && (
+            {expandedChapters[chapter.id] && (
               <div className="flex gap-3">
                 {chapter.sceneIds.map((sceneId) => {
                   const scene = scenes.find(s => s.id === sceneId);

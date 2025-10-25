@@ -3,6 +3,8 @@
  * Groups scenes into chapters for better organization
  */
 
+import type { Scene } from '@/app/scenes/types';
+
 export interface SceneChapter {
   id: string;
   name: string;
@@ -17,7 +19,7 @@ export const DEFAULT_CHAPTER_SIZE = 5;
  * Each chapter contains up to 5 scenes by default
  */
 export function groupScenesIntoChapters(
-  scenes: any[],
+  scenes: Scene[],
   chapterSize: number = DEFAULT_CHAPTER_SIZE
 ): SceneChapter[] {
   const chapters: SceneChapter[] = [];

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { LayersList } from '../molecules';
 import LayerEditor from './LayerEditor';
 import PropertiesPanel from './PropertiesPanel';
@@ -13,7 +13,8 @@ import { Play, Download } from 'lucide-react';
 import { Button } from '../atoms';
 
 const AnimationContainer: React.FC = () => {
-  const { scenes } = useScenes();
+  const { scenes = [] } = useScenes();
+  const memoizedScenes = useMemo(() => scenes, [scenes?.length]);
   const currentScene = useCurrentScene();
   const showShapeToolbar = useSceneStore((state: any) => state.showShapeToolbar);
   const showAssetLibrary = useSceneStore((state: any) => state.showAssetLibrary);
@@ -28,33 +29,51 @@ const AnimationContainer: React.FC = () => {
     setEditedScene(scene);
   }, []);
 
+  const handleClosePreview = useCallback(() => {
+    setShowPreview(false);
+  }, []);
+
+  const handleCloseFullPreview = useCallback(() => {
+    setShowFullPreview(false);
+  }, []);
+
+  const handleCloseExportModal = useCallback(() => {
+    setShowExportModal(false);
+  }, []);
+
   return (
     <div className="animation-container">
       {showAssetLibrary && <AssetLibrary />}
       {showShapeToolbar && <ShapeToolbar />}
       
       {/* Video Preview Modal */}
-      <VideoPreviewModal
-        isOpen={showPreview}
-        onClose={() => setShowPreview(false)}
-        sceneId={currentScene?.id}
-        isFullPreview={false}
-      />
+      {showPreview && (
+        <VideoPreviewModal
+          isOpen={showPreview}
+          onClose={handleClosePreview}
+          sceneId={currentScene?.id}
+          isFullPreview={false}
+        />
+      )}
       
       {/* Full Preview Modal */}
-      <VideoPreviewModal
-        isOpen={showFullPreview}
-        onClose={() => setShowFullPreview(false)}
-        isFullPreview={true}
-        scenes={scenes}
-      />
+      {showFullPreview && (
+        <VideoPreviewModal
+          isOpen={showFullPreview}
+          onClose={handleCloseFullPreview}
+          isFullPreview={true}
+          scenes={memoizedScenes}
+        />
+      )}
       
       {/* Export Modal */}
-      <ExportModal
-        isOpen={showExportModal}
-        onClose={() => setShowExportModal(false)}
-        canvas={canvasForExport}
-      />
+      {showExportModal && (
+        <ExportModal
+          isOpen={showExportModal}
+          onClose={handleCloseExportModal}
+          canvas={canvasForExport}
+        />
+      )}
       
       <div className="flex flex-col h-screen">
         {/* Header with Preview and Export buttons */}
@@ -81,7 +100,7 @@ const AnimationContainer: React.FC = () => {
               variant="default"
               size="sm"
               className="gap-2"
-              disabled={scenes.length === 0}
+              disabled={memoizedScenes.length === 0}
             >
               <Play className="w-4 h-4" />
               Prévisualisation complète

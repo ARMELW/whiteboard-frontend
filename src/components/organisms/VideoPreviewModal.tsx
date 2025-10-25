@@ -61,8 +61,14 @@ const VideoPreviewModal: React.FC<VideoPreviewModalProps> = ({
     fetchVideoUrl();
   }, [isOpen, sceneId, isFullPreview]);
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold flex items-center justify-between">

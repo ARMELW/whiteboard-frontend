@@ -1,6 +1,6 @@
-import React, { useCallback, useState, useRef, useEffect, useMemo } from 'react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
 import { Button, Card } from '../atoms';
-import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical, Music, BookmarkPlus, Play, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical, Music, BookmarkPlus, Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useScenes, useSceneStore } from '@/app/scenes';
 import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import { useWizardStore } from '@/app/wizard';
@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { THUMBNAIL_CONFIG } from '@/utils/sceneThumbnail';
-import { groupScenesIntoChapters, SceneChapter } from '@/utils/sceneChapters';
 import EmbeddedAssetLibraryPanel from './EmbeddedAssetLibraryPanel';
 import SaveAsTemplateDialog from './SaveAsTemplateDialog';
 import { NewSceneDialog } from './NewSceneDialog';
@@ -44,31 +43,6 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   
   // Use actions from useScenesActionsWithHistory hook for history tracking
   const { createScene, deleteScene, duplicateScene, reorderScenes } = useScenesActionsWithHistory();
-
-  // Group scenes into chapters using useMemo to avoid unnecessary recalculations
-  const chapters = useMemo(() => {
-    return groupScenesIntoChapters(scenes, 5);
-  }, [scenes]);
-
-  // Track expanded/collapsed state separately
-  const [expandedChapters, setExpandedChapters] = useState<Record<string, boolean>>({});
-
-  // Initialize expanded state for new chapters
-  useEffect(() => {
-    const newExpandedState = { ...expandedChapters };
-    let hasChanges = false;
-    
-    chapters.forEach(chapter => {
-      if (!(chapter.id in newExpandedState)) {
-        newExpandedState[chapter.id] = true; // Default to expanded
-        hasChanges = true;
-      }
-    });
-    
-    if (hasChanges) {
-      setExpandedChapters(newExpandedState);
-    }
-  }, [chapters]); // Only depend on chapters, not expandedChapters to avoid infinite loop
 
   // Auto-center on scene change
   useEffect(() => {
@@ -105,14 +79,6 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
       setSelectedSceneIndex(selectedSceneIndex + 1);
     }
   }, [selectedSceneIndex, scenes.length, setSelectedSceneIndex]);
-
-  // Toggle chapter expand/collapse
-  const toggleChapter = useCallback((chapterId: string) => {
-    setExpandedChapters(prev => ({
-      ...prev,
-      [chapterId]: !prev[chapterId]
-    }));
-  }, []);
 
   const handleAddScene = useCallback(async () => {
     // Show dialog to choose between blank and template
@@ -184,6 +150,9 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
     useSceneStore.getState().setPreviewLoading(true);
     useSceneStore.getState().setPreviewMode(true);
     
+    // Set the starting scene index for preview
+    useSceneStore.getState().setPreviewStartSceneIndex(index);
+    
     // Simulate video generation/retrieval (mock)
     // In a real implementation, this would call the backend to generate a preview
     // or use a pre-generated preview URL from the scene data
@@ -244,184 +213,147 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
         }}
       >
         <div className="flex gap-4 h-full items-start">
-        {/* Render chapters */}
-        {chapters.map((chapter, chapterIndex) => (
-          <div key={chapter.id} className="flex gap-3 items-start">
-            {/* Chapter Header/Toggle */}
-            <div className="flex flex-col items-center gap-2 pt-2">
-              <button
-                onClick={() => toggleChapter(chapter.id)}
-                className="flex flex-col items-center gap-1 p-2 hover:bg-gray-100 rounded-lg transition-colors group"
-                title={expandedChapters[chapter.id] ? 'Réduire' : 'Développer'}
-              >
-                <div className="text-xs font-semibold text-gray-600 group-hover:text-primary whitespace-nowrap">
-                  {chapter.name}
+          {/* Render all scenes without chapters */}
+          {scenes.map((scene, index) => (
+            <Card
+              key={scene.id}
+              ref={(el) => (sceneRefs.current[index] = el)}
+              className={`aspect-video flex-shrink-0 w-64 cursor-pointer transition-all hover:shadow-md relative group ${selectedSceneIndex === index
+                  ? 'border-primary shadow-md ring-2 ring-primary/20'
+                  : 'border-border hover:border-primary/50'
+                }`}
+              onClick={() => setSelectedSceneIndex(index)}
+            >
+              <div className="p-0 relative">
+                {/* Thumbnail - Full card */}
+                <div className="w-full aspect-video bg-secondary rounded-lg flex items-center justify-center text-muted-foreground text-xs overflow-hidden border border-border">
+                  {scene.sceneImage ? (
+                    <img
+                      src={scene.sceneImage}
+                      alt={`Scene ${index + 1}`}
+                      className="w-full h-full object-contain"
+                      style={{ backgroundColor: THUMBNAIL_CONFIG.BACKGROUND_COLOR }}
+                    />
+                  ) : scene.backgroundImage ? (
+                    <img
+                      src={scene.backgroundImage}
+                      alt={`Scene ${index + 1}`}
+                      className="w-full h-full object-contain"
+                      style={{ backgroundColor: THUMBNAIL_CONFIG.BACKGROUND_COLOR }}
+                    />
+                  ) : (
+                    <span className="w-full h-full block" style={{ background: '#fff' }}></span>
+                  )}
                 </div>
-                <div className="text-xs text-gray-500">
-                  {chapter.sceneIds.length} scène{chapter.sceneIds.length > 1 ? 's' : ''}
+
+                {/* Scene number badge - top left */}
+                <div className="absolute top-2 left-2 bg-black/70 text-white text-xs font-bold px-2 py-1 rounded">
+                  {index + 1}
                 </div>
-                {expandedChapters[chapter.id] ? (
-                  <ChevronUp className="h-4 w-4 text-gray-600 group-hover:text-primary" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-gray-600 group-hover:text-primary" />
+
+                {/* Audio indicator badge - top right of thumbnail (always visible, but moves down if actions menu visible) */}
+                {scene.sceneAudio && (
+                  <div className={`absolute ${selectedSceneIndex === index ? 'top-12' : 'top-2 group-hover:top-12'} right-2 bg-blue-600/90 text-white text-xs font-medium px-2 py-1 rounded flex items-center gap-1 transition-all z-10`}>
+                    <Music className="h-3 w-3" />
+                    <span>{Math.floor(scene.sceneAudio.duration)}s</span>
+                  </div>
                 )}
-              </button>
-            </div>
 
-            {/* Chapter Scenes */}
-            {expandedChapters[chapter.id] && (
-              <div className="flex gap-3">
-                {chapter.sceneIds.map((sceneId) => {
-                  const scene = scenes.find(s => s.id === sceneId);
-                  if (!scene) return null;
-                  
-                  const index = scenes.indexOf(scene);
-                  
-                  return (
-        <Card
-            key={scene.id}
-            ref={(el) => (sceneRefs.current[index] = el)}
-            className={`aspect-video flex-shrink-0 w-64 cursor-pointer transition-all hover:shadow-md relative group ${selectedSceneIndex === index
-                ? 'border-primary shadow-md ring-2 ring-primary/20'
-                : 'border-border hover:border-primary/50'
-              }`}
-            onClick={() => setSelectedSceneIndex(index)}
-          >
-            <div className="p-0 relative">
-              {/* Thumbnail - Full card */}
-              <div className="w-full aspect-video bg-secondary rounded-lg flex items-center justify-center text-muted-foreground text-xs overflow-hidden border border-border">
-                {scene.sceneImage ? (
-                  <img
-                    src={scene.sceneImage}
-                    alt={`Scene ${index + 1}`}
-                    className="w-full h-full object-contain"
-                    style={{ backgroundColor: THUMBNAIL_CONFIG.BACKGROUND_COLOR }}
-                  />
-                ) : scene.backgroundImage ? (
-                  <img
-                    src={scene.backgroundImage}
-                    alt={`Scene ${index + 1}`}
-                    className="w-full h-full object-contain"
-                    style={{ backgroundColor: THUMBNAIL_CONFIG.BACKGROUND_COLOR }}
-                  />
-                ) : (
-                  <span className="w-full h-full block" style={{ background: '#fff' }}></span>
-                )}
-              </div>
-
-              {/* Scene number badge - top left */}
-              <div className="absolute top-2 left-2 bg-black/70 text-white text-xs font-bold px-2 py-1 rounded">
-                {index + 1}
-              </div>
-
-              {/* Audio indicator badge - top right of thumbnail (always visible, but moves down if actions menu visible) */}
-              {scene.sceneAudio && (
-                <div className={`absolute ${selectedSceneIndex === index ? 'top-12' : 'top-2 group-hover:top-12'} right-2 bg-blue-600/90 text-white text-xs font-medium px-2 py-1 rounded flex items-center gap-1 transition-all z-10`}>
-                  <Music className="h-3 w-3" />
-                  <span>{Math.floor(scene.sceneAudio.duration)}s</span>
+                {/* Scene duration badge - bottom left */}
+                <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs font-medium px-2 py-1 rounded flex items-center gap-1">
+                  <span>{formatSceneDuration(scene.duration)}</span>
                 </div>
-              )}
 
-              {/* Scene duration badge - bottom left */}
-              <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs font-medium px-2 py-1 rounded flex items-center gap-1">
-                <span>{formatSceneDuration(scene.duration)}</span>
-              </div>
-
-              {/* Navigation buttons - centered bottom, visible on hover or when selected */}
-              <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 ${selectedSceneIndex === index ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
-                <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm rounded-full px-2 py-1 shadow-lg border border-border/50">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0 rounded-full hover:bg-primary/10 hover:text-primary disabled:opacity-30"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleMoveScene(index, 'left');
-                    }}
-                    disabled={index === 0}
-                  >
-                    <ArrowLeft className="h-3.5 w-3.5" />
-                  </Button>
-                  <div className="h-4 w-px bg-border/50" />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0 rounded-full hover:bg-primary/10 hover:text-primary disabled:opacity-30"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleMoveScene(index, 'right');
-                    }}
-                    disabled={index === scenes.length - 1}
-                  >
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Actions dropdown - top right, visible on hover or when selected */}
-              <div className={`absolute top-2 right-2 ${selectedSceneIndex === index ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                {/* Navigation buttons - centered bottom, visible on hover or when selected */}
+                <div className={`absolute bottom-2 left-1/2 -translate-x-1/2 ${selectedSceneIndex === index ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
+                  <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm rounded-full px-2 py-1 shadow-lg border border-border/50">
                     <Button
-                      variant="secondary"
+                      variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm rounded-full"
-                      onClick={(e) => e.stopPropagation()}
+                      className="h-7 w-7 p-0 rounded-full hover:bg-primary/10 hover:text-primary disabled:opacity-30"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMoveScene(index, 'left');
+                      }}
+                      disabled={index === 0}
                     >
-                      <MoreVertical className="h-4 w-4" />
+                      <ArrowLeft className="h-3.5 w-3.5" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem
+                    <div className="h-4 w-px bg-border/50" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 rounded-full hover:bg-primary/10 hover:text-primary disabled:opacity-30"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handlePreviewScene(index);
+                        handleMoveScene(index, 'right');
                       }}
+                      disabled={index === scenes.length - 1}
                     >
-                      <Play className="mr-2 h-4 w-4" />
-                      Prévisualiser
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDuplicateScene(index);
-                      }}
-                    >
-                      <Copy className="mr-2 h-4 w-4" />
-                      Dupliquer
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSaveAsTemplate(index);
-                      }}
-                    >
-                      <BookmarkPlus className="mr-2 h-4 w-4" />
-                      Sauvegarder comme template
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteScene(index);
-                      }}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Supprimer
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Actions dropdown - top right, visible on hover or when selected */}
+                <div className={`absolute top-2 right-2 ${selectedSceneIndex === index ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm rounded-full"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePreviewScene(index);
+                        }}
+                      >
+                        <Play className="mr-2 h-4 w-4" />
+                        Prévisualiser depuis ici
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDuplicateScene(index);
+                        }}
+                      >
+                        <Copy className="mr-2 h-4 w-4" />
+                        Dupliquer
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSaveAsTemplate(index);
+                        }}
+                      >
+                        <BookmarkPlus className="mr-2 h-4 w-4" />
+                        Sauvegarder comme template
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteScene(index);
+                        }}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
-            </div>
-          </Card>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        ))}
+            </Card>
+          ))}
         
         {/* Add Scene Card */}
         <Card

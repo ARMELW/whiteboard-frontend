@@ -1,9 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { Button, Card } from '../atoms';
-import { Plus, ArrowUp, ArrowDown, Copy, Trash2, Download, Upload, MoreVertical, ChevronLeft, ChevronRight, FolderKanban } from 'lucide-react';
+import { Plus, ArrowUp, ArrowDown, Copy, Trash2, Download, Upload, MoreVertical, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useScenes, useSceneStore, useScenesActions } from '@/app/scenes';
 import { THUMBNAIL_CONFIG } from '@/utils/sceneThumbnail';
-import ChapterManager, { Chapter } from './ChapterManager';
 
 const SceneCard: React.FC<{
   scene: any;
@@ -175,12 +174,9 @@ const ScenePanel: React.FC = () => {
   const { scenes } = useScenes();
   const selectedSceneIndex = useSceneStore((state) => state.selectedSceneIndex);
   const setSelectedSceneIndex = useSceneStore((state) => state.setSelectedSceneIndex);
-  const chapters = useSceneStore((state) => state.chapters);
-  const setChapters = useSceneStore((state) => state.setChapters);
   const importInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const scenesScrollRef = useRef<HTMLDivElement>(null);
-  const [useChapterView, setUseChapterView] = useState(false);
   
   // Use actions from useScenesActions hook
   const { createScene, deleteScene, duplicateScene, reorderScenes } = useScenesActions();
@@ -317,19 +313,6 @@ const ScenePanel: React.FC = () => {
         
         <div className="h-px bg-border my-2"></div>
         
-        {/* Toggle Chapter View */}
-        <Button
-          onClick={() => setUseChapterView(!useChapterView)}
-          className="w-full gap-2 mb-2"
-          size="sm"
-          variant={useChapterView ? 'default' : 'outline'}
-        >
-          <FolderKanban className="w-4 h-4" />
-          {useChapterView ? 'Vue chapitres' : 'Vue simple'}
-        </Button>
-        
-        <div className="h-px bg-border my-2"></div>
-        
         <div className="flex gap-2">
           <Button
             onClick={() => { }}
@@ -361,100 +344,65 @@ const ScenePanel: React.FC = () => {
 
       {/* Navigation buttons and Scenes List */}
       <div className="flex-1 flex items-center overflow-hidden">
-        {!useChapterView && (
-          <>
-            {/* Left Navigation Button */}
-            <button
-              onClick={() => scrollScenes('left')}
-              className="flex-shrink-0 p-2 hover:bg-secondary/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              disabled={scenes.length === 0}
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
+        {/* Left Navigation Button */}
+        <button
+          onClick={() => scrollScenes('left')}
+          className="flex-shrink-0 p-2 hover:bg-secondary/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          disabled={scenes.length === 0}
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
 
-            {/* Scenes List - Now horizontal with hidden scrollbar */}
-            <div 
-              ref={scenesScrollRef}
-              className="flex-1 overflow-x-auto p-3 hide-scrollbar"
-              style={{
-                scrollbarWidth: 'none',
-                msOverflowStyle: 'none'
-              }}
-            >
-              <div className="flex gap-3 h-full">
-              {scenes.map((scene: any, index: number) => (
-                <div key={scene.id} className="scene-card">
-                  <SceneCard
-                    scene={scene}
-                    index={index}
-                    isSelected={selectedSceneIndex === index}
-                    onSelect={() => navigateToScene(index)}
-                    onMoveUp={() => handleMoveScene(index, 'up')}
-                    onMoveDown={() => handleMoveScene(index, 'down')}
-                    onDuplicate={() => handleDuplicateScene(index)}
-                    onDelete={() => handleDeleteScene(index)}
-                    canMoveUp={index !== 0}
-                    canMoveDown={index !== scenes.length - 1}
-                  />
-                </div>
-              ))}
-              
-              {/* Add Scene Card */}
-              <Card
-                className="flex-shrink-0 w-64 cursor-pointer transition-all hover:shadow-md border-2 border-dashed border-border hover:border-primary/50 hover:bg-secondary/50"
-                onClick={handleAddScene}
-              >
-                <div className="p-0 relative">
-                  <div className="w-full aspect-video bg-secondary/30 rounded-lg flex flex-col items-center justify-center text-muted-foreground gap-2 hover:text-primary transition-colors">
-                    <Plus className="w-12 h-12" />
-                    <span className="text-sm font-medium">Nouvelle scène</span>
-                  </div>
-                </div>
-              </Card>
+        {/* Scenes List - Now horizontal with hidden scrollbar */}
+        <div 
+          ref={scenesScrollRef}
+          className="flex-1 overflow-x-auto p-3 hide-scrollbar"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
+          }}
+        >
+          <div className="flex gap-3 h-full">
+          {scenes.map((scene: any, index: number) => (
+            <div key={scene.id} className="scene-card">
+              <SceneCard
+                scene={scene}
+                index={index}
+                isSelected={selectedSceneIndex === index}
+                onSelect={() => navigateToScene(index)}
+                onMoveUp={() => handleMoveScene(index, 'up')}
+                onMoveDown={() => handleMoveScene(index, 'down')}
+                onDuplicate={() => handleDuplicateScene(index)}
+                onDelete={() => handleDeleteScene(index)}
+                canMoveUp={index !== 0}
+                canMoveDown={index !== scenes.length - 1}
+              />
+            </div>
+          ))}
+          
+          {/* Add Scene Card */}
+          <Card
+            className="flex-shrink-0 w-64 cursor-pointer transition-all hover:shadow-md border-2 border-dashed border-border hover:border-primary/50 hover:bg-secondary/50"
+            onClick={handleAddScene}
+          >
+            <div className="p-0 relative">
+              <div className="w-full aspect-video bg-secondary/30 rounded-lg flex flex-col items-center justify-center text-muted-foreground gap-2 hover:text-primary transition-colors">
+                <Plus className="w-12 h-12" />
+                <span className="text-sm font-medium">Nouvelle scène</span>
               </div>
             </div>
-
-            {/* Right Navigation Button */}
-            <button
-              onClick={() => scrollScenes('right')}
-              className="flex-shrink-0 p-2 hover:bg-secondary/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              disabled={scenes.length === 0}
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
-          </>
-        )}
-        
-        {/* Chapter View */}
-        {useChapterView && (
-          <div className="flex-1 overflow-y-auto p-3">
-            <ChapterManager
-              chapters={chapters}
-              totalScenes={scenes.length}
-              onChaptersChange={setChapters}
-              onSelectScene={navigateToScene}
-              selectedSceneIndex={selectedSceneIndex}
-              renderSceneCard={(index: number) => {
-                const scene = scenes[index];
-                if (!scene) return null;
-                return (
-                  <SceneCard
-                    scene={scene}
-                    index={index}
-                    isSelected={selectedSceneIndex === index}
-                    onSelect={() => navigateToScene(index)}
-                    onMoveUp={() => handleMoveScene(index, 'up')}
-                    onMoveDown={() => handleMoveScene(index, 'down')}
-                    onDuplicate={() => handleDuplicateScene(index)}
-                    onDelete={() => handleDeleteScene(index)}
-                    canMoveUp={index !== 0}
-                    canMoveDown={index !== scenes.length - 1}
-                  />
-                );
-              }}
-            />
+          </Card>
           </div>
-        )}
+        </div>
+
+        {/* Right Navigation Button */}
+        <button
+          onClick={() => scrollScenes('right')}
+          className="flex-shrink-0 p-2 hover:bg-secondary/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          disabled={scenes.length === 0}
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
       </div>
     </div>
   );

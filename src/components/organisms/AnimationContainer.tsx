@@ -21,6 +21,7 @@ const AnimationContainer: React.FC = () => {
   const [editedScene, setEditedScene] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [showFullPreview, setShowFullPreview] = useState(false);
+  const [showPreviewFromCurrent, setShowPreviewFromCurrent] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [canvasForExport, setCanvasForExport] = useState<HTMLCanvasElement | null>(null);
 
@@ -34,6 +35,10 @@ const AnimationContainer: React.FC = () => {
 
   const handleCloseFullPreview = useCallback(() => {
     setShowFullPreview(false);
+  }, []);
+
+  const handleClosePreviewFromCurrent = useCallback(() => {
+    setShowPreviewFromCurrent(false);
   }, []);
 
   const handleCloseExportModal = useCallback(() => {
@@ -65,6 +70,17 @@ const AnimationContainer: React.FC = () => {
         />
       )}
       
+      {/* Preview From Current Scene Modal */}
+      {showPreviewFromCurrent && (
+        <VideoPreviewModal
+          isOpen={showPreviewFromCurrent}
+          onClose={handleClosePreviewFromCurrent}
+          isFullPreview={true}
+          startFromSceneIndex={selectedSceneIndex}
+          scenes={scenes}
+        />
+      )}
+      
       {/* Export Modal */}
       {showExportModal && (
         <ExportModal
@@ -92,6 +108,17 @@ const AnimationContainer: React.FC = () => {
             >
               <Play className="w-4 h-4" />
               Prévisualiser la scène
+            </Button>
+            
+            <Button
+              onClick={() => setShowPreviewFromCurrent(true)}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              disabled={scenes.length === 0 || selectedSceneIndex >= scenes.length - 1}
+            >
+              <Play className="w-4 h-4" />
+              Depuis cette scène
             </Button>
             
             <Button

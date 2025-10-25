@@ -74,15 +74,33 @@ export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = memo(({
           <SelectTrigger className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
             <SelectValue placeholder="Sélectionner une police" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Arial">Arial</SelectItem>
-            <SelectItem value="Arial Black">Arial Black</SelectItem>
-            <SelectItem value="Verdana">Verdana</SelectItem>
-            <SelectItem value="Times New Roman">Times New Roman</SelectItem>
-            <SelectItem value="Georgia">Georgia</SelectItem>
-            <SelectItem value="Courier New">Courier New</SelectItem>
-            <SelectItem value="Comic Sans MS">Comic Sans MS</SelectItem>
-            <SelectItem value="Impact">Impact</SelectItem>
+          <SelectContent className="max-h-[400px]">
+            <div className="grid grid-cols-2 gap-1 p-2">
+              <SelectItem value="Arial" className="cursor-pointer hover:bg-secondary/50">
+                <span style={{ fontFamily: 'Arial' }}>Arial</span>
+              </SelectItem>
+              <SelectItem value="Arial Black" className="cursor-pointer hover:bg-secondary/50">
+                <span style={{ fontFamily: 'Arial Black' }}>Arial Black</span>
+              </SelectItem>
+              <SelectItem value="Verdana" className="cursor-pointer hover:bg-secondary/50">
+                <span style={{ fontFamily: 'Verdana' }}>Verdana</span>
+              </SelectItem>
+              <SelectItem value="Times New Roman" className="cursor-pointer hover:bg-secondary/50">
+                <span style={{ fontFamily: 'Times New Roman' }}>Times</span>
+              </SelectItem>
+              <SelectItem value="Georgia" className="cursor-pointer hover:bg-secondary/50">
+                <span style={{ fontFamily: 'Georgia' }}>Georgia</span>
+              </SelectItem>
+              <SelectItem value="Courier New" className="cursor-pointer hover:bg-secondary/50">
+                <span style={{ fontFamily: 'Courier New' }}>Courier</span>
+              </SelectItem>
+              <SelectItem value="Comic Sans MS" className="cursor-pointer hover:bg-secondary/50">
+                <span style={{ fontFamily: 'Comic Sans MS' }}>Comic Sans</span>
+              </SelectItem>
+              <SelectItem value="Impact" className="cursor-pointer hover:bg-secondary/50">
+                <span style={{ fontFamily: 'Impact' }}>Impact</span>
+              </SelectItem>
+            </div>
           </SelectContent>
         </Select>
       </div>

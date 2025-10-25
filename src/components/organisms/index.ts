@@ -11,5 +11,4 @@ export { default as AssetLibrary } from './AssetLibrary';
 export { default as ExportPanel } from './ExportPanel';
 export { default as ExportModal } from './ExportModal';
 export { default as VideoPreviewModal } from './VideoPreviewModal';
-export { default as ChapterManager } from './ChapterManager';
 export { default as ContextTabs } from './ContextTabs';

@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { Button, Card, CardContent, CardHeader, CardTitle } from './atoms';
 import { Upload, Play, Download, FileJson } from "lucide-react";
 import { ImageCropModal } from "./molecules";
+import { HandSelector, getHandImages } from "./molecules/handwriting";
 
 /**
  * HandWritingFromPython.jsx
@@ -26,6 +27,7 @@ const HandWritingAnimation = () => {
   const [sourceImage, setSourceImage] = useState(null);
   const [handImage, setHandImage] = useState(null);
   const [handMask, setHandMask] = useState(null);
+  const [selectedHandId, setSelectedHandId] = useState('default');
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [videoUrl, setVideoUrl] = useState(null);
@@ -52,14 +54,20 @@ const HandWritingAnimation = () => {
 
   // load hand images from public/data/images on mount
   useEffect(() => {
+    loadHandImages(selectedHandId);
+  }, [selectedHandId]);
+
+  const loadHandImages = (handId: string) => {
+    const { imagePath, maskPath } = getHandImages(handId);
+    
     const hand = new Image();
-    hand.src = "/data/images/drawing-hand.png";
+    hand.src = imagePath;
     hand.onload = () => setHandImage(hand);
 
     const mask = new Image();
-    mask.src = "/data/images/hand-mask.png";
+    mask.src = maskPath;
     mask.onload = () => setHandMask(mask);
-  }, []);
+  };
 
   /* -----------------------------
      Utility functions (browser)
@@ -849,24 +857,35 @@ const HandWritingAnimation = () => {
 
           {/* Image Mode Controls */}
           {mode === "image" && (
-            <div className="flex gap-4 items-center">
-              <Button
-                variant="outline"
-                onClick={() => document.getElementById("src-upload").click()}
-                className="flex items-center gap-2"
-              >
-                <Upload className="w-4 h-4" />
-                Upload Image
-              </Button>
-              <input id="src-upload" onChange={handleSourceUpload} className="hidden" type="file" accept="image/*" />
-              <Button onClick={handleStart} disabled={!sourceImage || isGenerating} className="flex items-center gap-2">
-                <Play className="w-4 h-4" />
-                {isGenerating ? "Génération..." : "Générer"}
-              </Button>
-              <Button variant="outline" onClick={handleDownload} disabled={!videoUrl} className="flex items-center gap-2">
-                <Download className="w-4 h-4" />
-                Download
-              </Button>
+            <div className="space-y-4">
+              <div className="flex gap-4 items-center">
+                <Button
+                  variant="outline"
+                  onClick={() => document.getElementById("src-upload").click()}
+                  className="flex items-center gap-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  Upload Image
+                </Button>
+                <input id="src-upload" onChange={handleSourceUpload} className="hidden" type="file" accept="image/*" />
+                <Button onClick={handleStart} disabled={!sourceImage || isGenerating} className="flex items-center gap-2">
+                  <Play className="w-4 h-4" />
+                  {isGenerating ? "Génération..." : "Générer"}
+                </Button>
+                <Button variant="outline" onClick={handleDownload} disabled={!videoUrl} className="flex items-center gap-2">
+                  <Download className="w-4 h-4" />
+                  Download
+                </Button>
+              </div>
+              
+              {/* Hand Selector */}
+              <div className="bg-secondary/50 p-4 rounded-lg">
+                <HandSelector
+                  selectedHandId={selectedHandId}
+                  onHandChange={setSelectedHandId}
+                  disabled={isGenerating}
+                />
+              </div>
             </div>
           )}
 
@@ -914,6 +933,15 @@ const HandWritingAnimation = () => {
                   <p>• Grille: {animationData.metadata.split_len}px</p>
                 </div>
               )}
+              
+              {/* Hand Selector */}
+              <div className="bg-secondary/50 p-4 rounded-lg">
+                <HandSelector
+                  selectedHandId={selectedHandId}
+                  onHandChange={setSelectedHandId}
+                  disabled={isGenerating}
+                />
+              </div>
             </div>
           )}
 

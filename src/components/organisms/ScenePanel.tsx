@@ -1,6 +1,6 @@
-import React, { useCallback, useState, useRef, useEffect } from 'react';
+import React, { useCallback, useState, useRef, useEffect, useMemo } from 'react';
 import { Button, Card } from '../atoms';
-import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical, Music, BookmarkPlus, Play, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical, Music, BookmarkPlus, Play, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { useScenes, useSceneStore } from '@/app/scenes';
 import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import { useWizardStore } from '@/app/wizard';
@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { THUMBNAIL_CONFIG } from '@/utils/sceneThumbnail';
+import { groupScenesIntoChapters, SceneChapter } from '@/utils/sceneChapters';
 import EmbeddedAssetLibraryPanel from './EmbeddedAssetLibraryPanel';
 import SaveAsTemplateDialog from './SaveAsTemplateDialog';
 import { NewSceneDialog } from './NewSceneDialog';
@@ -35,6 +36,9 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   const [sceneToSaveAsTemplate, setSceneToSaveAsTemplate] = useState<any>(null);
   const [showNewSceneDialog, setShowNewSceneDialog] = useState(false);
   
+  // Chapter management
+  const [chapters, setChapters] = useState<SceneChapter[]>([]);
+  
   // Refs for scene navigation
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const sceneRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -43,6 +47,20 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   
   // Use actions from useScenesActionsWithHistory hook for history tracking
   const { createScene, deleteScene, duplicateScene, reorderScenes } = useScenesActionsWithHistory();
+
+  // Group scenes into chapters
+  useEffect(() => {
+    const newChapters = groupScenesIntoChapters(scenes, 5);
+    setChapters(prevChapters => {
+      // Preserve expanded/collapsed state
+      return newChapters.map(newChapter => {
+        const existingChapter = prevChapters.find(c => c.id === newChapter.id);
+        return existingChapter
+          ? { ...newChapter, isExpanded: existingChapter.isExpanded }
+          : newChapter;
+      });
+    });
+  }, [scenes]);
 
   // Auto-center on scene change
   useEffect(() => {
@@ -79,6 +97,17 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
       setSelectedSceneIndex(selectedSceneIndex + 1);
     }
   }, [selectedSceneIndex, scenes.length, setSelectedSceneIndex]);
+
+  // Toggle chapter expand/collapse
+  const toggleChapter = useCallback((chapterId: string) => {
+    setChapters(prevChapters =>
+      prevChapters.map(chapter =>
+        chapter.id === chapterId
+          ? { ...chapter, isExpanded: !chapter.isExpanded }
+          : chapter
+      )
+    );
+  }, []);
 
   const handleAddScene = useCallback(async () => {
     // Show dialog to choose between blank and template
@@ -209,9 +238,42 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
           msOverflowStyle: 'none', /* IE and Edge */
         }}
       >
-        <div className="flex gap-3 h-full">
-        {scenes.map((scene: any, index: number) => (
-          <Card
+        <div className="flex gap-4 h-full items-start">
+        {/* Render chapters */}
+        {chapters.map((chapter, chapterIndex) => (
+          <div key={chapter.id} className="flex gap-3 items-start">
+            {/* Chapter Header/Toggle */}
+            <div className="flex flex-col items-center gap-2 pt-2">
+              <button
+                onClick={() => toggleChapter(chapter.id)}
+                className="flex flex-col items-center gap-1 p-2 hover:bg-gray-100 rounded-lg transition-colors group"
+                title={chapter.isExpanded ? 'Réduire' : 'Développer'}
+              >
+                <div className="text-xs font-semibold text-gray-600 group-hover:text-primary whitespace-nowrap">
+                  {chapter.name}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {chapter.sceneIds.length} scène{chapter.sceneIds.length > 1 ? 's' : ''}
+                </div>
+                {chapter.isExpanded ? (
+                  <ChevronUp className="h-4 w-4 text-gray-600 group-hover:text-primary" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-gray-600 group-hover:text-primary" />
+                )}
+              </button>
+            </div>
+
+            {/* Chapter Scenes */}
+            {chapter.isExpanded && (
+              <div className="flex gap-3">
+                {chapter.sceneIds.map((sceneId) => {
+                  const scene = scenes.find(s => s.id === sceneId);
+                  if (!scene) return null;
+                  
+                  const index = scenes.indexOf(scene);
+                  
+                  return (
+        <Card
             key={scene.id}
             ref={(el) => (sceneRefs.current[index] = el)}
             className={`aspect-video flex-shrink-0 w-64 cursor-pointer transition-all hover:shadow-md relative group ${selectedSceneIndex === index
@@ -349,6 +411,11 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
               </div>
             </div>
           </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         ))}
         
         {/* Add Scene Card */}

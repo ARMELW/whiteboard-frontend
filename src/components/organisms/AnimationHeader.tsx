@@ -16,6 +16,7 @@ import type { Camera as CameraType } from '@/app/scenes/types';
 interface AnimationHeaderProps {
   onOpenTemplateLibrary: () => void;
   onSaveAsTemplate: () => void;
+  onOpenExportModal: () => void;
   hasCurrentScene: boolean;
   cameras?: CameraType[];
   selectedCameraId?: string | null;
@@ -30,6 +31,7 @@ interface AnimationHeaderProps {
 const AnimationHeader: React.FC<AnimationHeaderProps> = ({
   onOpenTemplateLibrary,
   onSaveAsTemplate,
+  onOpenExportModal,
   hasCurrentScene,
   cameras = [],
   selectedCameraId = null,
@@ -40,7 +42,6 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
   onSceneZoom,
   onOpenCameraManager,
 }) => {
-  const setActiveTab = useSceneStore((state) => state.setActiveTab);
   const showHistoryPanel = useSceneStore((state) => state.showHistoryPanel);
   const setShowHistoryPanel = useSceneStore((state) => state.setShowHistoryPanel);
   const openWizard = useWizardStore((state) => state.openWizard);
@@ -60,8 +61,8 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
   }, [redo]);
 
   const handleExportClick = () => {
-    // Switch to export tab in properties panel
-    setActiveTab('export');
+    // Open export modal
+    onOpenExportModal();
   };
 
   const handlePreviewClick = async () => {

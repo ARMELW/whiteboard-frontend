@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback } from 'react';
-import { Save, Download, Undo, Redo, FileVideo, Play, Clock, Library, BookmarkPlus, Camera, Plus, ZoomIn, ZoomOut, Lock, Unlock, Sparkles, Loader2, ImageIcon } from 'lucide-react';
-import { useSceneStore } from '@/app/scenes';
+import { Save, Download, Undo, Redo, FileVideo, Play, Clock, Library, BookmarkPlus, Camera, Plus, ZoomIn, ZoomOut, Lock, Unlock, Sparkles, Loader2, ImageIcon, Check } from 'lucide-react';
+import { useSceneStore, useSaveScene } from '@/app/scenes';
 import { useWizardStore } from '@/app/wizard';
 import { useHistory } from '@/app/history';
 import { useQuickPreview } from '@/hooks/useQuickPreview';
@@ -48,6 +48,7 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
   const setShowHistoryPanel = useSceneStore((state) => state.setShowHistoryPanel);
   const openWizard = useWizardStore((state) => state.openWizard);
   const { generatePreview, isGenerating } = useQuickPreview();
+  const { saveAllScenes, isSaving, lastSaved } = useSaveScene();
   
   const { undo, redo, canUndo, canRedo } = useHistory();
   
@@ -72,6 +73,11 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
     await generatePreview();
   };
 
+  const handleSaveClick = async () => {
+    // Sauvegarder toutes les scènes vers le backend
+    await saveAllScenes();
+  };
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -85,11 +91,17 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
         e.preventDefault();
         handleRedo();
       }
+      // Ctrl+S or Cmd+S for save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        handleSaveClick();
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleUndo, handleRedo]);
+
 
   return (
     <header className="border-b border-gray-200 px-6 py-3 flex items-center justify-between flex-shrink-0">
@@ -289,9 +301,33 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
         )}
         <div className="h-6 w-px bg-gray-700 mx-2" />
         <button
-          className="flex items-center gap-2 px-3 py-2 hover:bg-gray-800 text-gray-300 rounded transition-colors"
+          onClick={handleSaveClick}
+          disabled={isSaving || !hasCurrentScene}
+          className={`flex items-center gap-2 px-3 py-2 rounded transition-colors ${
+            isSaving
+              ? 'bg-gray-600 cursor-wait'
+              : lastSaved
+              ? 'bg-green-600 hover:bg-green-700 text-white'
+              : hasCurrentScene
+              ? 'hover:bg-gray-800 text-gray-300'
+              : 'text-gray-500 cursor-not-allowed'
+          }`}
+          title={
+            isSaving
+              ? 'Sauvegarde en cours...'
+              : lastSaved
+              ? `Dernière sauvegarde: ${lastSaved.toLocaleTimeString()}`
+              : 'Sauvegarder (Ctrl+S)'
+          }
         >
-          <Save className="w-4 h-4" />
+          {isSaving ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : lastSaved ? (
+            <Check className="w-4 h-4" />
+          ) : (
+            <Save className="w-4 h-4" />
+          )}
+          {isSaving && <span className="text-xs">Sauvegarde...</span>}
         </button>
         <button
           onClick={handleExportClick}

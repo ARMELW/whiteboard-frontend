@@ -1,16 +1,18 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize, X, RotateCcw } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize, X, RotateCcw, Loader2 } from 'lucide-react';
 
 interface VideoPreviewPlayerProps {
   videoUrl: string;
   onClose: () => void;
   title?: string;
+  isLoading?: boolean;
 }
 
 const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({ 
   videoUrl, 
   onClose,
-  title = 'Prévisualisation Vidéo'
+  title = 'Prévisualisation Vidéo',
+  isLoading = false
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -18,6 +20,7 @@ const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
+  const [videoReady, setVideoReady] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -26,15 +29,26 @@ const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
     const handleTimeUpdate = () => setCurrentTime(video.currentTime);
     const handleDurationChange = () => setDuration(video.duration);
     const handleEnded = () => setIsPlaying(false);
+    const handleLoadedData = () => {
+      setVideoReady(true);
+      // Autoplay when video is ready
+      video.play().then(() => {
+        setIsPlaying(true);
+      }).catch((error) => {
+        console.log('Autoplay prevented:', error);
+      });
+    };
 
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('durationchange', handleDurationChange);
     video.addEventListener('ended', handleEnded);
+    video.addEventListener('loadeddata', handleLoadedData);
 
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('durationchange', handleDurationChange);
       video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('loadeddata', handleLoadedData);
     };
   }, []);
 
@@ -111,7 +125,7 @@ const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
     <div className="flex items-center justify-center p-6">
       <div className="w-full max-w-3xl">
         {/* Video Card */}
-        <div className="bg-white  shadow-xl overflow-hidden relative">
+        <div className="bg-white shadow-xl overflow-hidden relative">
           {/* Close Button */}
           <button
             onClick={onClose}
@@ -121,6 +135,16 @@ const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
             <X className="w-4 h-4" />
           </button>
 
+          {/* Loading Overlay */}
+          {(isLoading || !videoReady) && (
+            <div className="absolute inset-0 z-20 bg-black/80 flex items-center justify-center">
+              <div className="text-center text-white">
+                <Loader2 className="w-12 h-12 animate-spin mx-auto mb-3" />
+                <p className="text-sm">Chargement de la vidéo...</p>
+              </div>
+            </div>
+          )}
+
           {/* Video Player */}
           <div className="relative bg-black">
             <div className="aspect-video">
@@ -129,6 +153,8 @@ const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
                 src={videoUrl}
                 className="w-full h-full object-contain"
                 onClick={togglePlay}
+                autoPlay
+                playsInline
               />
             </div>
             

@@ -1,6 +1,6 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
 import { Button, Card } from '../atoms';
-import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical, Music, BookmarkPlus, Play } from 'lucide-react';
+import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical, Music, BookmarkPlus, Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useScenes, useSceneStore } from '@/app/scenes';
 import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import { useWizardStore } from '@/app/wizard';
@@ -35,10 +35,50 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   const [sceneToSaveAsTemplate, setSceneToSaveAsTemplate] = useState<any>(null);
   const [showNewSceneDialog, setShowNewSceneDialog] = useState(false);
   
+  // Refs for scene navigation
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const sceneRefs = useRef<(HTMLDivElement | null)[]>([]);
+  
   // Remove imageInputRef and importInputRef, handled in asset library
   
   // Use actions from useScenesActionsWithHistory hook for history tracking
   const { createScene, deleteScene, duplicateScene, reorderScenes } = useScenesActionsWithHistory();
+
+  // Auto-center on scene change
+  useEffect(() => {
+    if (scrollContainerRef.current && sceneRefs.current[selectedSceneIndex]) {
+      const container = scrollContainerRef.current;
+      const sceneElement = sceneRefs.current[selectedSceneIndex];
+      
+      if (sceneElement) {
+        const containerWidth = container.clientWidth;
+        const sceneLeft = sceneElement.offsetLeft;
+        const sceneWidth = sceneElement.clientWidth;
+        
+        // Center the scene in the viewport
+        const scrollPosition = sceneLeft - (containerWidth / 2) + (sceneWidth / 2);
+        
+        container.scrollTo({
+          left: scrollPosition,
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, [selectedSceneIndex]);
+
+  // Navigate to previous scene
+  const handleNavigatePrevious = useCallback(() => {
+    if (selectedSceneIndex > 0) {
+      setSelectedSceneIndex(selectedSceneIndex - 1);
+    }
+  }, [selectedSceneIndex, setSelectedSceneIndex]);
+
+  // Navigate to next scene
+  const handleNavigateNext = useCallback(() => {
+    if (selectedSceneIndex < scenes.length - 1) {
+      setSelectedSceneIndex(selectedSceneIndex + 1);
+    }
+  }, [selectedSceneIndex, scenes.length, setSelectedSceneIndex]);
 
   const handleAddScene = useCallback(async () => {
     // Show dialog to choose between blank and template
@@ -106,14 +146,21 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   const handlePreviewScene = useCallback(async (index: number) => {
     const scene = scenes[index];
     
-    // For now, we'll use a mock video URL
+    // Set loading state in store
+    useSceneStore.getState().setPreviewLoading(true);
+    useSceneStore.getState().setPreviewMode(true);
+    
+    // Simulate video generation/retrieval (mock)
     // In a real implementation, this would call the backend to generate a preview
     // or use a pre-generated preview URL from the scene data
     
-    // Mock video generation for single scene
+    // Mock delay to simulate video processing
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Mock video URL
     const mockVideoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
     
-    // Start preview with the mock URL
+    // Start preview with the mock URL (this will set loading to false)
     useSceneStore.getState().startPreview(mockVideoUrl, 'scene');
   }, [scenes]);
 
@@ -128,12 +175,45 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   };
 
   return (
-    <div className="bg-white flex h-full shadow-sm">
-      <div className="flex-1 overflow-x-auto p-3">
+    <div className="bg-white flex h-full shadow-sm relative">
+      {/* Left Navigation Button */}
+      <button
+        onClick={handleNavigatePrevious}
+        disabled={selectedSceneIndex === 0}
+        className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 bg-white hover:bg-gray-100 rounded-full shadow-lg border border-gray-200 transition-all ${
+          selectedSceneIndex === 0 ? 'opacity-30 cursor-not-allowed' : 'opacity-90 hover:opacity-100'
+        }`}
+        title="Scène précédente"
+      >
+        <ChevronLeft className="h-6 w-6 text-gray-700" />
+      </button>
+
+      {/* Right Navigation Button */}
+      <button
+        onClick={handleNavigateNext}
+        disabled={selectedSceneIndex >= scenes.length - 1}
+        className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 bg-white hover:bg-gray-100 rounded-full shadow-lg border border-gray-200 transition-all ${
+          selectedSceneIndex >= scenes.length - 1 ? 'opacity-30 cursor-not-allowed' : 'opacity-90 hover:opacity-100'
+        }`}
+        title="Scène suivante"
+      >
+        <ChevronRight className="h-6 w-6 text-gray-700" />
+      </button>
+
+      {/* Scene Container - Hide Scrollbar */}
+      <div 
+        ref={scrollContainerRef}
+        className="flex-1 overflow-x-auto p-3 scrollbar-hide"
+        style={{
+          scrollbarWidth: 'none', /* Firefox */
+          msOverflowStyle: 'none', /* IE and Edge */
+        }}
+      >
         <div className="flex gap-3 h-full">
         {scenes.map((scene: any, index: number) => (
           <Card
             key={scene.id}
+            ref={(el) => (sceneRefs.current[index] = el)}
             className={`aspect-video flex-shrink-0 w-64 cursor-pointer transition-all hover:shadow-md relative group ${selectedSceneIndex === index
                 ? 'border-primary shadow-md ring-2 ring-primary/20'
                 : 'border-border hover:border-primary/50'

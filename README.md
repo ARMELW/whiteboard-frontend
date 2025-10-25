@@ -41,6 +41,13 @@ Une application web interactive pour créer des vidéos d'animation structurées
 - **Timeline avancée** : Contrôlez précisément la synchronisation des éléments visuels
 - **Animations fluides** : Transitions élégantes entre les scènes
 - **Contrôles de lecture** : Play, pause, et navigation entre les scènes
+- **Système de sauvegarde backend** ⭐ NOUVEAU
+  - Sauvegarde automatique et manuelle des données
+  - Support backend API avec fallback localStorage
+  - Mode hybride intelligent (backend + cache local)
+  - Raccourcis clavier (Ctrl+S / Cmd+S)
+  - Indicateurs visuels de sauvegarde
+  - Synchronisation automatique des données
 - **Persistance des données** : Vos scènes sont sauvegardées automatiquement dans le navigateur
 - **Interface intuitive** : Interface utilisateur moderne construite avec React et Tailwind CSS
 - **Responsive** : Fonctionne sur tous les écrans
@@ -51,6 +58,8 @@ Une application web interactive pour créer des vidéos d'animation structurées
 - **React** : Bibliothèque JavaScript pour l'interface utilisateur
 - **Tailwind CSS** : Framework CSS utilitaire pour le style
 - **JavaScript (ES6+)** : Langage de programmation moderne
+- **Axios** : Client HTTP pour les requêtes API
+- **Zustand** : Gestion d'état légère et performante
 
 ## 📦 Installation
 
@@ -62,11 +71,30 @@ cd whiteboard-anim
 # Installer les dépendances
 npm install
 
+# Configurer l'environnement (optionnel)
+cp .env.example .env
+# Éditez .env pour configurer l'URL de votre backend API
+
 # Lancer le serveur de développement
 npm run dev
 ```
 
 Le projet sera accessible sur `http://localhost:5173/`
+
+### Configuration Backend (Optionnel)
+
+Pour utiliser le système de sauvegarde avec un backend:
+
+1. Créez un fichier `.env` à la racine:
+```bash
+VITE_API_URL=http://localhost:3000/api
+```
+
+2. L'application fonctionnera en mode hybride:
+   - Essaye d'abord de sauvegarder sur le backend
+   - Fallback automatique vers localStorage si le backend est indisponible
+
+Voir [docs/SAVE_SYSTEM_GUIDE.md](docs/SAVE_SYSTEM_GUIDE.md) pour plus de détails.
 
 ## 🏗️ Build pour la production
 
@@ -166,8 +194,24 @@ export const sampleStory = [
 
 ### Persistance des données
 
-Vos scènes sont automatiquement sauvegardées dans le navigateur (localStorage). 
-Pour réinitialiser et revenir à l'histoire d'exemple, effacez les données du site dans les paramètres de votre navigateur.
+Vos scènes sont automatiquement sauvegardées avec le système de sauvegarde intelligent:
+
+#### Mode Hybride (Par défaut)
+- Les données sont d'abord envoyées au backend API si configuré
+- Fallback automatique vers localStorage si le backend n'est pas disponible
+- Synchronisation automatique entre cache local et backend
+
+#### Utilisation du bouton Save
+1. Cliquez sur le bouton 💾 en haut à droite
+2. Ou utilisez le raccourci `Ctrl+S` (Windows/Linux) ou `Cmd+S` (Mac)
+3. Un toast de confirmation s'affiche après la sauvegarde
+
+**États du bouton:**
+- 🔘 Gris: Prêt à sauvegarder
+- ⏳ Bleu avec loader: Sauvegarde en cours
+- ✅ Vert avec checkmark: Sauvegarde réussie (affiche l'heure)
+
+Pour plus de détails, consultez [docs/SAVE_SYSTEM_GUIDE.md](docs/SAVE_SYSTEM_GUIDE.md).
 
 ### Export de couches depuis JSON
 

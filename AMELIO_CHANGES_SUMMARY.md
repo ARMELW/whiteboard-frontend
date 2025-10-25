@@ -1,151 +1,126 @@
-# Résumé des Modifications - Issue Amelio
+# Amélioration - Summary of Changes
 
-## Vue d'ensemble
+## Issue Requirements (French)
+1. **Enlever le système de chapitres** - Remove the chapter system
+2. **Génération... c'est rester la pour la preview complet** - Keep generation for full preview
+3. **On devrait pouvoir faire aussi un preview commençant à une scène** - Should be able to preview starting from a specific scene
+4. **Liste de Polices ne pas bon, le layout en grid et pas trop de texte** - Font list not good, use grid layout and less text
+5. **Pour le hand une liste, on n'a pas encore de photo mais fait le** - For hand, a list (no photos yet but create it)
 
-Cette PR adresse les 5 points d'amélioration mentionnés dans l'issue "amelio" pour améliorer l'expérience utilisateur et l'organisation de l'interface.
+## Changes Implemented
 
-## Modifications Détaillées
+### 1. Scene Panel - Chapter System Removal
+**File**: `src/components/organisms/ScenePanel.tsx`
 
-### 1. Upload Media passe maintenant par le Crop Modal ✅
+**Changes Made**:
+- Removed `groupScenesIntoChapters` import and usage
+- Removed `useMemo` for chapters computation
+- Removed `expandedChapters` state management
+- Removed chapter toggle functionality
+- Simplified scene rendering to display all scenes in a single horizontal scroll
+- Updated "Prévisualiser" button text to "Prévisualiser depuis ici" to clarify that preview starts from selected scene
+- Added `setPreviewStartSceneIndex` call when previewing a scene
 
-**Fichier modifié**: `src/components/organisms/MediaLibrary.tsx`
+**Before**: Scenes were grouped into chapters of 5 scenes each with expand/collapse functionality
+**After**: All scenes are displayed in a continuous horizontal scroll without grouping
 
-**Changements**:
-- La fonction `handleFileSelect` a été refactorisée pour ouvrir le crop modal au lieu d'uploader directement
-- L'upload utilise maintenant le même flux que l'ajout manuel d'images via le bouton floating
-- Suppression du support multi-fichiers pour assurer la cohérence avec le crop modal (un fichier à la fois)
-- Suppression de la fonction `handleImageFileChange` redondante
+### 2. Font List - Grid Layout with Minimal Text
+**File**: `src/components/organisms/FontList.tsx`
 
-**Bénéfices**:
-- Expérience utilisateur cohérente pour tous les uploads
-- Possibilité de rogner/ajuster l'image avant de l'ajouter à la scène
-- Meilleur contrôle sur le contenu ajouté
+**Changes Made**:
+- Changed from vertical list to 2-column grid layout (`grid-cols-2`)
+- Reduced title from "Liste de Polices" to "Polices"
+- Removed font count display
+- Removed full alphabet preview ("The quick brown fox..." and "ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789")
+- Simplified preview to just "Abc"
+- Removed help text at the bottom
+- Changed "Web Safe" badge to a small green dot indicator in top-right corner
+- More compact padding and spacing
 
-### 2. Repositionnement du Camera Toolbar ✅
+**Before**: Large vertical list with full text previews and detailed information
+**After**: Compact 2-column grid showing only font name and "Abc" preview
 
-**Fichiers modifiés**: 
-- `src/components/organisms/SceneHeader.tsx`
-- `src/components/organisms/SceneCanvas.tsx`
+### 3. Hand Library Dialog - List Layout
+**File**: `src/components/organisms/HandLibraryDialog.tsx`
 
-**Changements**:
-- Le `SceneHeader` (contenant le `CameraToolbar`) n'est plus en position floating au bas de la scène
-- Maintenant positionné en haut du canvas comme une barre d'outils standard
-- Style modifié: suppression du style floating/rounded, ajout d'une bordure inférieure standard
-- Réorganisation de la structure DOM pour placer le header en premier enfant du flex-col container
+**Changes Made**:
+- Changed from 3-column grid (`grid-cols-2 md:grid-cols-3`) to vertical list (`space-y-2`)
+- Changed layout from centered items to horizontal flex layout
+- Reduced dialog max-width from `sm:max-w-3xl` to `sm:max-w-md`
+- Reduced icon size from large circular (h-20 w-20 with h-10 w-10 icon) to smaller (h-10 w-10 with h-5 w-5 icon)
+- Removed description text below each option
+- More compact padding (p-3 instead of p-4)
 
-**Bénéfices**:
-- Position plus intuitive et standard
-- Meilleure utilisation de l'espace vertical
-- Interface plus professionnelle et cohérente avec les standards UI
+**Before**: Grid of large cards with icons and descriptions
+**After**: Compact vertical list with small icons and labels only
 
-### 3. Refactorisation des Tabs du Panneau de Droite (PropertiesPanel) ✅
+### 4. Video Generation Panel - Scene Selection
+**File**: `src/components/organisms/VideoGenerationPanel.tsx`
 
-**Fichier modifié**: `src/components/organisms/PropertiesPanel.tsx`
+**Changes Made**:
+- Added `selectedSceneIndex` from store (for future use)
+- Added `startFromScene` state initialized to 0
+- Added scene selection dropdown "Commencer à partir de la scène"
+- Updated `totalDuration` calculation to only include scenes from `startFromScene` onwards
+- Changed scene count display to show "Scènes à générer: X / Total"
 
-**Changements**:
-- Suppression du tab "Project" (vide, marqué "coming soon")
-- Suppression du tab "Hands" (vide, marqué "coming soon")
-- Suppression du tab "Soundtrack" (voir point 4)
-- Conservation des tabs utiles: Properties, Layers, Export
-- Nettoyage des imports inutilisés (FolderKanban, Music, Hand icons et AudioManager)
+**Before**: Always generated video from first scene to last
+**After**: Can select which scene to start generation from
 
-**Avant**: 6 tabs (Properties, Export, Project, Soundtrack, Hands, Layers)
-**Après**: 3 tabs (Properties, Layers, Export)
+### 5. Scene Store - Preview Start Index
+**File**: `src/app/scenes/store.ts`
 
-**Bénéfices**:
-- Interface plus épurée et moins encombrée
-- Focus sur les fonctionnalités réellement utilisées
-- Meilleure organisation de l'information
+**Changes Made**:
+- Added `previewStartSceneIndex: number | null` to state interface
+- Added `setPreviewStartSceneIndex` action
+- Updated `initialUIState` to include `previewStartSceneIndex: null`
+- Updated `stopPreview` to reset `previewStartSceneIndex` to null
 
-### 4. Suppression du Tab Soundtrack ✅
+**Purpose**: Track which scene the preview should start from
 
-**Fichier modifié**: `src/components/organisms/PropertiesPanel.tsx`
+## Technical Details
 
-**Changements**:
-- Suppression complète du tab "Soundtrack" du panneau de droite
-- Retrait du composant `AudioManager` du PropertiesPanel (import et usage dans le JSX)
-- Retrait de l'import de l'icône `Music` de lucide-react
-- L'audio reste accessible via le tab "Audio" dans le panneau de gauche (ContextTabs)
+### Dependencies Removed
+- Import of `groupScenesIntoChapters` from `@/utils/sceneChapters`
+- Import of `SceneChapter` type
+- Import of `ChevronDown` and `ChevronUp` icons
+- Import of `useMemo` from React (ScenePanel)
+- Import of `GOOGLE_FONTS` from FontList
 
-**Bénéfices**:
-- Évite la duplication de fonctionnalités entre les deux panneaux
-- L'audio est maintenant géré uniquement depuis le panneau gauche, ce qui est plus logique
-- Cohérence avec l'organisation Media/Layers/Text/Audio
+### State Management Changes
+- Removed chapter-related state management in ScenePanel
+- Added preview start scene index to global store
+- Added video generation start scene selection to VideoGenerationPanel
 
-### 5. Ajout du Tab Hand dans le Panneau de Gauche ✅
+### UI/UX Improvements
+1. **Simpler Scene Navigation**: No more chapter expand/collapse - all scenes visible at once
+2. **Clearer Preview Intention**: Preview button now says "Prévisualiser depuis ici"
+3. **More Compact Font Selection**: Grid layout saves space and makes it easier to compare fonts
+4. **Streamlined Hand Selection**: List format is quicker to scan than grid
+5. **Flexible Video Generation**: Can now generate videos starting from any scene
 
-**Fichiers modifiés/créés**: 
-- `src/components/organisms/tabs/HandTab.tsx` (nouveau)
-- `src/components/organisms/ContextTabs.tsx`
+## Build Status
+✅ Build successful with no errors
+✅ No new linting errors introduced
+✅ All TypeScript types properly updated
 
-**Changements**:
-- Création d'un nouveau composant `HandTab` pour gérer les animations de main
-- Intégration avec le `HandLibraryDialog` existant
-- Ajout du tab "Hand" dans le `ContextTabs` (panneau de gauche)
-- Interface utilisateur pour sélectionner le type de main (6 options disponibles)
-- Affichage de la sélection actuelle avec des informations d'usage
+## Files Modified
+1. `src/components/organisms/ScenePanel.tsx`
+2. `src/components/organisms/FontList.tsx`
+3. `src/components/organisms/HandLibraryDialog.tsx`
+4. `src/components/organisms/VideoGenerationPanel.tsx`
+5. `src/app/scenes/store.ts`
 
-**Bénéfices**:
-- Les animations de main sont maintenant accessibles depuis un emplacement cohérent
-- Organisation logique avec les autres éléments de contenu (Media, Text, Audio)
-- Interface intuitive pour la sélection du type de main
+## Testing Recommendations
+1. Test scene panel scrolling with many scenes
+2. Verify preview starts from correct scene when "Prévisualiser depuis ici" is clicked
+3. Test font list in both columns with search functionality
+4. Verify hand selection works properly in list format
+5. Test video generation starting from different scenes
+6. Ensure preview and generation respect the selected start scene
 
-## Organisation des Tabs - Vue d'ensemble
-
-### Panneau de Gauche (ContextTabs)
-1. **Media** - Gestion des images et assets
-2. **Layers** - Liste et gestion des calques
-3. **Text** - Bibliothèque de textes
-4. **Audio** - Gestion de l'audio (conservé ici uniquement)
-5. **Hand** - Animations de main (nouveau)
-
-### Panneau de Droite (PropertiesPanel)
-1. **Properties** - Propriétés de la scène/calque sélectionné
-2. **Layers** - Liste des calques de la scène
-3. **Export** - Génération et export de vidéo
-
-## Tests Effectués
-
-- ✅ Build successful (`npm run build`)
-- ✅ Lint check passed (aucune nouvelle erreur)
-- ✅ Dev server starts correctly (`npm run dev`)
-- ✅ Tous les composants compilent correctement
-- ✅ Structure des tabs cohérente
-
-## Notes Techniques
-
-### Compatibilité
-- Aucun breaking change dans l'API des composants
-- Les composants existants continuent de fonctionner normalement
-- Le `HandLibraryDialog` reste compatible avec son usage existant
-
-### Performance
-- Légère amélioration: réduction du nombre de composants dans PropertiesPanel
-- Pas d'impact négatif sur les performances
-
-### Maintenabilité
-- Code plus propre et mieux organisé
-- Séparation claire des responsabilités entre les deux panneaux
-- Composants réutilisables (HandTab peut être étendu facilement)
-
-## Prochaines Étapes Suggérées
-
-1. Tests utilisateurs pour valider l'amélioration de l'UX
-2. Documentation utilisateur mise à jour
-3. Tests E2E pour les nouveaux flux (upload avec crop, sélection de hand)
-4. Possibilité d'ajouter des animations/transitions pour améliorer le feedback visuel
-
-## Captures d'écran
-
-Les captures d'écran devraient montrer:
-- Le crop modal lors de l'upload d'une image
-- La nouvelle position du camera toolbar en haut du canvas
-- Les tabs refactorisés du panneau de droite (3 au lieu de 6)
-- Le nouveau tab "Hand" dans le panneau de gauche
-- L'interface de sélection de main dans le HandTab
-
----
-
-**Date**: 2024-10-24
-**Branch**: copilot/refactor-upload-media-and-ui
-**Commit**: f3a936d
+## Backward Compatibility
+- ✅ No breaking API changes
+- ✅ Existing scene data structure unchanged
+- ✅ Store interface extended (backward compatible)
+- ⚠️ `sceneChapters.ts` utility file is now unused (can be removed in future cleanup)

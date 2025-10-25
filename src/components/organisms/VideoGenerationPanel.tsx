@@ -15,7 +15,6 @@ const VideoGenerationPanel: React.FC = () => {
   const { generateVideo, downloadVideo, reset, currentJob, isGenerating, error, progress } =
     useVideoGeneration();
   const scenes = useSceneStore((state) => state.scenes);
-  const selectedSceneIndex = useSceneStore((state) => state.selectedSceneIndex);
   
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [format, setFormat] = useState<'mp4' | 'webm'>('mp4');
@@ -42,7 +41,7 @@ const VideoGenerationPanel: React.FC = () => {
   };
 
   const handleGenerate = () => {
-    generateVideo(audioFile || undefined, { format, quality, fps });
+    generateVideo(audioFile || undefined, { format, quality, fps, startFromScene });
   };
 
   const handleDownload = () => {
@@ -59,7 +58,7 @@ const VideoGenerationPanel: React.FC = () => {
         {/* Start Scene Selection */}
         <div className="space-y-1.5">
           <label className="block text-xs font-medium text-foreground">Commencer à partir de la scène</label>
-          <Select value={startFromScene.toString()} onValueChange={(value) => setStartFromScene(parseInt(value))}>
+          <Select value={startFromScene.toString()} onValueChange={(value) => setStartFromScene(parseInt(value, 10))}>
             <SelectTrigger className="w-full bg-white text-foreground border border-border rounded px-3 py-2 text-sm">
               <SelectValue />
             </SelectTrigger>

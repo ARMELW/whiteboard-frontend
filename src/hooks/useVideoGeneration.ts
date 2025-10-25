@@ -9,7 +9,7 @@ export function useVideoGeneration() {
   const [error, setError] = useState<string | null>(null);
 
   const generateVideo = useCallback(
-    async (audioFile?: File, config?: { format?: string; quality?: string; fps?: number }) => {
+    async (audioFile?: File, config?: { format?: string; quality?: string; fps?: number; startFromScene?: number }) => {
       if (scenes.length === 0) {
         setError('No scenes to export');
         return;
@@ -20,8 +20,12 @@ export function useVideoGeneration() {
       setCurrentJob(null);
 
       try {
+        // Select scenes starting from the specified index
+        const startIndex = config?.startFromScene ?? 0;
+        const scenesToGenerate = scenes.slice(startIndex);
+
         const request = {
-          scenes: scenes,
+          scenes: scenesToGenerate,
           audio: audioFile
             ? {
                 file: audioFile,

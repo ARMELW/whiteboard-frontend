@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { MainApp } from './pages/MainApp';
 import { loadGoogleFonts } from './utils/fontLoader';
+import { migrateScenesToProjectHierarchy, ensureDefaultProject } from './utils/sceneMigration';
 import { Toaster } from 'sonner';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -8,6 +9,12 @@ function App() {
   // Load Google Fonts on app mount
   useEffect(() => {
     loadGoogleFonts();
+  }, []);
+
+  // Run data migration on app mount
+  useEffect(() => {
+    ensureDefaultProject();
+    migrateScenesToProjectHierarchy();
   }, []);
 
   return (

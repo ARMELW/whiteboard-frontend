@@ -33,13 +33,13 @@ class ScenesService extends BaseService<Scene> {
   async create(payload: ScenePayload = {}): Promise<Scene> {
     const defaultCamera = createDefaultCamera();
 
-    if (!payload.project_id) {
-      throw new Error('project_id is required to create a scene');
-    }
+    // For backwards compatibility, use a default project_id if not provided
+    // TODO: Remove this fallback once all scene creation flows are updated
+    const projectId = payload.project_id || 'default-project';
 
     const defaultScene: Partial<Scene> = {
       id: `scene-${Date.now()}`,
-      project_id: payload.project_id,
+      project_id: projectId,
       title: 'Nouvelle Scène',
       content: 'Ajoutez votre contenu ici...',
       duration: 5,

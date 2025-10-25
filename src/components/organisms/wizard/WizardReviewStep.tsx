@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useWizard } from '@/app/wizard';
-import { CheckCircle2, Clock, Image, Mic, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, Clock, Image, Mic, ArrowLeft, Info, Lightbulb, Eye } from 'lucide-react';
 import {
   DialogHeader,
   DialogTitle,
@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 export const WizardReviewStep: React.FC = () => {
   const { 
@@ -18,6 +19,7 @@ export const WizardReviewStep: React.FC = () => {
     previousStep,
     closeWizard 
   } = useWizard();
+  const [selectedScene, setSelectedScene] = useState<string | null>(null);
 
   if (!generatedScript) {
     return null;
@@ -98,18 +100,80 @@ export const WizardReviewStep: React.FC = () => {
                     </span>
                   </div>
                   
+                  {/* AI Decisions for this scene */}
+                  {scene.aiDecisions && (
+                    <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Lightbulb className="w-4 h-4 text-purple-600" />
+                        <span className="text-xs font-semibold text-purple-900">Décisions IA pour cette scène</span>
+                      </div>
+                      <div className="space-y-1.5 text-xs text-purple-800">
+                        <div className="flex items-start gap-2">
+                          <Image className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                          <span><strong>{scene.aiDecisions.imageCount} image(s)</strong> générée(s)</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                          <span>{scene.aiDecisions.styleChoices.layoutReason}</span>
+                        </div>
+                        {scene.aiDecisions.textLayers.length > 0 && (
+                          <div className="flex items-start gap-2">
+                            <Eye className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                            <span><strong>{scene.aiDecisions.textLayers.length} calque(s) de texte</strong> pour renforcer les messages</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Show positioning details */}
+                      <Accordion type="single" collapsible className="mt-2">
+                        <AccordionItem value="details" className="border-none">
+                          <AccordionTrigger className="text-xs text-purple-700 py-2 hover:no-underline">
+                            Voir les détails de positionnement
+                          </AccordionTrigger>
+                          <AccordionContent className="text-xs space-y-2">
+                            {scene.aiDecisions.imagePositions.map((pos, idx) => (
+                              <div key={idx} className="flex items-start gap-2 p-2 bg-white rounded">
+                                <span className="font-semibold text-purple-900">Image {idx + 1}:</span>
+                                <div>
+                                  <div className="text-gray-700">Position: ({Math.round(pos.x)}, {Math.round(pos.y)})</div>
+                                  <div className="text-purple-700 italic">{pos.reason}</div>
+                                </div>
+                              </div>
+                            ))}
+                            {scene.aiDecisions.textLayers.map((layer, idx) => (
+                              <div key={idx} className="flex items-start gap-2 p-2 bg-white rounded">
+                                <span className="font-semibold text-purple-900">Texte {idx + 1}:</span>
+                                <div>
+                                  <div className="text-gray-700">"{layer.content}"</div>
+                                  <div className="text-purple-700 italic">{layer.reason}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    </div>
+                  )}
+                  
                   {sceneDoodles.length > 0 && (
                     <div className="mt-3 flex gap-2">
                       {sceneDoodles.slice(0, 3).map((doodle) => (
                         <div
                           key={doodle.id}
-                          className="w-16 h-12 rounded border border-gray-200 bg-gray-50 overflow-hidden"
+                          className="relative group"
                         >
-                          <img
-                            src={doodle.url}
-                            alt={doodle.description}
-                            className="w-full h-full object-cover"
-                          />
+                          <div className="w-16 h-12 rounded border border-gray-200 bg-gray-50 overflow-hidden">
+                            <img
+                              src={doodle.url}
+                              alt={doodle.description}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          {doodle.reasoning && (
+                            <div className="absolute bottom-full mb-2 left-0 hidden group-hover:block w-48 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-10">
+                              {doodle.reasoning}
+                            </div>
+                          )}
                         </div>
                       ))}
                       {sceneDoodles.length > 3 && (

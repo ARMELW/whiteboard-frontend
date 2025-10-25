@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useWizard } from '@/app/wizard';
-import { Sparkles, Lightbulb } from 'lucide-react';
+import { Sparkles, Lightbulb, FileText } from 'lucide-react';
 import {
   DialogHeader,
   DialogTitle,
@@ -17,12 +17,16 @@ const examplePrompts = [
 ];
 
 export const WizardPromptStep: React.FC = () => {
-  const { prompt, setPrompt, nextStep } = useWizard();
+  const { prompt, setPrompt, nextStep, setCurrentStep } = useWizard();
   const [localPrompt, setLocalPrompt] = useState(prompt);
 
   const handleContinue = () => {
     setPrompt(localPrompt);
     nextStep();
+  };
+
+  const handleImport = () => {
+    setCurrentStep('import' as any);
   };
 
   const handleUseExample = (example: string) => {
@@ -77,7 +81,14 @@ export const WizardPromptStep: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 pt-4 border-t">
+      <div className="flex justify-between gap-3 pt-4 border-t">
+        <Button
+          variant="outline"
+          onClick={handleImport}
+        >
+          <FileText className="w-4 h-4 mr-2" />
+          Importer un scénario
+        </Button>
         <Button
           onClick={handleContinue}
           disabled={!localPrompt.trim()}

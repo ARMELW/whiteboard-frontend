@@ -196,27 +196,6 @@ Proposer une solution de création vidéo accessible et compétitive face aux le
 
 ---
 
-## 🎓 Réductions Spéciales
-
-### 🎒 Réduction Étudiants/Enseignants
-**-40% sur tous les plans payants**
-- Sur présentation d'une carte étudiante/professeur valide
-- Accès au plan Starter pour 5.40€/mois
-- Accès au plan Pro pour 17.40€/mois
-
-### 🏫 Licence Éducative (Institutions)
-**Tarifs dégressifs pour établissements**
-- 10-50 utilisateurs: -30%
-- 51-200 utilisateurs: -45%
-- 201+ utilisateurs: -60%
-- Support et formation inclus
-
-### 🌟 Programme Créateurs
-**Plan Pro gratuit** si:
-- +50K abonnés YouTube/TikTok
-- Logo "Powered by Whiteboard" dans vidéos
-- 1 post promotionnel/mois
-
 ### 💰 Offres de Lancement
 **3 premiers mois:**
 - Starter: **6€/mois** (-33%)

@@ -89,7 +89,7 @@ const AnimationContainer: React.FC = () => {
         {/* Main content area with left context tabs, center editor, and right properties */}
         <div className="flex flex-1 overflow-hidden">
           {/* Left: Context Tabs Panel */}
-          <div className="w-80 flex-shrink-0 border-r border-gray-700 bg-gray-50">
+          <div className="w-96 flex-shrink-0 border-r border-gray-700 bg-gray-50">
             <ContextTabs />
           </div>
           

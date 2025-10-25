@@ -111,7 +111,7 @@ const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
     <div className="flex items-center justify-center p-6">
       <div className="w-full max-w-3xl">
         {/* Video Card */}
-        <div className="bg-white rounded-xl shadow-xl overflow-hidden relative">
+        <div className="bg-white  shadow-xl overflow-hidden relative">
           {/* Close Button */}
           <button
             onClick={onClose}

@@ -404,7 +404,7 @@ const MediaLibrary: React.FC = () => {
                     <img
                       src={item.url}
                       alt={item.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain bg-white"
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">

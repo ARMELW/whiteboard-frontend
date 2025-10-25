@@ -2,6 +2,26 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:30
 const prefix = API_BASE_URL;
 
 export const API_ENDPOINTS = {
+  auth: {
+    base: `${prefix}/auth`,
+    login: `${prefix}/auth/login`,
+    signup: `${prefix}/auth/signup`,
+    logout: `${prefix}/auth/logout`,
+    refresh: `${prefix}/auth/refresh`,
+    me: `${prefix}/auth/me`,
+    forgotPassword: `${prefix}/auth/forgot-password`,
+    resetPassword: `${prefix}/auth/reset-password`,
+  },
+  subscription: {
+    base: `${prefix}/subscription`,
+    plans: `${prefix}/subscription/plans`,
+    current: `${prefix}/subscription/current`,
+    checkout: `${prefix}/subscription/checkout`,
+    cancel: `${prefix}/subscription/cancel`,
+    upgrade: `${prefix}/subscription/upgrade`,
+    downgrade: `${prefix}/subscription/downgrade`,
+    invoices: `${prefix}/subscription/invoices`,
+  },
   scenes: {
     base: `${prefix}/scenes`,
     list: `${prefix}/scenes`,

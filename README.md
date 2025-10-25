@@ -380,6 +380,16 @@ Les contributions sont les bienvenues ! N'hésitez pas à :
 4. Push vers la branche
 5. Ouvrir une Pull Request
 
+## 💰 Plans et Tarification
+
+Découvrez notre stratégie de pricing compétitive, spécialement conçue pour être accessible aux débutants tout en offrant des fonctionnalités professionnelles :
+
+- 📊 **[Plan d'Abonnement Complet](./SUBSCRIPTION_PLAN.md)** - Stratégie détaillée avec analyse concurrentielle
+- 💡 **[Résumé des Prix](./PRICING_SUMMARY.md)** - Vue d'ensemble rapide et tableaux comparatifs
+- 📑 **[Index de la Documentation Pricing](./PRICING_INDEX.md)** - Navigation et roadmap d'implémentation
+
+**Plans disponibles** : Gratuit (0€), Starter (9€), Pro (29€), Entreprise (sur devis)
+
 ## 📄 Licence
 
 Ce projet est sous licence MIT.

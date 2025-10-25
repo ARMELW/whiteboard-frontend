@@ -4,6 +4,7 @@ import { ProjectsPage } from './dashboard/ProjectsPage';
 import { ChannelProjectsPage } from './dashboard/ChannelProjectsPage';
 import { Button } from '@/components/ui/button';
 import { Home, FolderOpen, Settings, ChevronLeft } from 'lucide-react';
+import { Project } from '@/app/projects/types';
 
 type Page = 'dashboard' | 'projects' | 'channelProjects';
 
@@ -13,7 +14,11 @@ interface NavigationState {
   channelName?: string;
 }
 
-export function DashboardApp() {
+interface DashboardAppProps {
+  onOpenEditor: (project: Project) => void;
+}
+
+export function DashboardApp({ onOpenEditor }: DashboardAppProps) {
   const [navState, setNavState] = useState<NavigationState>({ page: 'dashboard' });
 
   const navigateToChannelProjects = (channelId: string, channelName: string) => {
@@ -72,11 +77,12 @@ export function DashboardApp() {
         {navState.page === 'dashboard' && (
           <Dashboard onChannelClick={navigateToChannelProjects} />
         )}
-        {navState.page === 'projects' && <ProjectsPage />}
+        {navState.page === 'projects' && <ProjectsPage onOpenEditor={onOpenEditor} />}
         {navState.page === 'channelProjects' && navState.channelId && (
           <ChannelProjectsPage
             channelId={navState.channelId}
             channelName={navState.channelName || 'Chaîne'}
+            onOpenEditor={onOpenEditor}
           />
         )}
       </main>

@@ -22,9 +22,10 @@ import { Button } from '@/components/ui/button';
 interface ChannelProjectsPageProps {
   channelId: string;
   channelName: string;
+  onOpenEditor: (project: Project) => void;
 }
 
-export function ChannelProjectsPage({ channelId, channelName }: ChannelProjectsPageProps) {
+export function ChannelProjectsPage({ channelId, channelName, onOpenEditor }: ChannelProjectsPageProps) {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
@@ -36,8 +37,7 @@ export function ChannelProjectsPage({ channelId, channelName }: ChannelProjectsP
 
   const handleEditProject = (project: Project) => {
     setCurrentProject(project);
-    console.log('Navigate to project editor:', project);
-    // TODO: Navigate to scene editor with project context
+    onOpenEditor(project);
   };
 
   const handleDuplicateProject = (project: Project) => {
@@ -99,7 +99,7 @@ export function ChannelProjectsPage({ channelId, channelName }: ChannelProjectsP
         defaultChannelId={channelId}
         onSuccess={(projectId) => {
           console.log('Project created:', projectId);
-          // TODO: Navigate to editor
+          // Project will be available in the list to click and open
         }}
       />
 

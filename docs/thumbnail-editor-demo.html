@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thumbnail Editor - Redesigned</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #f3f4f6;
+        }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-center;
+            padding: 1rem;
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #111827 100%);
+            border-radius: 0.75rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 1400px;
+            max-height: 95vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #374151;
+        }
+        .header {
+            background: linear-gradient(90deg, #9333ea 0%, #7c3aed 50%, #6366f1 100%);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(147, 51, 234, 0.3);
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .header-icon {
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            backdrop-filter: blur(4px);
+        }
+        .header-title {
+            color: white;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        .header-subtitle {
+            color: #e9d5ff;
+            font-size: 0.875rem;
+        }
+        .close-btn {
+            padding: 0.5rem;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            transition: background 0.2s;
+        }
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .content-area {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+        }
+        .left-panel {
+            flex: 1;
+            padding: 1.5rem;
+            overflow: auto;
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        }
+        .canvas-container {
+            background: rgba(17, 24, 39, 0.5);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            border: 1px solid #374151;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        .canvas-wrapper {
+            position: relative;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            max-width: fit-content;
+        }
+        .canvas {
+            border-radius: 0.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 900px;
+            height: auto;
+            aspect-ratio: 16/9;
+            background: linear-gradient(135deg, #dc2626 0%, #9333ea 100%);
+            display: flex;
+            align-items: center;
+            justify-center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.5);
+        }
+        .canvas-text {
+            color: white;
+            font-size: 3rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            padding: 1rem;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-download {
+            background: linear-gradient(90deg, #9333ea 0%, #7c3aed 100%);
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(147, 51, 234, 0.3);
+        }
+        .btn-download:hover {
+            background: linear-gradient(90deg, #7c3aed 0%, #6d28d9 100%);
+            box-shadow: 0 20px 25px -5px rgba(147, 51, 234, 0.4);
+        }
+        .btn-save {
+            background: linear-gradient(90deg, #16a34a 0%, #15803d 100%);
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(22, 163, 74, 0.3);
+        }
+        .btn-save:hover {
+            background: linear-gradient(90deg, #15803d 0%, #14532d 100%);
+            box-shadow: 0 20px 25px -5px rgba(22, 163, 74, 0.4);
+        }
+        .right-panel {
+            width: 384px;
+            background: #111827;
+            border-left: 1px solid #374151;
+            overflow: auto;
+            padding: 1.5rem;
+        }
+        .panel-section {
+            background: rgba(31, 41, 55, 0.5);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            border: 1px solid #374151;
+            margin-bottom: 1rem;
+        }
+        .section-title {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .icon-purple {
+            color: #c084fc;
+        }
+        .add-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+        .add-btn:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+        .btn-purple {
+            background: linear-gradient(90deg, #9333ea 0%, #7c3aed 100%);
+        }
+        .btn-purple:hover {
+            background: linear-gradient(90deg, #7c3aed 0%, #6d28d9 100%);
+        }
+        .btn-indigo {
+            background: linear-gradient(90deg, #4f46e5 0%, #4338ca 100%);
+        }
+        .btn-indigo:hover {
+            background: linear-gradient(90deg, #4338ca 0%, #3730a3 100%);
+        }
+        .btn-blue {
+            background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+        }
+        .btn-blue:hover {
+            background: linear-gradient(90deg, #1d4ed8 0%, #1e40af 100%);
+        }
+        .color-picker {
+            width: 100%;
+            height: 2.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            border: 1px solid #4b5563;
+            margin-top: 0.5rem;
+        }
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        .color-btn {
+            height: 2.5rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+        .color-btn:hover {
+            box-shadow: 0 0 0 2px #c084fc;
+        }
+        .layer-item {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(17, 24, 39, 0.5);
+            border: 1px solid #374151;
+            margin-bottom: 0.5rem;
+        }
+        .layer-item.selected {
+            background: #9333ea;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.3);
+        }
+        .layer-name {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #d1d5db;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .layer-item.selected .layer-name {
+            color: white;
+        }
+        .layer-controls {
+            display: flex;
+            gap: 0.25rem;
+        }
+        .layer-btn {
+            padding: 0.25rem;
+            background: transparent;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            transition: background 0.2s;
+        }
+        .layer-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .template-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0.5rem;
+            border: 1px solid #4b5563;
+            transition: all 0.2s;
+            cursor: pointer;
+            margin-bottom: 0.75rem;
+        }
+        .template-item:hover {
+            border-color: #9333ea;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+        .template-preview {
+            height: 5rem;
+            display: flex;
+            align-items: center;
+            justify-center;
+            position: relative;
+        }
+        .template-name {
+            position: absolute;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            opacity: 0.5;
+        }
+        .template-info {
+            background: rgba(17, 24, 39, 0.8);
+            padding: 0.5rem;
+            border-top: 1px solid #374151;
+        }
+        .template-title {
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        .template-desc {
+            color: #9ca3af;
+            font-size: 0.75rem;
+            margin-top: 0.125rem;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #d1d5db;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .checkbox-label:hover {
+            color: white;
+        }
+        .checkbox {
+            width: 1rem;
+            height: 1rem;
+            accent-color: #9333ea;
+            border-radius: 0.25rem;
+        }
+        label {
+            display: block;
+            color: #d1d5db;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        .tip {
+            color: #9ca3af;
+            font-size: 0.75rem;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-left">
+                    <div class="header-icon">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="header-title">Éditeur de Miniature</div>
+                        <div class="header-subtitle">Créez des miniatures professionnelles • 1280x720</div>
+                    </div>
+                </div>
+                <button class="close-btn">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="content-area">
+                <!-- Left Panel -->
+                <div class="left-panel">
+                    <div class="canvas-container">
+                        <div class="canvas-wrapper">
+                            <div class="canvas">
+                                <div class="canvas-text">MON TUTORIEL AWESOME</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-download">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Télécharger
+                        </button>
+                        <button class="btn btn-save">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                            Enregistrer
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Panel -->
+                <div class="right-panel">
+                    <!-- Add Elements -->
+                    <div class="panel-section">
+                        <h3 class="section-title">
+                            <svg class="icon-purple" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                                <line x1="9" y1="20" x2="15" y2="20"></line>
+                                <line x1="12" y1="4" x2="12" y2="20"></line>
+                            </svg>
+                            Ajouter des éléments
+                        </h3>
+                        <button class="add-btn btn-purple">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            Importer Image
+                        </button>
+                        <button class="add-btn btn-indigo">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                                <line x1="9" y1="20" x2="15" y2="20"></line>
+                                <line x1="12" y1="4" x2="12" y2="20"></line>
+                            </svg>
+                            Ajouter Texte
+                        </button>
+                        <button class="add-btn btn-blue">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            </svg>
+                            Ajouter Forme
+                        </button>
+                    </div>
+
+                    <!-- Background -->
+                    <div class="panel-section">
+                        <h3 class="section-title">
+                            <svg class="icon-purple" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+                            </svg>
+                            Arrière-plan
+                        </h3>
+                        <label>Couleur de fond</label>
+                        <input type="color" class="color-picker" value="#dc2626">
+                        <div class="color-grid">
+                            <button class="color-btn" style="background: #dc2626;"></button>
+                            <button class="color-btn" style="background: #1e40af;"></button>
+                            <button class="color-btn" style="background: #059669;"></button>
+                        </div>
+                    </div>
+
+                    <!-- Layers -->
+                    <div class="panel-section">
+                        <h3 class="section-title">
+                            <svg class="icon-purple" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                <path d="M2 17l10 5 10-5"></path>
+                                <path d="M2 12l10 5 10-5"></path>
+                            </svg>
+                            Calques (1)
+                        </h3>
+                        <div class="layer-item selected">
+                            <div class="layer-name">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                                    <line x1="9" y1="20" x2="15" y2="20"></line>
+                                    <line x1="12" y1="4" x2="12" y2="20"></line>
+                                </svg>
+                                Mon Tutoriel Awesome
+                            </div>
+                            <div class="layer-controls">
+                                <button class="layer-btn">▲</button>
+                                <button class="layer-btn">▼</button>
+                                <button class="layer-btn">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Templates -->
+                    <div class="panel-section">
+                        <h3 class="section-title">
+                            <svg class="icon-purple" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                            </svg>
+                            Templates Prédéfinis
+                        </h3>
+                        <div class="template-item">
+                            <div class="template-preview" style="background: #ff0000;">
+                                <div class="template-name">YouTube Bold</div>
+                            </div>
+                            <div class="template-info">
+                                <div class="template-title">YouTube Bold</div>
+                                <div class="template-desc">Style YouTube classique avec titre imposant</div>
+                            </div>
+                        </div>
+                        <div class="tip">💡 Astuce: Personnalisez chaque template après application</div>
+                    </div>
+
+                    <!-- Utilities -->
+                    <div class="panel-section">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox">
+                            Afficher la grille de composition
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

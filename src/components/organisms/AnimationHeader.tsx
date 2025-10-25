@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
-import { Save, Download, Undo, Redo, FileVideo, Play, Clock, Library, BookmarkPlus, Camera, Plus, ZoomIn, ZoomOut, Lock, Unlock, Sparkles, Loader2 } from 'lucide-react';
+import { Save, Download, Undo, Redo, FileVideo, Play, Clock, Library, BookmarkPlus, Camera, Plus, ZoomIn, ZoomOut, Lock, Unlock, Sparkles, Loader2, ImageIcon } from 'lucide-react';
 import { useSceneStore } from '@/app/scenes';
 import { useWizardStore } from '@/app/wizard';
 import { useHistory } from '@/app/history';
@@ -17,6 +17,7 @@ interface AnimationHeaderProps {
   onOpenTemplateLibrary: () => void;
   onSaveAsTemplate: () => void;
   onOpenExportModal: () => void;
+  onOpenThumbnailMaker?: () => void;
   hasCurrentScene: boolean;
   cameras?: CameraType[];
   selectedCameraId?: string | null;
@@ -32,6 +33,7 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
   onOpenTemplateLibrary,
   onSaveAsTemplate,
   onOpenExportModal,
+  onOpenThumbnailMaker,
   hasCurrentScene,
   cameras = [],
   selectedCameraId = null,
@@ -270,6 +272,21 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
         >
           <BookmarkPlus className="w-4 h-4" />
         </button>
+        {onOpenThumbnailMaker && (
+          <button
+            onClick={onOpenThumbnailMaker}
+            disabled={!hasCurrentScene}
+            className={`flex items-center gap-2 px-3 py-2 rounded transition-colors ${
+              hasCurrentScene
+                ? 'hover:bg-gray-800 text-gray-300'
+                : 'text-gray-500 cursor-not-allowed'
+            }`}
+            title="Créer une miniature YouTube"
+          >
+            <ImageIcon className="w-4 h-4" />
+            <span className="text-sm">Miniature</span>
+          </button>
+        )}
         <div className="h-6 w-px bg-gray-700 mx-2" />
         <button
           className="flex items-center gap-2 px-3 py-2 hover:bg-gray-800 text-gray-300 rounded transition-colors"

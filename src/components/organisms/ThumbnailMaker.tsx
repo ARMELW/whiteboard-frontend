@@ -9,8 +9,10 @@ import {
   ThumbnailAddElements,
   ThumbnailBackground,
   ThumbnailLayersList,
-  ThumbnailTextProperties
+  ThumbnailTextProperties,
+  ThumbnailTemplates
 } from '../molecules';
+import type { ThumbnailTemplate } from '../molecules';
 
 // Types for layers
 export type ThumbnailLayer =
@@ -199,9 +201,14 @@ const ThumbnailMaker = ({ scene, onClose, onSave }: ThumbnailMakerProps) => {
     const stage = stageRef.current;
     if (!stage) return;
 
-    const uri = stage.toDataURL({ pixelRatio: 2 });
+    // Export with high quality and optimize for YouTube (< 2MB)
+    const uri = stage.toDataURL({ 
+      pixelRatio: 2,
+      mimeType: 'image/jpeg',
+      quality: 0.92 // High quality JPEG for smaller file size
+    });
     const link = document.createElement('a');
-    link.download = `thumbnail-${scene?.id || 'scene'}.png`;
+    link.download = `thumbnail-${scene?.id || 'scene'}.jpg`;
     link.href = uri;
     link.click();
   };
@@ -210,7 +217,12 @@ const ThumbnailMaker = ({ scene, onClose, onSave }: ThumbnailMakerProps) => {
     const stage = stageRef.current;
     if (!stage) return;
 
-    const dataUrl = stage.toDataURL({ pixelRatio: 2 });
+    // Save with high quality JPEG for smaller file size
+    const dataUrl = stage.toDataURL({ 
+      pixelRatio: 2,
+      mimeType: 'image/jpeg',
+      quality: 0.92
+    });
     onSave?.({
       ...scene,
       thumbnail: {
@@ -219,6 +231,12 @@ const ThumbnailMaker = ({ scene, onClose, onSave }: ThumbnailMakerProps) => {
         dataUrl,
       },
     });
+  };
+
+  const handleApplyTemplate = (template: ThumbnailTemplate) => {
+    setBackgroundColor(template.backgroundColor);
+    setLayers(template.layers);
+    setSelectedLayerId(null);
   };
 
   const selectedLayer = layers.find(l => l.id === selectedLayerId);
@@ -349,6 +367,10 @@ const ThumbnailMaker = ({ scene, onClose, onSave }: ThumbnailMakerProps) => {
           {/* Right Panel - Controls */}
           <div className="w-96 bg-gray-850 border-l border-border overflow-auto">
             <div className="p-6 space-y-6">
+              <ThumbnailTemplates
+                onSelectTemplate={handleApplyTemplate}
+              />
+
               <ThumbnailAddElements
                 onImageUpload={() => imageUploadRef.current?.click()}
                 onAddText={handleAddText}

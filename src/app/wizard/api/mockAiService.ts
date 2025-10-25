@@ -61,14 +61,38 @@ export const generateScript = async (
     template = topicTemplates.presentation;
   }
 
-  const scenes: ScriptScene[] = template.map((sceneTitle, index) => ({
-    id: uuidv4(),
-    title: sceneTitle,
-    content: `Contenu généré automatiquement pour "${prompt}". ${sceneTitle}. Ceci est un exemple de contenu qui serait généré par l'IA en fonction de votre demande.`,
-    duration: config.sceneDuration,
-    suggestedVisuals: generateSuggestedVisuals(sceneTitle, config.doodleStyle),
-    voiceoverText: `Texte de voix-off pour ${sceneTitle}. L'IA génère automatiquement un script engageant basé sur votre prompt.`,
-  }));
+  const scenes: ScriptScene[] = template.map((sceneTitle, index) => {
+    // AI Decision Making: Determine optimal visual strategy
+    const contentComplexity = prompt.length / template.length;
+    const isTextHeavy = config.textImageBalance === 'text_heavy' || 
+                        (config.textImageBalance === 'auto' && contentComplexity > 50);
+    
+    // Determine image count based on configuration and content
+    let imageCount = Math.floor(Math.random() * (config.maxImagesPerScene - config.minImagesPerScene + 1)) + config.minImagesPerScene;
+    
+    // Generate intelligent positioning based on strategy
+    const imagePositions = generateImagePositions(imageCount, config.imagePlacementStrategy);
+    const textLayers = config.useTextLayers ? generateTextLayers(sceneTitle, imageCount) : [];
+    
+    return {
+      id: uuidv4(),
+      title: sceneTitle,
+      content: `Contenu généré automatiquement pour "${prompt}". ${sceneTitle}. Ceci est un exemple de contenu qui serait généré par l'IA en fonction de votre demande.`,
+      duration: config.sceneDuration,
+      suggestedVisuals: generateSuggestedVisuals(sceneTitle, config.doodleStyle),
+      voiceoverText: `Texte de voix-off pour ${sceneTitle}. L'IA génère automatiquement un script engageant basé sur votre prompt.`,
+      aiDecisions: {
+        imageCount,
+        imagePositions,
+        textLayers,
+        styleChoices: {
+          colorScheme: getColorSchemeForStyle(config.doodleStyle),
+          fontChoice: getFontForStyle(config.doodleStyle),
+          layoutReason: getLayoutReason(config.imagePlacementStrategy, imageCount),
+        },
+      },
+    };
+  });
 
   const totalDuration = scenes.reduce((sum, scene) => sum + scene.duration, 0);
 
@@ -78,6 +102,126 @@ export const generateScript = async (
     scenes,
     estimatedDuration: totalDuration,
   };
+};
+
+// Helper: Generate intelligent image positions
+const generateImagePositions = (count: number, strategy: string): Array<{ x: number; y: number; reason: string }> => {
+  const positions: Array<{ x: number; y: number; reason: string }> = [];
+  const canvasWidth = 1920;
+  const canvasHeight = 1080;
+  
+  switch (strategy) {
+    case 'centered':
+      for (let i = 0; i < count; i++) {
+        positions.push({
+          x: canvasWidth / 2,
+          y: canvasHeight / 2 + (i - count / 2) * 100,
+          reason: 'Centré pour impact maximum',
+        });
+      }
+      break;
+    case 'grid':
+      const cols = Math.ceil(Math.sqrt(count));
+      const rows = Math.ceil(count / cols);
+      for (let i = 0; i < count; i++) {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        positions.push({
+          x: (canvasWidth / (cols + 1)) * (col + 1),
+          y: (canvasHeight / (rows + 1)) * (row + 1),
+          reason: 'Grille pour organisation claire',
+        });
+      }
+      break;
+    case 'scattered':
+      for (let i = 0; i < count; i++) {
+        positions.push({
+          x: 300 + Math.random() * (canvasWidth - 600),
+          y: 200 + Math.random() * (canvasHeight - 400),
+          reason: 'Disposition dynamique et naturelle',
+        });
+      }
+      break;
+    default: // auto
+      // Smart auto-placement based on count
+      if (count <= 2) {
+        positions.push(
+          { x: canvasWidth * 0.3, y: canvasHeight * 0.5, reason: 'Placement gauche pour séquence naturelle' },
+          { x: canvasWidth * 0.7, y: canvasHeight * 0.5, reason: 'Placement droit pour équilibre' }
+        );
+      } else {
+        const angleStep = (2 * Math.PI) / count;
+        const radius = 300;
+        for (let i = 0; i < count; i++) {
+          positions.push({
+            x: canvasWidth / 2 + Math.cos(angleStep * i) * radius,
+            y: canvasHeight / 2 + Math.sin(angleStep * i) * radius,
+            reason: 'Disposition circulaire pour harmonie visuelle',
+          });
+        }
+      }
+  }
+  
+  return positions.slice(0, count);
+};
+
+// Helper: Generate text layers
+const generateTextLayers = (title: string, imageCount: number): Array<{ content: string; position: { x: number; y: number }; reason: string }> => {
+  const layers = [];
+  const keywords = title.split(':')[0].split(' ').filter(w => w.length > 3);
+  
+  if (keywords.length > 0) {
+    layers.push({
+      content: keywords[0],
+      position: { x: 960, y: 150 },
+      reason: 'Mot-clé principal en haut pour hiérarchie visuelle',
+    });
+  }
+  
+  if (imageCount > 2 && keywords.length > 1) {
+    layers.push({
+      content: keywords.slice(1, 3).join(' '),
+      position: { x: 960, y: 900 },
+      reason: 'Texte de support en bas pour contexte',
+    });
+  }
+  
+  return layers;
+};
+
+// Helper: Get color scheme for style
+const getColorSchemeForStyle = (style: string): string => {
+  const schemes: Record<string, string> = {
+    minimal: 'Monochrome avec accents subtils',
+    detailed: 'Palette riche et variée',
+    cartoon: 'Couleurs vives et saturées',
+    sketch: 'Tons naturels et crayonnés',
+    professional: 'Palette corporate sobre',
+  };
+  return schemes[style] || schemes.professional;
+};
+
+// Helper: Get font for style
+const getFontForStyle = (style: string): string => {
+  const fonts: Record<string, string> = {
+    minimal: 'Helvetica Neue - clarté et modernité',
+    detailed: 'Georgia - élégance et lisibilité',
+    cartoon: 'Comic Sans MS - ludique et accessible',
+    sketch: 'Brush Script - aspect manuscrit',
+    professional: 'Arial - professionnel et neutre',
+  };
+  return fonts[style] || fonts.professional;
+};
+
+// Helper: Get layout reason
+const getLayoutReason = (strategy: string, imageCount: number): string => {
+  const reasons: Record<string, string> = {
+    centered: 'Mise en valeur centrale pour capter l\'attention immédiatement',
+    grid: 'Organisation structurée facilitant la comparaison et la compréhension',
+    scattered: 'Aspect naturel et dynamique pour maintenir l\'engagement',
+    auto: `Disposition optimale calculée pour ${imageCount} élément(s) selon principes de design`,
+  };
+  return reasons[strategy] || reasons.auto;
 };
 
 // Generate suggested visuals based on scene content
@@ -105,18 +249,31 @@ export const generateDoodleImages = async (
   await mockDelay(3000); // Simulate AI image generation
 
   const assets: GeneratedAsset[] = [];
+  const imageSizes = {
+    small: { width: 400, height: 300 },
+    medium: { width: 600, height: 450 },
+    large: { width: 800, height: 600 },
+  };
+  const size = imageSizes[config.imageSize];
 
   for (const scene of script.scenes) {
-    // Generate 2-3 doodle images per scene
-    const imageCount = Math.floor(Math.random() * 2) + 2;
+    // Use AI decisions from scene if available
+    const imageCount = scene.aiDecisions?.imageCount || Math.floor(Math.random() * 2) + 2;
+    const positions = scene.aiDecisions?.imagePositions || [];
     
     for (let i = 0; i < imageCount; i++) {
+      const position = positions[i] || { x: 100 + i * 150, y: 100 };
+      const reasoning = positions[i]?.reason || 'Placement automatique selon contenu';
+      
       assets.push({
         id: uuidv4(),
         type: 'doodle',
-        url: generateMockDoodleUrl(scene.title, i, config.doodleStyle),
+        url: generateMockDoodleUrl(scene.title, i, config.doodleStyle, size),
         sceneId: scene.id,
         description: `Doodle image ${i + 1} pour ${scene.title}`,
+        position: { x: position.x, y: position.y },
+        size,
+        reasoning,
       });
     }
   }
@@ -125,12 +282,12 @@ export const generateDoodleImages = async (
 };
 
 // Generate mock doodle URL (in production, this would be actual AI-generated images)
-const generateMockDoodleUrl = (title: string, index: number, style: DoodleStyle): string => {
+const generateMockDoodleUrl = (title: string, index: number, style: DoodleStyle, size: { width: number; height: number }): string => {
   // For now, return placeholder images
   // In production, this would return URLs to AI-generated doodle images
   const colors = ['4A90E2', '50C878', 'F39C12', 'E74C3C', '9B59B6'];
   const color = colors[index % colors.length];
-  return `https://via.placeholder.com/400x300/${color}/FFFFFF?text=${encodeURIComponent(title.substring(0, 20))}`;
+  return `https://via.placeholder.com/${size.width}x${size.height}/${color}/FFFFFF?text=${encodeURIComponent(title.substring(0, 15))}`;
 };
 
 // Generate voiceover audio

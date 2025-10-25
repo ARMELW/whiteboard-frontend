@@ -6,6 +6,7 @@ import {
   DialogContent,
 } from '@/components/ui/dialog';
 import { WizardPromptStep } from './WizardPromptStep';
+import { WizardImportStep } from './WizardImportStep';
 import { WizardConfigurationStep } from './WizardConfigurationStep';
 import { WizardGenerationStep } from './WizardGenerationStep';
 import { WizardReviewStep } from './WizardReviewStep';
@@ -17,6 +18,8 @@ export const AiWizardDialog: React.FC = () => {
     switch (currentStep) {
       case WizardStep.PROMPT:
         return <WizardPromptStep />;
+      case WizardStep.IMPORT:
+        return <WizardImportStep />;
       case WizardStep.CONFIGURATION:
         return <WizardConfigurationStep />;
       case WizardStep.GENERATION:

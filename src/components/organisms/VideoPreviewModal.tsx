@@ -11,8 +11,9 @@ interface VideoPreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   sceneId?: string;
-  isFullPreview?: boolean; // Pour la prévisualisation complète de toutes les scènes
-  scenes?: any[]; // Pour la prévisualisation complète
+  isFullPreview?: boolean;
+  startFromSceneIndex?: number;
+  scenes?: any[];
 }
 
 const VideoPreviewModal: React.FC<VideoPreviewModalProps> = ({ 
@@ -20,6 +21,7 @@ const VideoPreviewModal: React.FC<VideoPreviewModalProps> = ({
   onClose,
   sceneId,
   isFullPreview = false,
+  startFromSceneIndex,
   scenes = []
 }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -59,7 +61,7 @@ const VideoPreviewModal: React.FC<VideoPreviewModalProps> = ({
     };
 
     fetchVideoUrl();
-  }, [isOpen, sceneId, isFullPreview]);
+  }, [isOpen, sceneId, isFullPreview, startFromSceneIndex]);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -73,7 +75,11 @@ const VideoPreviewModal: React.FC<VideoPreviewModalProps> = ({
         <DialogHeader>
           <DialogTitle className="text-lg font-bold flex items-center justify-between">
             <span>
-              {isFullPreview ? 'Prévisualisation complète' : 'Prévisualisation de la scène'}
+              {isFullPreview 
+                ? (startFromSceneIndex !== undefined 
+                    ? `Prévisualisation à partir de la scène ${startFromSceneIndex + 1}` 
+                    : 'Prévisualisation complète')
+                : 'Prévisualisation de la scène'}
             </span>
             <button
               onClick={onClose}
@@ -136,7 +142,15 @@ const VideoPreviewModal: React.FC<VideoPreviewModalProps> = ({
         {isFullPreview && scenes.length > 0 && (
           <div className="mt-4 p-3 bg-secondary/30 rounded-lg">
             <p className="text-xs text-muted-foreground">
-              <strong>{scenes.length}</strong> scène{scenes.length > 1 ? 's' : ''} incluse{scenes.length > 1 ? 's' : ''} dans cette prévisualisation
+              {startFromSceneIndex !== undefined ? (
+                <>
+                  <strong>{scenes.length - startFromSceneIndex}</strong> scène{scenes.length - startFromSceneIndex > 1 ? 's' : ''} à partir de la scène <strong>{startFromSceneIndex + 1}</strong>
+                </>
+              ) : (
+                <>
+                  <strong>{scenes.length}</strong> scène{scenes.length > 1 ? 's' : ''} incluse{scenes.length > 1 ? 's' : ''} dans cette prévisualisation
+                </>
+              )}
             </p>
           </div>
         )}

@@ -8,6 +8,7 @@ interface SceneState {
   scenes: Scene[];
   loading: boolean;
   error: Error | null;
+  currentProjectId: string | null;
   
   // UI state
   selectedSceneIndex: number;
@@ -29,6 +30,7 @@ interface SceneState {
   
   // Data Actions
   setScenes: (scenes: Scene[]) => void;
+  setCurrentProjectId: (projectId: string | null) => void;
   addScene: (scene: Scene, afterIndex?: number) => void;
   updateScene: (scene: Scene) => void;
   updateSceneProperty: (sceneId: string, property: string, value: any) => void;
@@ -94,6 +96,7 @@ const initialDataState = {
   scenes: [],
   loading: false,
   error: null,
+  currentProjectId: null,
 };
 
 export const useSceneStore = create<SceneState>((set) => ({
@@ -105,6 +108,7 @@ export const useSceneStore = create<SceneState>((set) => ({
 
   // Data Actions
   setScenes: (scenes: Scene[]) => set({ scenes }),
+  setCurrentProjectId: (projectId: string | null) => set({ currentProjectId: projectId }),
   addScene: (scene: Scene, afterIndex?: number) => {
     set(state => {
       const scenes = [...state.scenes];

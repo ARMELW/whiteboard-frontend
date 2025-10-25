@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { MainApp } from './pages/MainApp';
+import { RouterProvider } from 'react-router-dom';
+import { router } from './routes';
 import { loadGoogleFonts } from './utils/fontLoader';
 import { migrateScenesToProjectHierarchy, ensureDefaultProject } from './utils/sceneMigration';
 import { Toaster } from 'sonner';
@@ -19,7 +20,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <MainApp />
+      <RouterProvider router={router} />
       <Toaster 
         position="bottom-right"
         toastOptions={{

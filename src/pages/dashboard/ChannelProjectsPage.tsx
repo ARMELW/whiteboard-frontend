@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ProjectsList } from '@/app/projects/components/ProjectsList';
 import { CreateProjectModal } from '@/app/projects/components/CreateProjectModal';
 import { Project } from '@/app/projects/types';
 import { useProjectsActions } from '@/app/projects/hooks/useProjectsActions';
 import { useProjectStore } from '@/app/projects/store';
+import { useChannels } from '@/app/channels/hooks/useChannels';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,13 +21,10 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-interface ChannelProjectsPageProps {
-  channelId: string;
-  channelName: string;
-  onOpenEditor: (project: Project) => void;
-}
-
-export function ChannelProjectsPage({ channelId, channelName, onOpenEditor }: ChannelProjectsPageProps) {
+export function ChannelProjectsPage() {
+  const navigate = useNavigate();
+  const { channelId } = useParams<{ channelId: string }>();
+  const { data: channels } = useChannels();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
@@ -35,9 +34,18 @@ export function ChannelProjectsPage({ channelId, channelName, onOpenEditor }: Ch
   const { deleteProject, duplicateProject } = useProjectsActions();
   const setCurrentProject = useProjectStore((state) => state.setCurrentProject);
 
+  // Redirect to dashboard if no channelId
+  if (!channelId) {
+    navigate('/');
+    return null;
+  }
+
+  const channel = channels?.find(c => c.id === channelId);
+  const channelName = channel?.name || 'Chaîne';
+
   const handleEditProject = (project: Project) => {
     setCurrentProject(project);
-    onOpenEditor(project);
+    navigate(`/channels/${channelId}/editor/${project.id}`);
   };
 
   const handleDuplicateProject = (project: Project) => {

@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ProjectsList } from '@/app/projects/components/ProjectsList';
 import { CreateProjectModal } from '@/app/projects/components/CreateProjectModal';
 import { Project } from '@/app/projects/types';
 import { useProjectsActions } from '@/app/projects/hooks/useProjectsActions';
+import { useProjectStore } from '@/app/projects/store';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,11 +20,8 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 
-interface ProjectsPageProps {
-  onOpenEditor: (project: Project) => void;
-}
-
-export function ProjectsPage({ onOpenEditor }: ProjectsPageProps) {
+export function ProjectsPage() {
+  const navigate = useNavigate();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
@@ -30,9 +29,11 @@ export function ProjectsPage({ onOpenEditor }: ProjectsPageProps) {
   const [duplicateTitle, setDuplicateTitle] = useState('');
   
   const { deleteProject, duplicateProject } = useProjectsActions();
+  const setCurrentProject = useProjectStore((state) => state.setCurrentProject);
 
   const handleEditProject = (project: Project) => {
-    onOpenEditor(project);
+    setCurrentProject(project);
+    navigate(`/channels/${project.channel_id}/editor/${project.id}`);
   };
 
   const handleDuplicateProject = (project: Project) => {

@@ -1,22 +1,20 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChannelsList } from '@/app/channels/components/ChannelsList';
 import { CreateChannelModal } from '@/app/channels/components/CreateChannelModal';
 import { ChannelSettingsModal } from '@/app/channels/components/ChannelSettingsModal';
 import { Channel } from '@/app/channels/types';
 import { useChannels } from '@/app/channels/hooks/useChannels';
 
-interface DashboardProps {
-  onChannelClick: (channelId: string, channelName: string) => void;
-}
-
-export function Dashboard({ onChannelClick }: DashboardProps) {
+export function Dashboard() {
+  const navigate = useNavigate();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const { refetch } = useChannels();
 
   const handleChannelClick = (channel: Channel) => {
-    onChannelClick(channel.id, channel.name);
+    navigate(`/channels/${channel.id}`);
   };
 
   const handleChannelSettings = (channel: Channel) => {

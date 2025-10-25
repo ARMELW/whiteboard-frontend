@@ -34,6 +34,12 @@ export function ChannelProjectsPage() {
   const { deleteProject, duplicateProject } = useProjectsActions();
   const setCurrentProject = useProjectStore((state) => state.setCurrentProject);
 
+  // Redirect to dashboard if no channelId
+  if (!channelId) {
+    navigate('/');
+    return null;
+  }
+
   const channel = channels?.find(c => c.id === channelId);
   const channelName = channel?.name || 'Chaîne';
 
@@ -88,7 +94,7 @@ export function ChannelProjectsPage() {
       </div>
 
       <ProjectsList
-        channelId={channelId!}
+        channelId={channelId}
         onCreateProject={() => setCreateModalOpen(true)}
         onEditProject={handleEditProject}
         onDuplicateProject={handleDuplicateProject}
@@ -98,7 +104,7 @@ export function ChannelProjectsPage() {
       <CreateProjectModal
         open={createModalOpen}
         onOpenChange={setCreateModalOpen}
-        defaultChannelId={channelId!}
+        defaultChannelId={channelId}
         onSuccess={(projectId) => {
           console.log('Project created:', projectId);
           // Project will be available in the list to click and open

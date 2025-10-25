@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,7 +18,7 @@
             z-index: 50;
             display: flex;
             align-items: center;
-            justify-center;
+            justify-content: center;
             padding: 1rem;
         }
         .modal-content {
@@ -494,9 +494,9 @@
                                 Mon Tutoriel Awesome
                             </div>
                             <div class="layer-controls">
-                                <button class="layer-btn">▲</button>
-                                <button class="layer-btn">▼</button>
-                                <button class="layer-btn">
+                                <button class="layer-btn" aria-label="Move layer up">▲</button>
+                                <button class="layer-btn" aria-label="Move layer down">▼</button>
+                                <button class="layer-btn" aria-label="Delete layer">
                                     <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                         <polyline points="3 6 5 6 21 6"></polyline>
                                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>

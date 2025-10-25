@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { Button, Card } from '../atoms';
-import { Plus, ArrowUp, ArrowDown, Copy, Trash2, Download, Upload, MoreVertical } from 'lucide-react';
+import { Plus, ArrowUp, ArrowDown, Copy, Trash2, Download, Upload, MoreVertical, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useScenes, useSceneStore, useScenesActions } from '@/app/scenes';
 import { THUMBNAIL_CONFIG } from '@/utils/sceneThumbnail';
 
@@ -176,6 +176,7 @@ const ScenePanel: React.FC = () => {
   const setSelectedSceneIndex = useSceneStore((state) => state.setSelectedSceneIndex);
   const importInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const scenesScrollRef = useRef<HTMLDivElement>(null);
   
   // Use actions from useScenesActions hook
   const { createScene, deleteScene, duplicateScene, reorderScenes } = useScenesActions();
@@ -238,6 +239,37 @@ const ScenePanel: React.FC = () => {
     reader.readAsDataURL(file);
     // Reset input so same file can be selected again
     e.target.value = '';
+  };
+
+  // Scroll navigation functions
+  const scrollScenes = (direction: 'left' | 'right') => {
+    if (!scenesScrollRef.current) return;
+    const scrollAmount = 300; // Scroll by 300px
+    const newScrollLeft = scenesScrollRef.current.scrollLeft + (direction === 'right' ? scrollAmount : -scrollAmount);
+    scenesScrollRef.current.scrollTo({
+      left: newScrollLeft,
+      behavior: 'smooth'
+    });
+  };
+
+  // Navigate to specific scene and scroll into view
+  const navigateToScene = (index: number) => {
+    setSelectedSceneIndex(index);
+    // Auto-scroll to center the selected scene
+    if (scenesScrollRef.current) {
+      const sceneCards = scenesScrollRef.current.querySelectorAll('.scene-card');
+      const selectedCard = sceneCards[index] as HTMLElement;
+      if (selectedCard) {
+        const containerWidth = scenesScrollRef.current.offsetWidth;
+        const cardLeft = selectedCard.offsetLeft;
+        const cardWidth = selectedCard.offsetWidth;
+        const scrollPosition = cardLeft - (containerWidth / 2) + (cardWidth / 2);
+        scenesScrollRef.current.scrollTo({
+          left: scrollPosition,
+          behavior: 'smooth'
+        });
+      }
+    }
   };
 
   return (
@@ -307,38 +339,67 @@ const ScenePanel: React.FC = () => {
         </div>
       </div>
 
-      {/* Scenes List - Now horizontal */}
-      <div className="flex-1 overflow-x-auto p-3">
-        <div className="flex gap-3 h-full">
-        {scenes.map((scene: any, index: number) => (
-          <SceneCard
-            key={scene.id}
-            scene={scene}
-            index={index}
-            isSelected={selectedSceneIndex === index}
-            onSelect={() => setSelectedSceneIndex(index)}
-            onMoveUp={() => handleMoveScene(index, 'up')}
-            onMoveDown={() => handleMoveScene(index, 'down')}
-            onDuplicate={() => handleDuplicateScene(index)}
-            onDelete={() => handleDeleteScene(index)}
-            canMoveUp={index !== 0}
-            canMoveDown={index !== scenes.length - 1}
-          />
-        ))}
-        
-        {/* Add Scene Card */}
-        <Card
-          className="flex-shrink-0 w-64 cursor-pointer transition-all hover:shadow-md border-2 border-dashed border-border hover:border-primary/50 hover:bg-secondary/50"
-          onClick={handleAddScene}
+      {/* Navigation buttons and Scenes List */}
+      <div className="flex-1 flex items-center overflow-hidden">
+        {/* Left Navigation Button */}
+        <button
+          onClick={() => scrollScenes('left')}
+          className="flex-shrink-0 p-2 hover:bg-secondary/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          disabled={scenes.length === 0}
         >
-          <div className="p-0 relative">
-            <div className="w-full aspect-video bg-secondary/30 rounded-lg flex flex-col items-center justify-center text-muted-foreground gap-2 hover:text-primary transition-colors">
-              <Plus className="w-12 h-12" />
-              <span className="text-sm font-medium">Nouvelle scène</span>
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+
+        {/* Scenes List - Now horizontal with hidden scrollbar */}
+        <div 
+          ref={scenesScrollRef}
+          className="flex-1 overflow-x-auto p-3 hide-scrollbar"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
+          }}
+        >
+          <div className="flex gap-3 h-full">
+          {scenes.map((scene: any, index: number) => (
+            <div key={scene.id} className="scene-card">
+              <SceneCard
+                scene={scene}
+                index={index}
+                isSelected={selectedSceneIndex === index}
+                onSelect={() => navigateToScene(index)}
+                onMoveUp={() => handleMoveScene(index, 'up')}
+                onMoveDown={() => handleMoveScene(index, 'down')}
+                onDuplicate={() => handleDuplicateScene(index)}
+                onDelete={() => handleDeleteScene(index)}
+                canMoveUp={index !== 0}
+                canMoveDown={index !== scenes.length - 1}
+              />
             </div>
+          ))}
+          
+          {/* Add Scene Card */}
+          <Card
+            className="flex-shrink-0 w-64 cursor-pointer transition-all hover:shadow-md border-2 border-dashed border-border hover:border-primary/50 hover:bg-secondary/50"
+            onClick={handleAddScene}
+          >
+            <div className="p-0 relative">
+              <div className="w-full aspect-video bg-secondary/30 rounded-lg flex flex-col items-center justify-center text-muted-foreground gap-2 hover:text-primary transition-colors">
+                <Plus className="w-12 h-12" />
+                <span className="text-sm font-medium">Nouvelle scène</span>
+              </div>
+            </div>
+          </Card>
           </div>
-        </Card>
         </div>
+
+        {/* Right Navigation Button */}
+        <button
+          onClick={() => scrollScenes('right')}
+          className="flex-shrink-0 p-2 hover:bg-secondary/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          disabled={scenes.length === 0}
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
       </div>
     </div>
   );

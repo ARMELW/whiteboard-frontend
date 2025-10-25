@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Settings, FolderKanban, Music, Hand, Layers as LayersIcon } from 'lucide-react';
+import { Settings, FolderKanban, Music, Hand } from 'lucide-react';
 import ScenePropertiesPanel from '../atoms/ScenePropertiesPanel';
 import AudioManager from '../audio/AudioManager';
-import { LayerPropertiesForm, LayersListPanel } from '../molecules';
+import { LayerPropertiesForm } from '../molecules';
 import { useCurrentScene, useSceneStore, useScenesActions } from '@/app/scenes';
 
-type TabType = 'properties' | 'project' | 'soundtrack' | 'hands' | 'layers';
+type TabType = 'properties' | 'project' | 'soundtrack' | 'hands';
 
 interface PropertiesPanelProps {
   editedScene?: any;
@@ -18,7 +18,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ editedScene: propEdit
   const setSelectedLayerId = useSceneStore((state) => state.setSelectedLayerId);
   const [activeTab, setActiveTab] = useState<TabType>('properties');
   
-  const { updateScene, updateLayer, deleteLayer, moveLayer, duplicateLayer } = useScenesActions();
+  const { updateScene, updateLayer } = useScenesActions();
 
   if (!scene) {
     return (
@@ -54,7 +54,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ editedScene: propEdit
     { id: 'project' as TabType, label: 'Project', icon: FolderKanban },
     { id: 'soundtrack' as TabType, label: 'Soundtrack', icon: Music },
     { id: 'hands' as TabType, label: 'Hands', icon: Hand },
-    { id: 'layers' as TabType, label: 'Layers', icon: LayersIcon },
   ];
 
   return (
@@ -138,36 +137,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ editedScene: propEdit
               <Hand className="w-12 h-12 mx-auto mb-2 text-muted-foreground opacity-50" />
               <p className="text-sm text-muted-foreground">Hand animations coming soon</p>
             </div>
-          </div>
-        )}
-
-        {activeTab === 'layers' && (
-          <div className="space-y-4">
-            {scene && scene.layers && scene.layers.length > 0 ? (
-              <LayersListPanel
-                layers={scene.layers || []}
-                selectedLayerId={selectedLayerId}
-                onSelectLayer={setSelectedLayerId}
-                onMoveLayer={(layerId, direction) => {
-                  if (!scene.id) return;
-                  moveLayer({ sceneId: scene.id, layerId, direction });
-                }}
-                onDuplicateLayer={(layerId) => {
-                  if (!scene.id) return;
-                  duplicateLayer({ sceneId: scene.id, layerId });
-                }}
-                onDeleteLayer={(layerId: string) => {
-                  if (!scene.id) return;
-                  deleteLayer({ sceneId: scene.id, layerId });
-                }}
-              />
-            ) : (
-              <div className="text-center py-8">
-                <LayersIcon className="w-12 h-12 mx-auto mb-2 text-muted-foreground opacity-50" />
-                <p className="text-sm text-muted-foreground">No layers in this scene</p>
-                <p className="text-xs text-muted-foreground mt-1">Add images or text from the left panel</p>
-              </div>
-            )}
           </div>
         )}
       </div>

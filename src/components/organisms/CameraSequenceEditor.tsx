@@ -15,12 +15,24 @@ import {
   Position 
 } from '@/app/scenes/types';
 
+const MIN_SEQUENCE_DURATION = 0.1;
+const DEFAULT_SEQUENCE_DURATION = 5;
+const DEFAULT_KEYFRAME_INTERVAL = 1;
+
 interface CameraSequenceEditorProps {
   sequences: CameraSequence[];
   sceneDuration: number;
   onSave: (sequences: CameraSequence[]) => void;
   onClose: () => void;
 }
+
+const calculateNewKeyframeTime = (
+  sequence: CameraSequence,
+  lastKeyframeTime: number
+): number => {
+  const maxTime = sequence.endTime - sequence.startTime;
+  return Math.min(maxTime, lastKeyframeTime + DEFAULT_KEYFRAME_INTERVAL);
+};
 
 const CameraSequenceEditor: React.FC<CameraSequenceEditorProps> = ({
   sequences: initialSequences,
@@ -38,7 +50,7 @@ const CameraSequenceEditor: React.FC<CameraSequenceEditorProps> = ({
       id: `camera-seq-${Date.now()}`,
       name: `Sequence ${sequences.length + 1}`,
       startTime: 0,
-      endTime: Math.min(5, sceneDuration),
+      endTime: Math.min(DEFAULT_SEQUENCE_DURATION, sceneDuration),
       keyframes: [
         {
           time: 0,
@@ -73,11 +85,13 @@ const CameraSequenceEditor: React.FC<CameraSequenceEditorProps> = ({
     const sequence = sequences.find(s => s.id === sequenceId);
     if (!sequence) return;
 
+    const lastKeyframe = sequence.keyframes[sequence.keyframes.length - 1];
+    const newTime = calculateNewKeyframeTime(sequence, lastKeyframe?.time || 0);
+
     const newKeyframe: CameraKeyframe = {
-      time: Math.min(sequence.endTime - sequence.startTime, 
-        (sequence.keyframes[sequence.keyframes.length - 1]?.time || 0) + 1),
-      position: sequence.keyframes[sequence.keyframes.length - 1]?.position || { x: 0.5, y: 0.5 },
-      zoom: sequence.keyframes[sequence.keyframes.length - 1]?.zoom || 1,
+      time: newTime,
+      position: lastKeyframe?.position || { x: 0.5, y: 0.5 },
+      zoom: lastKeyframe?.zoom || 1,
       easing: CameraEasing.EASE_IN_OUT,
     };
 
@@ -221,7 +235,7 @@ const CameraSequenceEditor: React.FC<CameraSequenceEditorProps> = ({
                         max={sceneDuration}
                         value={selectedSeq.startTime}
                         onChange={(e) => updateSequence(selectedSeq.id, { 
-                          startTime: Math.min(parseFloat(e.target.value), selectedSeq.endTime - 0.1)
+                          startTime: Math.min(parseFloat(e.target.value), selectedSeq.endTime - MIN_SEQUENCE_DURATION)
                         })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
@@ -238,7 +252,7 @@ const CameraSequenceEditor: React.FC<CameraSequenceEditorProps> = ({
                         max={sceneDuration}
                         value={selectedSeq.endTime}
                         onChange={(e) => updateSequence(selectedSeq.id, { 
-                          endTime: Math.max(parseFloat(e.target.value), selectedSeq.startTime + 0.1)
+                          endTime: Math.max(parseFloat(e.target.value), selectedSeq.startTime + MIN_SEQUENCE_DURATION)
                         })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />

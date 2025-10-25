@@ -60,7 +60,8 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onSelectTemplate, onC
     const template = await importTemplate(text);
     if (template) {
       setImportDialogOpen(false);
-      alert('Template imported successfully!');
+      // TODO: Replace with toast notification
+      console.log('Template imported successfully!');
     }
   };
 
@@ -196,7 +197,9 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onSelectTemplate, onC
                   <div 
                     className="h-48 bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center"
                     style={{
-                      backgroundColor: template.sceneData.backgroundImage || undefined,
+                      backgroundColor: template.sceneData.backgroundImage?.startsWith('#') 
+                        ? template.sceneData.backgroundImage 
+                        : undefined,
                     }}
                   >
                     {template.thumbnail ? (

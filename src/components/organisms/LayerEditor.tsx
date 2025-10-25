@@ -49,6 +49,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
   const previewMode = useSceneStore((state) => state.previewMode);
   const previewVideoUrl = useSceneStore((state) => state.previewVideoUrl);
   const previewType = useSceneStore((state) => state.previewType);
+  const previewLoading = useSceneStore((state) => state.previewLoading);
   const stopPreview = useSceneStore((state) => state.stopPreview);
 
   // Use actions from useScenesActionsWithHistory hook for history tracking
@@ -202,6 +203,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
           videoUrl={previewVideoUrl}
           onClose={stopPreview}
           title={previewType === 'scene' ? 'Prévisualisation Scène' : 'Prévisualisation Complète'}
+          isLoading={previewLoading}
         />
       ) : (
         <>

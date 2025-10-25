@@ -11,6 +11,7 @@ import HistoryPanel from './HistoryPanel';
 import TemplateLibrary from './TemplateLibrary';
 import SaveAsTemplateDialog from './SaveAsTemplateDialog';
 import CameraManagerModal from './CameraManagerModal';
+import ExportModal from './ExportModal';
 import { AiWizardDialog } from './wizard';
 import { useScenes, useSceneStore, useCurrentScene } from '@/app/scenes';
 import type { Camera } from '@/app/scenes/types';
@@ -25,6 +26,7 @@ const AnimationContainer: React.FC = () => {
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false);
   const [showCameraManager, setShowCameraManager] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   
   // Camera state lifted from SceneCanvas
   const [cameras, setCameras] = useState<Camera[]>([]);
@@ -65,6 +67,12 @@ const AnimationContainer: React.FC = () => {
           }}
         />
       )}
+      {showExportModal && (
+        <ExportModal
+          isOpen={showExportModal}
+          onClose={() => setShowExportModal(false)}
+        />
+      )}
       
       {/* AI Wizard Dialog */}
       <AiWizardDialog />
@@ -73,6 +81,7 @@ const AnimationContainer: React.FC = () => {
       <AnimationHeader 
         onOpenTemplateLibrary={() => setShowTemplateLibrary(true)}
         onSaveAsTemplate={() => setShowSaveAsTemplate(true)}
+        onOpenExportModal={() => setShowExportModal(true)}
         hasCurrentScene={!!currentScene}
         cameras={cameras}
         selectedCameraId={selectedCameraId}

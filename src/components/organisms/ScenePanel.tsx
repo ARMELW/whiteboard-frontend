@@ -1,6 +1,6 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef, useEffect, useMemo } from 'react';
 import { Button, Card } from '../atoms';
-import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical, Music, BookmarkPlus, Play } from 'lucide-react';
+import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical, Music, BookmarkPlus, Play, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { useScenes, useSceneStore } from '@/app/scenes';
 import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import { useWizardStore } from '@/app/wizard';
@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { THUMBNAIL_CONFIG } from '@/utils/sceneThumbnail';
+import { groupScenesIntoChapters, SceneChapter } from '@/utils/sceneChapters';
 import EmbeddedAssetLibraryPanel from './EmbeddedAssetLibraryPanel';
 import SaveAsTemplateDialog from './SaveAsTemplateDialog';
 import { NewSceneDialog } from './NewSceneDialog';
@@ -35,10 +36,83 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   const [sceneToSaveAsTemplate, setSceneToSaveAsTemplate] = useState<any>(null);
   const [showNewSceneDialog, setShowNewSceneDialog] = useState(false);
   
+  // Refs for scene navigation
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const sceneRefs = useRef<(HTMLDivElement | null)[]>([]);
+  
   // Remove imageInputRef and importInputRef, handled in asset library
   
   // Use actions from useScenesActionsWithHistory hook for history tracking
   const { createScene, deleteScene, duplicateScene, reorderScenes } = useScenesActionsWithHistory();
+
+  // Group scenes into chapters using useMemo to avoid unnecessary recalculations
+  const chapters = useMemo(() => {
+    return groupScenesIntoChapters(scenes, 5);
+  }, [scenes]);
+
+  // Track expanded/collapsed state separately
+  const [expandedChapters, setExpandedChapters] = useState<Record<string, boolean>>({});
+
+  // Initialize expanded state for new chapters
+  useEffect(() => {
+    const newExpandedState = { ...expandedChapters };
+    let hasChanges = false;
+    
+    chapters.forEach(chapter => {
+      if (!(chapter.id in newExpandedState)) {
+        newExpandedState[chapter.id] = true; // Default to expanded
+        hasChanges = true;
+      }
+    });
+    
+    if (hasChanges) {
+      setExpandedChapters(newExpandedState);
+    }
+  }, [chapters]); // Only depend on chapters, not expandedChapters to avoid infinite loop
+
+  // Auto-center on scene change
+  useEffect(() => {
+    if (scrollContainerRef.current && sceneRefs.current[selectedSceneIndex]) {
+      const container = scrollContainerRef.current;
+      const sceneElement = sceneRefs.current[selectedSceneIndex];
+      
+      if (sceneElement) {
+        const containerWidth = container.clientWidth;
+        const sceneLeft = sceneElement.offsetLeft;
+        const sceneWidth = sceneElement.clientWidth;
+        
+        // Center the scene in the viewport
+        const scrollPosition = sceneLeft - (containerWidth / 2) + (sceneWidth / 2);
+        
+        container.scrollTo({
+          left: scrollPosition,
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, [selectedSceneIndex]);
+
+  // Navigate to previous scene
+  const handleNavigatePrevious = useCallback(() => {
+    if (selectedSceneIndex > 0) {
+      setSelectedSceneIndex(selectedSceneIndex - 1);
+    }
+  }, [selectedSceneIndex, setSelectedSceneIndex]);
+
+  // Navigate to next scene
+  const handleNavigateNext = useCallback(() => {
+    if (selectedSceneIndex < scenes.length - 1) {
+      setSelectedSceneIndex(selectedSceneIndex + 1);
+    }
+  }, [selectedSceneIndex, scenes.length, setSelectedSceneIndex]);
+
+  // Toggle chapter expand/collapse
+  const toggleChapter = useCallback((chapterId: string) => {
+    setExpandedChapters(prev => ({
+      ...prev,
+      [chapterId]: !prev[chapterId]
+    }));
+  }, []);
 
   const handleAddScene = useCallback(async () => {
     // Show dialog to choose between blank and template
@@ -106,14 +180,21 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   const handlePreviewScene = useCallback(async (index: number) => {
     const scene = scenes[index];
     
-    // For now, we'll use a mock video URL
+    // Set loading state in store
+    useSceneStore.getState().setPreviewLoading(true);
+    useSceneStore.getState().setPreviewMode(true);
+    
+    // Simulate video generation/retrieval (mock)
     // In a real implementation, this would call the backend to generate a preview
     // or use a pre-generated preview URL from the scene data
     
-    // Mock video generation for single scene
+    // Mock delay to simulate video processing
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Mock video URL
     const mockVideoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
     
-    // Start preview with the mock URL
+    // Start preview with the mock URL (this will set loading to false)
     useSceneStore.getState().startPreview(mockVideoUrl, 'scene');
   }, [scenes]);
 
@@ -128,12 +209,78 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   };
 
   return (
-    <div className="bg-white flex h-full shadow-sm">
-      <div className="flex-1 overflow-x-auto p-3">
-        <div className="flex gap-3 h-full">
-        {scenes.map((scene: any, index: number) => (
-          <Card
+    <div className="bg-white flex h-full shadow-sm relative">
+      {/* Left Navigation Button */}
+      <button
+        onClick={handleNavigatePrevious}
+        disabled={selectedSceneIndex === 0}
+        className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 bg-white hover:bg-gray-100 rounded-full shadow-lg border border-gray-200 transition-all ${
+          selectedSceneIndex === 0 ? 'opacity-30 cursor-not-allowed' : 'opacity-90 hover:opacity-100'
+        }`}
+        title="Scène précédente"
+      >
+        <ChevronLeft className="h-6 w-6 text-gray-700" />
+      </button>
+
+      {/* Right Navigation Button */}
+      <button
+        onClick={handleNavigateNext}
+        disabled={selectedSceneIndex >= scenes.length - 1}
+        className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 bg-white hover:bg-gray-100 rounded-full shadow-lg border border-gray-200 transition-all ${
+          selectedSceneIndex >= scenes.length - 1 ? 'opacity-30 cursor-not-allowed' : 'opacity-90 hover:opacity-100'
+        }`}
+        title="Scène suivante"
+      >
+        <ChevronRight className="h-6 w-6 text-gray-700" />
+      </button>
+
+      {/* Scene Container - Hide Scrollbar */}
+      <div 
+        ref={scrollContainerRef}
+        className="flex-1 overflow-x-auto p-3 scrollbar-hide"
+        style={{
+          scrollbarWidth: 'none', /* Firefox */
+          msOverflowStyle: 'none', /* IE and Edge */
+        }}
+      >
+        <div className="flex gap-4 h-full items-start">
+        {/* Render chapters */}
+        {chapters.map((chapter, chapterIndex) => (
+          <div key={chapter.id} className="flex gap-3 items-start">
+            {/* Chapter Header/Toggle */}
+            <div className="flex flex-col items-center gap-2 pt-2">
+              <button
+                onClick={() => toggleChapter(chapter.id)}
+                className="flex flex-col items-center gap-1 p-2 hover:bg-gray-100 rounded-lg transition-colors group"
+                title={expandedChapters[chapter.id] ? 'Réduire' : 'Développer'}
+              >
+                <div className="text-xs font-semibold text-gray-600 group-hover:text-primary whitespace-nowrap">
+                  {chapter.name}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {chapter.sceneIds.length} scène{chapter.sceneIds.length > 1 ? 's' : ''}
+                </div>
+                {expandedChapters[chapter.id] ? (
+                  <ChevronUp className="h-4 w-4 text-gray-600 group-hover:text-primary" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-gray-600 group-hover:text-primary" />
+                )}
+              </button>
+            </div>
+
+            {/* Chapter Scenes */}
+            {expandedChapters[chapter.id] && (
+              <div className="flex gap-3">
+                {chapter.sceneIds.map((sceneId) => {
+                  const scene = scenes.find(s => s.id === sceneId);
+                  if (!scene) return null;
+                  
+                  const index = scenes.indexOf(scene);
+                  
+                  return (
+        <Card
             key={scene.id}
+            ref={(el) => (sceneRefs.current[index] = el)}
             className={`aspect-video flex-shrink-0 w-64 cursor-pointer transition-all hover:shadow-md relative group ${selectedSceneIndex === index
                 ? 'border-primary shadow-md ring-2 ring-primary/20'
                 : 'border-border hover:border-primary/50'
@@ -269,6 +416,11 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
               </div>
             </div>
           </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         ))}
         
         {/* Add Scene Card */}

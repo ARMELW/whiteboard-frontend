@@ -2,11 +2,12 @@ import { useEffect, useCallback } from 'react';
 import { useSceneStore } from '../store';
 import scenesService from '../api/scenesService';
 
-export const useScenes = () => {
+export const useScenes = (projectId?: string) => {
   const scenes = useSceneStore((state) => state.scenes);
   const loading = useSceneStore((state) => state.loading);
   const error = useSceneStore((state) => state.error);
   const setScenes = useSceneStore((state) => state.setScenes);
+  const setCurrentProjectId = useSceneStore((state) => state.setCurrentProjectId);
 
   // Use store.setState directly to avoid new function identity on every render
   const setLoading = useCallback((v: boolean) => useSceneStore.setState({ loading: v }), []);
@@ -19,22 +20,28 @@ export const useScenes = () => {
     try {
       const result = await scenesService.list({ page: 1, limit: 1000 });
       setScenes(result.data);
+      if (projectId) {
+        setCurrentProjectId(projectId);
+      }
     } catch (error) {
       setError(error as Error);
     } finally {
       setLoading(false);
     }
-  }, [setLoading, setError, setScenes]);
+  }, [projectId, setLoading, setError, setScenes, setCurrentProjectId]);
 
   useEffect(() => {
-    if (scenes.length === 0 && !loading) {
-      refetch();
-    }
+    refetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [projectId]);
+
+  // Filter scenes by projectId if provided
+  const filteredScenes = projectId
+    ? scenes.filter((s) => s.project_id === projectId)
+    : scenes;
 
   return {
-    scenes,
+    scenes: filteredScenes,
     loading,
     error,
     refetch,

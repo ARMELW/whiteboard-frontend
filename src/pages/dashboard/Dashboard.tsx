@@ -5,15 +5,18 @@ import { ChannelSettingsModal } from '@/app/channels/components/ChannelSettingsM
 import { Channel } from '@/app/channels/types';
 import { useChannels } from '@/app/channels/hooks/useChannels';
 
-export function Dashboard() {
+interface DashboardProps {
+  onChannelClick: (channelId: string, channelName: string) => void;
+}
+
+export function Dashboard({ onChannelClick }: DashboardProps) {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const { refetch } = useChannels();
 
   const handleChannelClick = (channel: Channel) => {
-    console.log('Channel clicked:', channel);
-    // TODO: Navigate to channel projects view
+    onChannelClick(channel.id, channel.name);
   };
 
   const handleChannelSettings = (channel: Channel) => {

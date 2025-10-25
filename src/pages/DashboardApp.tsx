@@ -1,13 +1,32 @@
 import { useState } from 'react';
 import { Dashboard } from './dashboard/Dashboard';
 import { ProjectsPage } from './dashboard/ProjectsPage';
+import { ChannelProjectsPage } from './dashboard/ChannelProjectsPage';
 import { Button } from '@/components/ui/button';
-import { Home, FolderOpen, Settings } from 'lucide-react';
+import { Home, FolderOpen, Settings, ChevronLeft } from 'lucide-react';
 
-type Page = 'dashboard' | 'projects' | 'editor';
+type Page = 'dashboard' | 'projects' | 'channelProjects';
+
+interface NavigationState {
+  page: Page;
+  channelId?: string;
+  channelName?: string;
+}
 
 export function DashboardApp() {
-  const [currentPage, setCurrentPage] = useState<Page>('dashboard');
+  const [navState, setNavState] = useState<NavigationState>({ page: 'dashboard' });
+
+  const navigateToChannelProjects = (channelId: string, channelName: string) => {
+    setNavState({ page: 'channelProjects', channelId, channelName });
+  };
+
+  const navigateToHome = () => {
+    setNavState({ page: 'dashboard' });
+  };
+
+  const navigateToAllProjects = () => {
+    setNavState({ page: 'projects' });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -17,19 +36,28 @@ export function DashboardApp() {
             <div className="flex items-center gap-6">
               <h1 className="text-xl font-bold">Whiteboard Anim</h1>
               <div className="flex gap-2">
+                {navState.page !== 'dashboard' && (
+                  <Button
+                    variant="ghost"
+                    onClick={navigateToHome}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-2" />
+                    Retour
+                  </Button>
+                )}
                 <Button
-                  variant={currentPage === 'dashboard' ? 'default' : 'ghost'}
-                  onClick={() => setCurrentPage('dashboard')}
+                  variant={navState.page === 'dashboard' ? 'default' : 'ghost'}
+                  onClick={navigateToHome}
                 >
                   <Home className="h-4 w-4 mr-2" />
                   Dashboard
                 </Button>
                 <Button
-                  variant={currentPage === 'projects' ? 'default' : 'ghost'}
-                  onClick={() => setCurrentPage('projects')}
+                  variant={navState.page === 'projects' ? 'default' : 'ghost'}
+                  onClick={navigateToAllProjects}
                 >
                   <FolderOpen className="h-4 w-4 mr-2" />
-                  Projets
+                  Tous les projets
                 </Button>
               </div>
             </div>
@@ -41,8 +69,16 @@ export function DashboardApp() {
       </nav>
 
       <main>
-        {currentPage === 'dashboard' && <Dashboard />}
-        {currentPage === 'projects' && <ProjectsPage />}
+        {navState.page === 'dashboard' && (
+          <Dashboard onChannelClick={navigateToChannelProjects} />
+        )}
+        {navState.page === 'projects' && <ProjectsPage />}
+        {navState.page === 'channelProjects' && navState.channelId && (
+          <ChannelProjectsPage
+            channelId={navState.channelId}
+            channelName={navState.channelName || 'Chaîne'}
+          />
+        )}
       </main>
     </div>
   );

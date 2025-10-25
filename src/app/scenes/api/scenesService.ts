@@ -33,8 +33,13 @@ class ScenesService extends BaseService<Scene> {
   async create(payload: ScenePayload = {}): Promise<Scene> {
     const defaultCamera = createDefaultCamera();
 
+    if (!payload.project_id) {
+      throw new Error('project_id is required to create a scene');
+    }
+
     const defaultScene: Partial<Scene> = {
       id: `scene-${Date.now()}`,
+      project_id: payload.project_id,
       title: 'Nouvelle Scène',
       content: 'Ajoutez votre contenu ici...',
       duration: 5,
@@ -71,6 +76,7 @@ class ScenesService extends BaseService<Scene> {
       ...scene,
       id: `scene-${Date.now()}`,
       title: `${scene.title} (Copie)`,
+      project_id: scene.project_id,
       sceneCameras,
       multiTimeline: scene.multiTimeline || createMultiTimeline(scene.duration),
       createdAt: new Date().toISOString(),

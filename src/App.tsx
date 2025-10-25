@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { AnimationContainer } from './components/organisms';
+import { MainApp } from './pages/MainApp';
 import { loadGoogleFonts } from './utils/fontLoader';
 import { Toaster } from 'sonner';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -12,7 +12,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <AnimationContainer />
+      <MainApp />
       <Toaster 
         position="bottom-right"
         toastOptions={{

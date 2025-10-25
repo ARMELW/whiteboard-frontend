@@ -1,22 +1,24 @@
 import { useState } from 'react';
 import { ChannelsList } from '@/app/channels/components/ChannelsList';
 import { CreateChannelModal } from '@/app/channels/components/CreateChannelModal';
+import { ChannelSettingsModal } from '@/app/channels/components/ChannelSettingsModal';
 import { Channel } from '@/app/channels/types';
+import { useChannels } from '@/app/channels/hooks/useChannels';
 
 export function Dashboard() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
+  const { refetch } = useChannels();
 
   const handleChannelClick = (channel: Channel) => {
-    setSelectedChannel(channel);
-    // TODO: Navigate to channel projects view
     console.log('Channel clicked:', channel);
+    // TODO: Navigate to channel projects view
   };
 
   const handleChannelSettings = (channel: Channel) => {
     setSelectedChannel(channel);
-    // TODO: Open channel settings modal
-    console.log('Channel settings:', channel);
+    setSettingsModalOpen(true);
   };
 
   return (
@@ -37,6 +39,14 @@ export function Dashboard() {
       <CreateChannelModal
         open={createModalOpen}
         onOpenChange={setCreateModalOpen}
+        onSuccess={() => refetch()}
+      />
+
+      <ChannelSettingsModal
+        channel={selectedChannel}
+        open={settingsModalOpen}
+        onOpenChange={setSettingsModalOpen}
+        onUpdate={() => refetch()}
       />
     </div>
   );

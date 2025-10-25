@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import { LayersList } from '../molecules';
 import LayerEditor from './LayerEditor';
 import PropertiesPanel from './PropertiesPanel';
@@ -14,7 +14,6 @@ import { Button } from '../atoms';
 
 const AnimationContainer: React.FC = () => {
   const { scenes = [] } = useScenes();
-  const memoizedScenes = useMemo(() => scenes, [scenes?.length]);
   const currentScene = useCurrentScene();
   const showShapeToolbar = useSceneStore((state: any) => state.showShapeToolbar);
   const showAssetLibrary = useSceneStore((state: any) => state.showAssetLibrary);
@@ -62,7 +61,7 @@ const AnimationContainer: React.FC = () => {
           isOpen={showFullPreview}
           onClose={handleCloseFullPreview}
           isFullPreview={true}
-          scenes={memoizedScenes}
+          scenes={scenes}
         />
       )}
       
@@ -100,7 +99,7 @@ const AnimationContainer: React.FC = () => {
               variant="default"
               size="sm"
               className="gap-2"
-              disabled={memoizedScenes.length === 0}
+              disabled={scenes.length === 0}
             >
               <Play className="w-4 h-4" />
               Prévisualisation complète

@@ -9,8 +9,10 @@ import {
   ThumbnailAddElements,
   ThumbnailBackground,
   ThumbnailLayersList,
-  ThumbnailTextProperties
+  ThumbnailTextProperties,
+  ThumbnailTemplates
 } from '../molecules';
+import { ThumbnailTemplate, applyTemplate } from '../../types/thumbnailTemplates';
 
 // Types for layers
 export type ThumbnailLayer =
@@ -231,6 +233,16 @@ const ThumbnailMaker = ({ scene, onClose, onSave }: ThumbnailMakerProps) => {
     });
   };
 
+  const handleApplyTemplate = (template: ThumbnailTemplate) => {
+    const { backgroundColor: newBgColor, layers: newLayers } = applyTemplate(
+      template, 
+      scene?.title
+    );
+    setBackgroundColor(newBgColor);
+    setLayers(newLayers);
+    setSelectedLayerId(null);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl max-h-[95vh] overflow-hidden flex flex-col">
@@ -349,6 +361,8 @@ const ThumbnailMaker = ({ scene, onClose, onSave }: ThumbnailMakerProps) => {
           {/* Right Panel - Controls */}
           <div className="w-96 bg-gray-850 border-l border-border overflow-auto">
             <div className="p-6 space-y-6">
+              <ThumbnailTemplates onSelectTemplate={handleApplyTemplate} />
+
               <ThumbnailAddElements
                 onImageUpload={() => imageUploadRef.current?.click()}
                 onAddText={handleAddText}

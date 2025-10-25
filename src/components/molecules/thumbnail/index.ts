@@ -7,6 +7,7 @@ export { ThumbnailAddElements } from './ThumbnailAddElements';
 export { ThumbnailBackground } from './ThumbnailBackground';
 export { ThumbnailLayersList } from './ThumbnailLayersList';
 export { ThumbnailTextProperties } from './ThumbnailTextProperties';
+export { ThumbnailTemplates } from './ThumbnailTemplates';
 export type { ThumbnailImageLayerProps } from './ThumbnailImageLayer';
 export type { ThumbnailTextLayerProps } from './ThumbnailTextLayer';
 export type { ThumbnailShapeLayerProps } from './ThumbnailShapeLayer';

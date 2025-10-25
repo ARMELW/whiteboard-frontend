@@ -35,6 +35,7 @@ export const useSaveScene = () => {
 
     try {
       // Sauvegarder chaque scène
+      console.log('[useSaveScene] Saving all scenes', scenes);
       const savePromises = scenes.map(scene => 
         scenesService.update(scene.id, scene)
       );

@@ -46,10 +46,7 @@ Toutes les réponses suivent le format JSON standard avec gestion d'erreur cohé
 ## 🔐 Authentication
 
 ### Headers Requis
-Tous les endpoints protégés nécessitent un token d'authentification:
-```
-Authorization: Bearer <token>
-```
+Tous les endpoints protégés par better auth:
 
 ---
 
@@ -1645,10 +1642,9 @@ interface Template {
   - Traitement d'images (thumbnails, compression)
   - Traitement audio
 
-### Websockets (optionnel)
+### Websockets
 - Pour notifier en temps réel:
   - Progression d'export vidéo
-  - Collaboration en temps réel
   - Autosave
 
 ### Optimisations

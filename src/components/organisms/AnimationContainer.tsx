@@ -6,13 +6,23 @@ import AssetLibrary from './AssetLibrary';
 import ShapeToolbar from './ShapeToolbar';
 import ScenePanel from './ScenePanel';
 import ContextTabs from './ContextTabs';
+import VideoPreviewModal from './VideoPreviewModal';
+import ExportModal from './ExportModal';
 import { useScenes, useSceneStore, useCurrentScene } from '@/app/scenes';
+import { Play, Download } from 'lucide-react';
+import { Button } from '../atoms';
 
 const AnimationContainer: React.FC = () => {
+  const { scenes } = useScenes();
   const currentScene = useCurrentScene();
   const showShapeToolbar = useSceneStore((state: any) => state.showShapeToolbar);
   const showAssetLibrary = useSceneStore((state: any) => state.showAssetLibrary);
+  const selectedSceneIndex = useSceneStore((state) => state.selectedSceneIndex);
   const [editedScene, setEditedScene] = useState<any>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showFullPreview, setShowFullPreview] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [canvasForExport, setCanvasForExport] = useState<HTMLCanvasElement | null>(null);
 
   const handleEditedSceneChange = useCallback((scene: any) => {
     setEditedScene(scene);
@@ -22,7 +32,74 @@ const AnimationContainer: React.FC = () => {
     <div className="animation-container">
       {showAssetLibrary && <AssetLibrary />}
       {showShapeToolbar && <ShapeToolbar />}
+      
+      {/* Video Preview Modal */}
+      <VideoPreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        sceneId={currentScene?.id}
+        isFullPreview={false}
+      />
+      
+      {/* Full Preview Modal */}
+      <VideoPreviewModal
+        isOpen={showFullPreview}
+        onClose={() => setShowFullPreview(false)}
+        isFullPreview={true}
+        scenes={scenes}
+      />
+      
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        canvas={canvasForExport}
+      />
+      
       <div className="flex flex-col h-screen">
+        {/* Header with Preview and Export buttons */}
+        <div className="bg-white border-b border-border px-6 py-3 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold text-foreground">Whiteboard Animation</h1>
+            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setShowPreview(true)}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              disabled={!currentScene}
+            >
+              <Play className="w-4 h-4" />
+              Prévisualiser la scène
+            </Button>
+            
+            <Button
+              onClick={() => setShowFullPreview(true)}
+              variant="default"
+              size="sm"
+              className="gap-2"
+              disabled={scenes.length === 0}
+            >
+              <Play className="w-4 h-4" />
+              Prévisualisation complète
+            </Button>
+            
+            <Button
+              onClick={() => setShowExportModal(true)}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              disabled={!currentScene}
+            >
+              <Download className="w-4 h-4" />
+              Exporter
+            </Button>
+          </div>
+        </div>
+        
         {/* Main content area with left context tabs, center editor, and right properties */}
         <div className="flex flex-1 overflow-hidden">
           {/* Left: Context Tabs Panel */}

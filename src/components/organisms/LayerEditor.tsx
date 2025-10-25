@@ -128,21 +128,13 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
 
       console.log('[LayerEditor] Auto-saving scene...');
       
-      await updateScene({ 
-        id: scene.id, 
-        data: {
-          layers: editedScene.layers,
-          sceneCameras: editedScene.sceneCameras,
-          backgroundImage: editedScene.backgroundImage,
-          duration: editedScene.duration,
-          title: editedScene.title,
-          content: editedScene.content,
-          animation: editedScene.animation,
-          multiTimeline: editedScene.multiTimeline,
-          audio: editedScene.audio,
-        }
+      // Pass a Scene-shaped object instead of { id, data: { ... } }
+      await updateScene({
+        // ensure id is preserved and pass the edited scene fields directly
+        ...(editedScene || {}),
+        id: scene.id,
       });
-
+      
       // Mettre à jour l'état sauvegardé après une sauvegarde réussie
       lastSavedStateRef.current = currentStateHash;
       console.log('[LayerEditor] Scene saved successfully');

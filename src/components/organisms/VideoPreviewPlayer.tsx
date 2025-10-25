@@ -108,103 +108,106 @@ const VideoPreviewPlayer: React.FC<VideoPreviewPlayerProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-900">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700">
-        <h3 className="text-white font-semibold text-lg">{title}</h3>
-        <button
-          onClick={onClose}
-          className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-300 hover:text-white"
-          title="Fermer"
-        >
-          <X className="w-5 h-5" />
-        </button>
-      </div>
+    <div className="flex items-center justify-center p-6">
+      <div className="w-full max-w-3xl">
+        {/* Video Card */}
+        <div className="bg-white rounded-xl shadow-xl overflow-hidden relative">
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 z-10 p-1.5 bg-black/50 hover:bg-black/70 rounded-lg transition-colors text-white"
+            title="Fermer"
+          >
+            <X className="w-4 h-4" />
+          </button>
 
-      {/* Video Player */}
-      <div className="flex-1 flex items-center justify-center bg-black relative">
-        <video
-          ref={videoRef}
-          src={videoUrl}
-          className="max-w-full max-h-full"
-          onClick={togglePlay}
-        />
-      </div>
-
-      {/* Controls */}
-      <div className="bg-gray-800 px-4 py-3 space-y-2">
-        {/* Progress Bar */}
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-400 min-w-[40px]">
-            {formatTime(currentTime)}
-          </span>
-          <input
-            type="range"
-            min="0"
-            max={duration || 0}
-            value={currentTime}
-            onChange={handleSeek}
-            className="flex-1 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-500"
-          />
-          <span className="text-xs text-gray-400 min-w-[40px] text-right">
-            {formatTime(duration)}
-          </span>
-        </div>
-
-        {/* Control Buttons */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {/* Play/Pause */}
-            <button
-              onClick={togglePlay}
-              className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-white"
-              title={isPlaying ? 'Pause' : 'Lecture'}
-            >
-              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-            </button>
-
-            {/* Restart */}
-            <button
-              onClick={handleRestart}
-              className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-300 hover:text-white"
-              title="Recommencer"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </button>
-
-            {/* Volume Control */}
-            <div className="flex items-center gap-2 ml-2">
-              <button
-                onClick={toggleMute}
-                className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-300 hover:text-white"
-                title={isMuted ? 'Activer le son' : 'Couper le son'}
-              >
-                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-              </button>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={volume}
-                onChange={handleVolumeChange}
-                className="w-20 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+          {/* Video Player */}
+          <div className="relative bg-black">
+            <div className="aspect-video">
+              <video
+                ref={videoRef}
+                src={videoUrl}
+                className="w-full h-full object-contain"
+                onClick={togglePlay}
               />
             </div>
-          </div>
+            
+            {/* Overlay Controls */}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+              {/* Progress Bar */}
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs text-white font-medium min-w-[35px]">
+                  {formatTime(currentTime)}
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max={duration || 0}
+                  value={currentTime}
+                  onChange={handleSeek}
+                  className="flex-1 h-1 bg-white/30 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-500 [&::-webkit-slider-thumb]:shadow-lg"
+                />
+                <span className="text-xs text-white font-medium min-w-[35px] text-right">
+                  {formatTime(duration)}
+                </span>
+              </div>
 
-          {/* Fullscreen */}
-          <button
-            onClick={toggleFullscreen}
-            className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-gray-300 hover:text-white"
-            title="Plein écran"
-          >
-            <Maximize className="w-5 h-5" />
-          </button>
+              {/* Control Buttons */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-0.5">
+                  {/* Play/Pause */}
+                  <button
+                    onClick={togglePlay}
+                    className="p-1.5 hover:bg-white/20 rounded-lg transition-colors text-white"
+                    title={isPlaying ? 'Pause' : 'Lecture'}
+                  >
+                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                  </button>
+
+                  {/* Restart */}
+                  <button
+                    onClick={handleRestart}
+                    className="p-1.5 hover:bg-white/20 rounded-lg transition-colors text-white"
+                    title="Recommencer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+
+                  {/* Volume Control */}
+                  <div className="flex items-center gap-1.5 ml-1">
+                    <button
+                      onClick={toggleMute}
+                      className="p-1.5 hover:bg-white/20 rounded-lg transition-colors text-white"
+                      title={isMuted ? 'Activer le son' : 'Couper le son'}
+                    >
+                      {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                    </button>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={volume}
+                      onChange={handleVolumeChange}
+                      className="w-16 h-1 bg-white/30 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Fullscreen */}
+                <button
+                  onClick={toggleFullscreen}
+                  className="p-1.5 hover:bg-white/20 rounded-lg transition-colors text-white"
+                  title="Plein écran"
+                >
+                  <Maximize className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
-
-export default VideoPreviewPlayer;
+export default React.memo(VideoPreviewPlayer);  

@@ -163,12 +163,7 @@ const ImageManager: React.FC = () => {
                   <div className="text-xs font-medium text-gray-900 truncate" title={file.fileName}>
                     {file.fileName}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {file.width} × {file.height}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {formatFileSize(file.size)}
-                  </div>
+                  
                 </div>
               </div>
             ))}

@@ -111,7 +111,7 @@ const EmbeddedAssetLibrary: React.FC<EmbeddedAssetLibraryProps> = ({
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-2 max-h-[calc(100vh-250px)] overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="grid grid-cols-2 gap-2 max-h-[calc(100vh-350px)] overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {assets.map((asset) => (
             <div
               key={asset.id}

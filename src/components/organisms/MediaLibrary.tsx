@@ -435,24 +435,7 @@ const MediaLibrary: React.FC = () => {
                     <div className="text-xs font-medium text-gray-900 truncate" title={item.name}>
                       {item.name}
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {item.width} × {item.height}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {formatFileSize(item.size)}
-                    </div>
-                    {item.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {item.tags.map(tag => (
-                          <span
-                            key={tag}
-                            className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                   
                   </div>
                 </div>
               ))}

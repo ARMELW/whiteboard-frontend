@@ -55,39 +55,36 @@ export const HandLibraryDialog: React.FC<HandLibraryDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Bibliothèque de mains</DialogTitle>
           <DialogDescription>
-            Sélectionnez le type de main pour l'animation d'écriture
+            Sélectionnez le type de main pour l'animation
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 py-4">
+        <div className="space-y-2 py-4">
           {handOptions.map((hand) => (
             <button
               key={hand.type}
               onClick={() => handleSelect(hand.type)}
-              className={`group relative flex flex-col items-center gap-3 rounded-lg border-2 p-4 transition-all ${
+              className={`w-full flex items-center gap-3 rounded-lg border-2 p-3 transition-all text-left ${
                 selectedHand === hand.type
                   ? 'border-primary bg-primary/10'
                   : 'border-border bg-background hover:border-primary/50 hover:bg-secondary/50'
               }`}
             >
-              <div className={`flex h-20 w-20 items-center justify-center rounded-full transition-colors ${
+              <div className={`flex h-10 w-10 items-center justify-center rounded-full flex-shrink-0 transition-colors ${
                 selectedHand === hand.type
                   ? 'bg-primary/20'
-                  : 'bg-muted group-hover:bg-primary/10'
+                  : 'bg-muted'
               }`}>
-                <Hand className={`h-10 w-10 ${
+                <Hand className={`h-5 w-5 ${
                   selectedHand === hand.type ? 'text-primary' : 'text-muted-foreground'
                 }`} />
               </div>
-              <div className="text-center">
-                <h3 className="font-semibold text-sm mb-1">{hand.label}</h3>
-                <p className="text-xs text-muted-foreground">
-                  {hand.description}
-                </p>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-sm">{hand.label}</h3>
               </div>
             </button>
           ))}

@@ -25,6 +25,7 @@ interface SceneState {
   previewVideoUrl: string | null;
   previewType: 'full' | 'scene' | null;
   previewLoading: boolean;
+  previewStartSceneIndex: number | null;
   
   // Data Actions
   setScenes: (scenes: Scene[]) => void;
@@ -64,6 +65,7 @@ interface SceneState {
   setPreviewVideoUrl: (url: string | null) => void;
   setPreviewType: (type: 'full' | 'scene' | null) => void;
   setPreviewLoading: (loading: boolean) => void;
+  setPreviewStartSceneIndex: (index: number | null) => void;
   startPreview: (videoUrl: string, type: 'full' | 'scene') => void;
   stopPreview: () => void;
   
@@ -85,6 +87,7 @@ const initialUIState = {
   previewVideoUrl: null,
   previewType: null,
   previewLoading: false,
+  previewStartSceneIndex: null,
 };
 
 const initialDataState = {
@@ -283,6 +286,7 @@ export const useSceneStore = create<SceneState>((set) => ({
   setPreviewVideoUrl: (url) => set({ previewVideoUrl: url }),
   setPreviewType: (type) => set({ previewType: type }),
   setPreviewLoading: (loading) => set({ previewLoading: loading }),
+  setPreviewStartSceneIndex: (index) => set({ previewStartSceneIndex: index }),
   startPreview: (videoUrl, type) => set({ 
     previewMode: true, 
     previewVideoUrl: videoUrl, 
@@ -293,7 +297,8 @@ export const useSceneStore = create<SceneState>((set) => ({
     previewMode: false, 
     previewVideoUrl: null, 
     previewType: null,
-    previewLoading: false
+    previewLoading: false,
+    previewStartSceneIndex: null
   }),
   
   reset: () => set({ ...initialDataState, ...initialUIState }),

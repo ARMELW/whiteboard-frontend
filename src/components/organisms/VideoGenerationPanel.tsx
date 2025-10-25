@@ -15,16 +15,19 @@ const VideoGenerationPanel: React.FC = () => {
   const { generateVideo, downloadVideo, reset, currentJob, isGenerating, error, progress } =
     useVideoGeneration();
   const scenes = useSceneStore((state) => state.scenes);
+  const selectedSceneIndex = useSceneStore((state) => state.selectedSceneIndex);
   
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [format, setFormat] = useState<'mp4' | 'webm'>('mp4');
   const [quality, setQuality] = useState<'hd' | 'fullhd' | '4k'>('fullhd');
   const [fps, setFps] = useState<24 | 30 | 60>(30);
+  const [startFromScene, setStartFromScene] = useState<number>(0);
   const audioInputRef = useRef<HTMLInputElement>(null);
 
   const totalDuration = useMemo(() => {
-    return scenes.reduce((acc, scene) => acc + (scene.duration || 0), 0);
-  }, [scenes]);
+    const scenesToInclude = scenes.slice(startFromScene);
+    return scenesToInclude.reduce((acc, scene) => acc + (scene.duration || 0), 0);
+  }, [scenes, startFromScene]);
 
   const handleAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -52,6 +55,23 @@ const VideoGenerationPanel: React.FC = () => {
       {/* Generation Parameters */}
       <div className="space-y-3 p-4 bg-secondary/20 rounded-lg border border-border">
         <h3 className="text-sm font-semibold text-foreground mb-2">Paramètres de Génération</h3>
+        
+        {/* Start Scene Selection */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-foreground">Commencer à partir de la scène</label>
+          <Select value={startFromScene.toString()} onValueChange={(value) => setStartFromScene(parseInt(value))}>
+            <SelectTrigger className="w-full bg-white text-foreground border border-border rounded px-3 py-2 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {scenes.map((scene, index) => (
+                <SelectItem key={scene.id} value={index.toString()}>
+                  Scène {index + 1}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         
         {/* Format Selection */}
         <div className="space-y-1.5">
@@ -106,8 +126,8 @@ const VideoGenerationPanel: React.FC = () => {
             </span>
           </div>
           <div className="flex justify-between items-center text-xs text-muted-foreground mt-1">
-            <span>Nombre de scènes:</span>
-            <span>{scenes.length}</span>
+            <span>Scènes à générer:</span>
+            <span>{scenes.length - startFromScene} / {scenes.length}</span>
           </div>
         </div>
       </div>

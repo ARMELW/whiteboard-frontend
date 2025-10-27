@@ -1,102 +1,107 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '../store';
-import { authService } from '../api/authService';
-import { authKeys } from '../config';
-import type { LoginCredentials, SignupCredentials } from '../types';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { signIn, signUp, signOut } from '@/lib/auth-client';
+import type { LoginCredentials, SignupCredentials } from '../types';
 
 export function useAuth() {
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { session, user, isAuthenticated, setSession, clearAuth, setLoading } = useAuthStore();
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isSigningUp, setIsSigningUp] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [loginError, setLoginError] = useState<Error | null>(null);
+  const [signupError, setSignupError] = useState<Error | null>(null);
 
-  const sessionQuery = useQuery({
-    queryKey: authKeys.detail('session'),
-    queryFn: async () => {
-      const storedSession = authService.getStoredSession();
-      if (!storedSession) {
-        setSession(null);
-        return null;
-      }
+  const login = useCallback(async (
+    credentials: LoginCredentials,
+    options?: {
+      onSuccess?: (data: any) => void;
+      onError?: (error: Error) => void;
+    }
+  ) => {
+    setIsLoggingIn(true);
+    setLoginError(null);
+    
+    try {
+      const result = await signIn.email({
+        email: credentials.email,
+        password: credentials.password,
+      });
 
-      const currentSession = await authService.getCurrentUser();
-      if (!currentSession) {
-        setSession(null);
-        return null;
-      }
-
-      setSession(currentSession);
-      return currentSession;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnMount: true,
-    refetchOnWindowFocus: false,
-    retry: false,
-  });
-
-  const loginMutation = useMutation({
-    mutationFn: (credentials: LoginCredentials) => authService.login(credentials),
-    onSuccess: (response) => {
-      if (response.success && response.session) {
-        setSession(response.session);
-        queryClient.invalidateQueries({ queryKey: authKeys.all });
-      }
-    },
-  });
-
-  const signupMutation = useMutation({
-    mutationFn: (credentials: SignupCredentials) => authService.signup(credentials),
-    onSuccess: (response) => {
-      if (response.success && response.session) {
-        setSession(response.session);
-        queryClient.invalidateQueries({ queryKey: authKeys.all });
-      }
-    },
-  });
-
-  const logoutMutation = useMutation({
-    mutationFn: () => authService.logout(),
-    onSuccess: () => {
-      clearAuth();
-      queryClient.clear();
-      navigate('/login', { replace: true });
-    },
-  });
-
-  const refreshTokenMutation = useMutation({
-    mutationFn: () => authService.refreshToken(),
-    onSuccess: (newSession) => {
-      if (newSession) {
-        setSession(newSession);
+      if (result.error) {
+        const error = new Error(result.error.message || 'Login failed');
+        setLoginError(error);
+        options?.onError?.(error);
       } else {
-        clearAuth();
+        options?.onSuccess?.({ success: true, session: result.data });
       }
-    },
-  });
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Login failed');
+      setLoginError(err);
+      options?.onError?.(err);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  }, []);
+
+  const signup = useCallback(async (
+    credentials: SignupCredentials,
+    options?: {
+      onSuccess?: (data: any) => void;
+      onError?: (error: Error) => void;
+    }
+  ) => {
+    setIsSigningUp(true);
+    setSignupError(null);
+    
+    try {
+      const result = await signUp.email({
+        email: credentials.email,
+        password: credentials.password,
+        name: `${credentials.firstName} ${credentials.lastName || ''}`.trim(),
+      });
+
+      if (result.error) {
+        const error = new Error(result.error.message || 'Signup failed');
+        setSignupError(error);
+        options?.onError?.(error);
+      } else {
+        options?.onSuccess?.({ success: true, session: result.data });
+      }
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error('Signup failed');
+      setSignupError(err);
+      options?.onError?.(err);
+    } finally {
+      setIsSigningUp(false);
+    }
+  }, []);
+
+  const logout = useCallback(async () => {
+    setIsLoggingOut(true);
+    
+    try {
+      await signOut();
+      navigate('/login', { replace: true });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }, [navigate]);
 
   return {
-    // State
-    session,
-    user,
-    isAuthenticated,
-    isLoading: sessionQuery.isLoading,
-
     // Mutations
-    login: loginMutation.mutate,
-    signup: signupMutation.mutate,
-    logout: logoutMutation.mutate,
-    refreshToken: refreshTokenMutation.mutate,
+    login,
+    signup,
+    logout,
 
     // Mutation states
-    isLoggingIn: loginMutation.isPending,
-    isSigningUp: signupMutation.isPending,
-    isLoggingOut: logoutMutation.isPending,
+    isLoggingIn,
+    isSigningUp,
+    isLoggingOut,
 
     // Mutation results
-    loginError: loginMutation.error,
-    signupError: signupMutation.error,
-    
-    // Helpers
-    refetchSession: sessionQuery.refetch,
+    loginError,
+    signupError,
   };
 }

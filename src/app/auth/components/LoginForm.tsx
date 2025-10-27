@@ -24,17 +24,12 @@ export function LoginForm() {
   const onSubmit = async (data: LoginCredentials) => {
     setError(null);
     
-    login(data, {
-      onSuccess: (response) => {
-        if (response.success) {
-          toast.success('Connexion réussie !');
-          navigate('/', { replace: true });
-        } else {
-          setError(response.message || 'Erreur de connexion');
-          toast.error(response.message || 'Erreur de connexion');
-        }
+    await login(data, {
+      onSuccess: () => {
+        toast.success('Connexion réussie !');
+        navigate('/', { replace: true });
       },
-      onError: (err: any) => {
+      onError: (err: Error) => {
         const message = err?.message || 'Erreur de connexion';
         setError(message);
         toast.error(message);

@@ -1,12 +1,14 @@
-import { useAuthStore } from '../store';
+import { useSession as useBetterAuthSession } from '@/lib/auth-client';
 
 export function useSession() {
-  const { session, user, isAuthenticated } = useAuthStore();
+  const { data: session, isPending, error } = useBetterAuthSession();
 
   return {
-    session,
-    user,
-    isAuthenticated,
-    planId: user?.planId || 'free',
+    session: session || null,
+    user: session?.user || null,
+    isAuthenticated: !!session?.user,
+    isLoading: isPending,
+    error,
+    planId: session?.user?.planId || 'free',
   };
 }

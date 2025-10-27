@@ -2,12 +2,13 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home, FolderOpen, Settings, ChevronLeft, LogOut } from 'lucide-react';
 import { useAuth, useSession } from '@/app/auth';
+import { PlanBadge } from '@/app/subscription/components';
 
 export function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout, isLoggingOut } = useAuth();
-  const { user } = useSession();
+  const { user, planId } = useSession();
 
   const isHome = location.pathname === '/';
   const isProjects = location.pathname === '/projects';
@@ -59,9 +60,18 @@ export function DashboardLayout() {
             </div>
             <div className="flex items-center gap-4">
               {user && (
-                <span className="text-sm text-gray-600">
-                  {user.email}
-                </span>
+                <>
+                  <button
+                    onClick={() => navigate('/pricing')}
+                    className="transition-transform hover:scale-105"
+                    aria-label="Voir les plans et tarifs"
+                  >
+                    <PlanBadge planId={planId as any} />
+                  </button>
+                  <span className="text-sm text-gray-600">
+                    {user.email}
+                  </span>
+                </>
               )}
               <Button variant="ghost" size="icon">
                 <Settings className="h-5 w-5" />

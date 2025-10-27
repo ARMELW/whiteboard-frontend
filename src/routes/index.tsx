@@ -7,6 +7,7 @@ import { DashboardLayout } from '@/pages/layouts/DashboardLayout';
 import { EditorLayout } from '@/pages/layouts/EditorLayout';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { SignupPage } from '@/pages/auth/SignupPage';
+import { PricingPage } from '@/pages/pricing/PricingPage';
 import { ProtectedRoute } from '@/app/auth/components';
 
 export const router = createBrowserRouter([
@@ -17,6 +18,10 @@ export const router = createBrowserRouter([
   {
     path: '/signup',
     element: <SignupPage />,
+  },
+  {
+    path: '/pricing',
+    element: <PricingPage />,
   },
   {
     path: '/',

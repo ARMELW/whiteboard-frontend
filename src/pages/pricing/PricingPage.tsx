@@ -4,8 +4,10 @@ import { useSession } from '@/app/auth';
 import { Button } from '@/components/ui/button';
 import { Check, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export function PricingPage() {
+  const navigate = useNavigate();
   const { data: apiPlans, isLoading, error } = usePricingPlans();
   const { mutate: createCheckout, isPending: isCreatingCheckout } = useCreateCheckout();
   const { user, isAuthenticated } = useSession();
@@ -14,19 +16,19 @@ export function PricingPage() {
 
   const handleSelectPlan = (planId: string) => {
     if (!isAuthenticated) {
-      window.location.href = '/auth/login?redirect=/pricing';
+      navigate('/signup');
       return;
     }
 
     if (planId === 'free') {
-      console.log('User selected free plan - no checkout needed');
+      navigate('/');
       return;
     }
 
     createCheckout({
       planId,
       billingPeriod: selectedBilling,
-      successUrl: window.location.origin + '/dashboard?checkout=success',
+      successUrl: window.location.origin + '/?checkout=success',
       cancelUrl: window.location.origin + '/pricing?checkout=cancel',
     });
   };
@@ -61,6 +63,18 @@ export function PricingPage() {
           <p className="text-xl text-gray-600">
             Démarrez gratuitement, upgradez quand vous êtes prêt
           </p>
+
+          {isAuthenticated && (
+            <div className="mt-4">
+              <Button
+                variant="outline"
+                onClick={() => navigate('/')}
+                className="text-sm"
+              >
+                Continuer avec le plan gratuit →
+              </Button>
+            </div>
+          )}
 
           {/* Billing Toggle */}
           <div className="flex items-center justify-center gap-4 mt-6">

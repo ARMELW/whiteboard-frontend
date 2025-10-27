@@ -19,7 +19,7 @@ export function useCreateCheckout(): UseMutationResult<
       const result = await authClient.subscription.upgrade({
         plan: data.planId,
         annual: data.billingPeriod === 'yearly',
-        successUrl: data.successUrl || window.location.origin + '/dashboard?checkout=success',
+        successUrl: data.successUrl || window.location.origin + '/?checkout=success',
         cancelUrl: data.cancelUrl || window.location.origin + '/pricing?checkout=cancel',
       });
       return result;
@@ -44,7 +44,7 @@ export function useCancelSubscription(): UseMutationResult<
   return useMutation({
     mutationFn: async (params) => {
       const result = await authClient.subscription.cancel({
-        returnUrl: window.location.origin + '/dashboard',
+        returnUrl: window.location.origin + '/',
         subscriptionId: params?.subscriptionId,
       });
       return result;
@@ -95,8 +95,8 @@ export function useUpgradeSubscription(): UseMutationResult<
       const result = await authClient.subscription.upgrade({
         plan: data.planId,
         annual: data.annual,
-        successUrl: window.location.origin + '/dashboard?upgrade=success',
-        cancelUrl: window.location.origin + '/dashboard?upgrade=cancel',
+        successUrl: window.location.origin + '/?upgrade=success',
+        cancelUrl: window.location.origin + '/?upgrade=cancel',
       });
       return result;
     },
@@ -122,7 +122,7 @@ export function useBillingPortal(): UseMutationResult<
   return useMutation({
     mutationFn: async () => {
       const result = await authClient.subscription.billingPortal({
-        returnUrl: window.location.origin + '/dashboard',
+        returnUrl: window.location.origin + '/',
       });
       return result;
     },

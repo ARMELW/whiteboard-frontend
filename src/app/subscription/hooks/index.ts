@@ -8,3 +8,4 @@ export {
   useRestoreSubscription,
   useBillingPortal,
 } from './useSubscriptionActions';
+export { useOnboarding, usePlanRecommendation, useUsageAnalytics } from './useOnboarding';

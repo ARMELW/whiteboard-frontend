@@ -3,3 +3,5 @@ export { LimitWarning } from './LimitWarning';
 export { PlanBadge } from './PlanBadge';
 export { UsageIndicator } from './UsageIndicator';
 export { WatermarkOverlay } from './WatermarkOverlay';
+export { PlanComparisonModal } from './PlanComparisonModal';
+export { OnboardingWizard } from './OnboardingWizard';

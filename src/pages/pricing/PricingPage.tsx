@@ -1,14 +1,35 @@
 import { PLANS, type Plan, type PlanId } from '@/app/subscription';
+import { usePricingPlans } from '@/app/subscription/hooks';
 import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 
 export function PricingPage() {
+  const { data: apiPlans, isLoading, error } = usePricingPlans();
   const planOrder: PlanId[] = ['free', 'starter', 'pro', 'enterprise'];
 
-  const handleSelectPlan = (planId: PlanId) => {
+  const handleSelectPlan = (planId: string) => {
     // TODO: Implement plan selection/checkout
     console.log('Selected plan:', planId);
   };
+
+  const displayPlans = apiPlans?.length
+    ? apiPlans
+    : planOrder.map((id) => PLANS[id]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Chargement des plans...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.warn('Failed to load pricing from API, using local plans:', error);
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
@@ -25,12 +46,12 @@ export function PricingPage() {
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {planOrder.map((planId) => {
-            const plan = PLANS[planId];
+          {displayPlans.map((plan: any) => {
+            const localPlan = PLANS[plan.id as PlanId];
             return (
               <PricingCard
                 key={plan.id}
-                plan={plan}
+                plan={localPlan || plan}
                 onSelect={() => handleSelectPlan(plan.id)}
               />
             );

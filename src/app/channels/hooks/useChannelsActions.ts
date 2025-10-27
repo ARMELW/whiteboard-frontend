@@ -1,5 +1,5 @@
 import { useChannelStore } from '../store';
-import { channelMockService } from '../api/channelMockService';
+import { channelService } from '../api/channelService';
 import { ChannelPayload } from '../types';
 import { toast } from 'sonner';
 
@@ -13,7 +13,7 @@ export const useChannelsActions = () => {
     createChannel: async (payload: ChannelPayload) => {
       useChannelStore.setState({ loading: true });
       try {
-        const result = await channelMockService.create(payload);
+        const result = await channelService.create(payload);
         if (result.success) {
           addChannel(result.data);
           toast.success('Chaîne créée avec succès');
@@ -41,7 +41,7 @@ export const useChannelsActions = () => {
     ) => {
       useChannelStore.setState({ loading: true });
       try {
-        const result = await channelMockService.update(id, payload);
+        const result = await channelService.update(id, payload);
         updateChannel(result.data);
         toast.success('Chaîne mise à jour avec succès');
         return result.data;
@@ -56,7 +56,7 @@ export const useChannelsActions = () => {
     archiveChannel: async (id: string) => {
       useChannelStore.setState({ loading: true });
       try {
-        await channelMockService.archive(id);
+        await channelService.archive(id);
         deleteChannel(id);
         toast.success('Chaîne archivée avec succès');
       } catch (error) {
@@ -70,7 +70,7 @@ export const useChannelsActions = () => {
     deleteChannel: async (id: string) => {
       useChannelStore.setState({ loading: true });
       try {
-        const result = await channelMockService.delete(id);
+        const result = await channelService.delete(id);
         if (result.success) {
           deleteChannel(id);
           toast.success('Chaîne supprimée avec succès');
@@ -89,7 +89,7 @@ export const useChannelsActions = () => {
     uploadLogo: async (id: string, file: File) => {
       useChannelStore.setState({ loading: true });
       try {
-        const result = await channelMockService.uploadLogo(id, file);
+        const result = await channelService.uploadLogo(id, file);
         const channels = useChannelStore.getState().channels;
         const channel = channels.find((c) => c.id === id);
         if (channel) {
@@ -115,7 +115,7 @@ export const useChannelsActions = () => {
 
     getStats: async (id: string) => {
       try {
-        const result = await channelMockService.getStats(id);
+        const result = await channelService.getStats(id);
         return result.data;
       } catch (error) {
         toast.error('Erreur lors de la récupération des statistiques');

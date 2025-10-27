@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useProjectStore } from '../store';
-import { projectMockService } from '../api/projectMockService';
+import { projectService } from '../api/projectService';
 
 export const useProjects = (channelId?: string) => {
   const projects = useProjectStore((state) => state.projects);
@@ -23,9 +23,9 @@ export const useProjects = (channelId?: string) => {
     try {
       let result;
       if (channelId) {
-        result = await projectMockService.list(channelId);
+        result = await projectService.list(channelId);
       } else {
-        result = await projectMockService.listAll();
+        result = await projectService.listAll();
       }
       setProjects(result.data.projects);
     } catch (error) {

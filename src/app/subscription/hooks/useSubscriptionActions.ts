@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 export interface CreateCheckoutRequest {
   planId: string;
   billingPeriod: 'monthly' | 'yearly';
+  stripePriceId?: string;
   successUrl?: string;
   cancelUrl?: string;
 }
@@ -16,12 +17,20 @@ export function useCreateCheckout(): UseMutationResult<
 > {
   return useMutation({
     mutationFn: async (data: CreateCheckoutRequest) => {
-      const result = await authClient.subscription.upgrade({
-        plan: data.planId,
-        annual: data.billingPeriod === 'yearly',
+      const upgradeParams: any = {
         successUrl: data.successUrl || window.location.origin + '/?checkout=success',
         cancelUrl: data.cancelUrl || window.location.origin + '/pricing?checkout=cancel',
-      });
+      };
+
+      // If stripePriceId is provided, use it directly; otherwise use plan name
+      if (data.stripePriceId) {
+        upgradeParams.priceId = data.stripePriceId;
+      } else {
+        upgradeParams.plan = data.planId;
+        upgradeParams.annual = data.billingPeriod === 'yearly';
+      }
+      
+      const result = await authClient.subscription.upgrade(upgradeParams);
       return result;
     },
     onSuccess: (data) => {
@@ -88,16 +97,24 @@ export function useRestoreSubscription(): UseMutationResult<
 export function useUpgradeSubscription(): UseMutationResult<
   any,
   Error,
-  { planId: string; annual?: boolean }
+  { planId: string; annual?: boolean; stripePriceId?: string }
 > {
   return useMutation({
     mutationFn: async (data) => {
-      const result = await authClient.subscription.upgrade({
-        plan: data.planId,
-        annual: data.annual,
+      const upgradeParams: any = {
         successUrl: window.location.origin + '/?upgrade=success',
         cancelUrl: window.location.origin + '/?upgrade=cancel',
-      });
+      };
+
+      // If stripePriceId is provided, use it directly; otherwise use plan name
+      if (data.stripePriceId) {
+        upgradeParams.priceId = data.stripePriceId;
+      } else {
+        upgradeParams.plan = data.planId;
+        upgradeParams.annual = data.annual;
+      }
+      
+      const result = await authClient.subscription.upgrade(upgradeParams);
       return result;
     },
     onSuccess: (data) => {

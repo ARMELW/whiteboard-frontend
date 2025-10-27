@@ -35,6 +35,10 @@ export interface PlanPricing {
 }
 
 export interface PlanMetadata {
+  stripePriceIds?: {
+    monthly?: string;
+    yearly?: string;
+  };
   [key: string]: any;
 }
 
@@ -49,6 +53,10 @@ export interface ApiPlan {
   isPublic: boolean;
   sortOrder: number;
   metadata?: PlanMetadata;
+  stripePriceIds?: {
+    monthly?: string;
+    yearly?: string;
+  };
 }
 
 export interface PlansApiResponse {

@@ -2,6 +2,48 @@
 
 Guide complet d'intégration de l'API Doodlio pour les développeurs frontend. Ce document contient tous les endpoints disponibles, les payloads requis, les formats de réponse et des exemples de code.
 
+## ✅ Statut de l'Intégration Frontend
+
+**Dernière mise à jour:** Octobre 2025
+
+Tous les endpoints de l'API ont été intégrés dans le fichier `src/config/api.ts` du frontend. Voici le résumé complet:
+
+### Endpoints Intégrés ✅
+
+| Catégorie | Status | Endpoints Disponibles |
+|-----------|--------|----------------------|
+| **Authentification** | ✅ Complet | login, signup, logout, refresh, me, forgotPassword, resetPassword |
+| **User (Utilisateur)** | ✅ Complet | session |
+| **Channels (Canaux)** | ✅ Complet | create, list, detail, update, delete, archive, stats, uploadLogo |
+| **Projects (Projets)** | ✅ Complet | create, list, detail, update, delete, duplicate, autosave |
+| **Scenes** | ✅ Complet | create, list, detail, update, delete, duplicate, reorder |
+| **Assets (Images)** | ✅ Complet | list, upload, detail, update, delete, stats |
+| **Audio** | ✅ Complet | list, upload, detail, update, delete, favorite |
+| **Templates** | ✅ Complet | create, list, detail, update, delete, export, import |
+| **Export** | ✅ Complet | config, scene, video, status, download |
+| **AI (Intelligence Artificielle)** | ✅ Complet | status, generateImagePrompt, generateScript, generateVoice, generateMusic, voices |
+| **Fonts (Polices)** | ✅ Complet | list |
+| **Pricing (Tarifs)** | ✅ Complet | plans, planDetail, billingHistory |
+| **Upload** | ✅ Complet | upload, delete |
+| **User API Keys** | ✅ Complet | list, save, detail, validate, delete |
+| **AI Usage** | ✅ Complet | current, history |
+| **Permissions/Roles** | ✅ Complet | create, list, detail, update, delete, assign |
+| **Health & Monitoring** | ✅ Complet | check, version, metrics |
+| **Subscription** | ✅ Complet | plans, current, checkout, cancel, upgrade, downgrade, invoices |
+
+### Notes d'Intégration
+
+- ✅ **Configuration centralisée**: Tous les endpoints sont définis dans `src/config/api.ts`
+- ✅ **Support des paramètres dynamiques**: Les fonctions acceptent des IDs pour construire les URLs
+- ✅ **Préfixe API configurable**: Utilise `VITE_API_URL` pour la configuration d'environnement
+- ✅ **TypeScript ready**: Prêt pour l'intégration avec des services typés
+- ✅ **Nomenclature cohérente**: Suit les conventions RESTful
+- ✅ **Support v1 API**: Chemins `/v1/` pour les nouveaux endpoints
+
+### Aucun Endpoint Manquant 🎉
+
+Tous les endpoints documentés dans ce guide sont maintenant intégrés dans le frontend. Le développement de nouvelles fonctionnalités peut commencer immédiatement en utilisant la configuration existante.
+
 ## Table des Matières
 
 1. [Configuration Initiale](#configuration-initiale)

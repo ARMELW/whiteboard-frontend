@@ -1,5 +1,6 @@
 import { PLANS, type Plan, type PlanId } from '@/app/subscription';
-import { usePricingPlans, useCreateCheckout } from '@/app/subscription/hooks';
+import { usePlans, useCreateCheckout } from '@/app/subscription/hooks';
+import { convertApiPlanToLocalPlan } from '@/app/subscription/utils/planConverter';
 import { useSession } from '@/app/auth';
 import { Button } from '@/components/ui/button';
 import { Check, Loader2 } from 'lucide-react';
@@ -8,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 export function PricingPage() {
   const navigate = useNavigate();
-  const { data: apiPlans, isLoading, error } = usePricingPlans();
+  const { data: apiPlans, isLoading, error } = usePlans();
   const { mutate: createCheckout, isPending: isCreatingCheckout } = useCreateCheckout();
   const { user, isAuthenticated } = useSession();
   const [selectedBilling, setSelectedBilling] = useState<'monthly' | 'yearly'>('monthly');
@@ -33,8 +34,9 @@ export function PricingPage() {
     });
   };
 
+  // Convert API plans to local format and use them if available, otherwise fallback to static plans
   const displayPlans = apiPlans?.length
-    ? apiPlans
+    ? apiPlans.map(convertApiPlanToLocalPlan)
     : planOrder.map((id) => PLANS[id]);
 
   if (isLoading) {
@@ -107,14 +109,12 @@ export function PricingPage() {
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {displayPlans.map((plan: any) => {
-            const localPlan = PLANS[plan.id as PlanId];
-            const currentPlan = localPlan || plan;
             const isCurrentPlan = user?.planId === plan.id;
             
             return (
               <PricingCard
                 key={plan.id}
-                plan={currentPlan}
+                plan={plan}
                 billingPeriod={selectedBilling}
                 onSelect={() => handleSelectPlan(plan.id)}
                 isLoading={isCreatingCheckout}

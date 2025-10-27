@@ -9,3 +9,4 @@ export {
   useBillingPortal,
 } from './useSubscriptionActions';
 export { useOnboarding, usePlanRecommendation, useUsageAnalytics } from './useOnboarding';
+export { usePlans } from './usePlans';

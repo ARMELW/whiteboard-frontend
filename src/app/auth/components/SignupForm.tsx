@@ -26,17 +26,12 @@ export function SignupForm() {
   const onSubmit = async (data: SignupFormData) => {
     setError(null);
     
-    signup(data, {
-      onSuccess: (response) => {
-        if (response.success) {
-          toast.success('Compte créé avec succès !');
-          navigate('/', { replace: true });
-        } else {
-          setError(response.message || 'Erreur lors de la création du compte');
-          toast.error(response.message || 'Erreur lors de la création du compte');
-        }
+    await signup(data, {
+      onSuccess: () => {
+        toast.success('Compte créé avec succès !');
+        navigate('/', { replace: true });
       },
-      onError: (err: any) => {
+      onError: (err: Error) => {
         const message = err?.message || 'Erreur lors de la création du compte';
         setError(message);
         toast.error(message);

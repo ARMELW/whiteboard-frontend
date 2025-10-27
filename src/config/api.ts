@@ -22,6 +22,14 @@ export const API_ENDPOINTS = {
     downgrade: `${prefix}/subscription/downgrade`,
     invoices: `${prefix}/subscription/invoices`,
   },
+  pricing: {
+    plans: `${prefix}/v1/pricing/plans`,
+    planDetail: (planId: string) => `${prefix}/v1/pricing/plans/${planId}`,
+    billingHistory: `${prefix}/v1/pricing/billing-history`,
+  },
+  users: {
+    session: `${prefix}/v1/users/session`,
+  },
   scenes: {
     base: `${prefix}/scenes`,
     list: `${prefix}/scenes`,

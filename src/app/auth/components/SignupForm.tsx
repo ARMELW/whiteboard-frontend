@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { signupSchema, type SignupCredentials } from '../schema';
 import { useAuth } from '../hooks';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ type SignupFormData = SignupCredentials;
 
 export function SignupForm() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signup, isSigningUp } = useAuth();
   const [error, setError] = useState<string | null>(null);
 

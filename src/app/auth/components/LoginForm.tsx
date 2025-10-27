@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { loginSchema, type LoginCredentials } from '../schema';
 import { useAuth } from '../hooks';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 
 export function LoginForm() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, isLoggingIn } = useAuth();
   const [error, setError] = useState<string | null>(null);
 
@@ -27,7 +28,9 @@ export function LoginForm() {
     await login(data, {
       onSuccess: () => {
         toast.success('Connexion réussie !');
-        navigate('/', { replace: true });
+        // Redirect to the page user was trying to access, or dashboard if none
+        const from = (location.state as any)?.from?.pathname || '/dashboard';
+        navigate(from, { replace: true });
       },
       onError: (err: Error) => {
         const message = err?.message || 'Erreur de connexion';

@@ -4,7 +4,7 @@
 
 Ce document explique les modifications apportées pour remplacer les services mock par des appels API réels.
 
-## Services Dynamiser
+## Services Dynamisés
 
 ### 1. Service Projets (`projectService`)
 

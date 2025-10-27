@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/Navbar';
+import { useSession } from '@/app/auth';
 import {
   Sparkles,
   Video,
@@ -18,6 +20,13 @@ import {
 
 export function LandingPage() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useSession();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const features = [
     {

@@ -10,8 +10,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const location = useLocation();
 
   if (!isAuthenticated) {
-    // Redirect to login while saving the attempted location
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // Redirect to landing page while saving the attempted location
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;

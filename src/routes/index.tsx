@@ -8,10 +8,15 @@ import { EditorLayout } from '@/pages/layouts/EditorLayout';
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { SignupPage } from '@/pages/auth/SignupPage';
 import { PricingPage } from '@/pages/pricing/PricingPage';
+import { LandingPage } from '@/pages/LandingPage';
 import { ProtectedRoute } from '@/app/auth/components';
 import { SubscriptionFeaturesDemo } from '@/pages/demo/SubscriptionFeaturesDemo';
 
 export const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <LandingPage />,
+  },
   {
     path: '/login',
     element: <LoginPage />,
@@ -29,7 +34,7 @@ export const router = createBrowserRouter([
     element: <SubscriptionFeaturesDemo />,
   },
   {
-    path: '/',
+    path: '/dashboard',
     element: (
       <ProtectedRoute>
         <DashboardLayout />

@@ -1,8 +1,8 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, FolderOpen, Settings, ChevronLeft, LogOut, Crown } from 'lucide-react';
+import { Home, FolderOpen, Settings, ChevronLeft, LogOut } from 'lucide-react';
 import { useAuth, useSession } from '@/app/auth';
-import { PLANS } from '@/app/subscription';
+import { PlanBadge } from '@/app/subscription/components';
 
 export function DashboardLayout() {
   const navigate = useNavigate();
@@ -12,8 +12,6 @@ export function DashboardLayout() {
 
   const isHome = location.pathname === '/';
   const isProjects = location.pathname === '/projects';
-
-  const currentPlan = PLANS[planId as keyof typeof PLANS] || PLANS.free;
 
   const navigateToHome = () => {
     navigate('/');
@@ -63,15 +61,13 @@ export function DashboardLayout() {
             <div className="flex items-center gap-4">
               {user && (
                 <>
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <button
                     onClick={() => navigate('/pricing')}
-                    className="flex items-center gap-2"
+                    className="transition-transform hover:scale-105"
+                    aria-label="Voir les plans et tarifs"
                   >
-                    <Crown className="h-4 w-4" />
-                    <span className="font-medium">{currentPlan.name}</span>
-                  </Button>
+                    <PlanBadge planId={planId as any} />
+                  </button>
                   <span className="text-sm text-gray-600">
                     {user.email}
                   </span>

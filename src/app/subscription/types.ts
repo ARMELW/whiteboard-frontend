@@ -2,16 +2,18 @@ import type { PlanId } from './config/plans';
 
 export interface Subscription {
   id: string;
-  userId: string;
-  planId: PlanId;
-  status: 'active' | 'cancelled' | 'expired' | 'trialing';
-  currentPeriodStart: Date;
-  currentPeriodEnd: Date;
-  cancelAtPeriodEnd: boolean;
+  plan: string;
+  referenceId: string;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  status: 'active' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'paused' | 'trialing' | 'unpaid';
+  periodStart?: Date;
+  periodEnd?: Date;
+  trialStart?: Date;
+  trialEnd?: Date;
+  cancelAtPeriodEnd?: boolean;
+  seats?: number;
+  groupId?: string;
 }
 
 export interface CheckoutSession {

@@ -90,7 +90,6 @@ export const API_ENDPOINTS = {
     list: `${prefix}/fonts`,
   },
   upload: {
-    base: `${prefix}/upload`,
     upload: `${prefix}/upload`,
     delete: `${prefix}/upload`,
   },

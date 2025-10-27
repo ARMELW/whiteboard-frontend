@@ -140,7 +140,11 @@ export function LandingPage() {
 
           {/* Hero Image/Video Placeholder */}
           <div className="mt-16 relative">
-            <div className="aspect-video bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
+            <div 
+              className="aspect-video bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl shadow-2xl overflow-hidden border border-gray-200"
+              role="img"
+              aria-label="Aperçu de l'interface de l'éditeur vidéo Doodlio"
+            >
               <div className="w-full h-full flex items-center justify-center">
                 <div className="text-center">
                   <Video className="w-24 h-24 text-blue-600 mx-auto mb-4" />
@@ -151,8 +155,8 @@ export function LandingPage() {
               </div>
             </div>
             {/* Decorative elements */}
-            <div className="absolute -top-4 -left-4 w-24 h-24 bg-yellow-400 rounded-full opacity-20 blur-3xl"></div>
-            <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-purple-400 rounded-full opacity-20 blur-3xl"></div>
+            <div className="absolute -top-4 -left-4 w-24 h-24 bg-yellow-400 rounded-full opacity-20 blur-3xl" aria-hidden="true"></div>
+            <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-purple-400 rounded-full opacity-20 blur-3xl" aria-hidden="true"></div>
           </div>
         </div>
       </section>
@@ -249,7 +253,11 @@ export function LandingPage() {
               </div>
             </div>
             <div className="relative">
-              <div className="aspect-square bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl shadow-xl border border-gray-200 flex items-center justify-center">
+              <div 
+                className="aspect-square bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl shadow-xl border border-gray-200 flex items-center justify-center"
+                role="img"
+                aria-label="Illustration des fonctionnalités de Doodlio"
+              >
                 <div className="text-center">
                   <Sparkles className="w-32 h-32 text-blue-600 mx-auto mb-4" />
                   <p className="text-gray-600 font-medium">Illustration</p>

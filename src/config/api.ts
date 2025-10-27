@@ -27,6 +27,9 @@ export const API_ENDPOINTS = {
     planDetail: (planId: string) => `${prefix}/v1/pricing/plans/${planId}`,
     billingHistory: `${prefix}/v1/pricing/billing-history`,
   },
+  plans: {
+    list: `${prefix}/v1/plans`,
+  },
   users: {
     session: `${prefix}/v1/users/session`,
   },

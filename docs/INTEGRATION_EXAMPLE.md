@@ -67,6 +67,7 @@ import { CreditCard, FileText, Settings } from 'lucide-react';
 
 export function Navigation() {
   const { isAuthenticated, user } = useSession();
+  const currentPlan = user?.planId ? PLANS[user.planId] : null;
 
   return (
     <nav className="flex items-center gap-4">
@@ -89,10 +90,12 @@ export function Navigation() {
             Factures
           </Link>
 
-          {/* Show current plan badge */}
-          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">
-            Plan {user?.planId}
-          </span>
+          {/* Show current plan badge with friendly name */}
+          {currentPlan && (
+            <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">
+              Plan {currentPlan.name}
+            </span>
+          )}
         </>
       )}
     </nav>
@@ -112,6 +115,10 @@ import { ArrowUpCircle } from 'lucide-react';
 export function Dashboard() {
   const { user } = useSession();
   const { plan, limits } = usePlanLimits();
+
+  // Constants for special limit values
+  const UNLIMITED = -1;
+  const NO_CLOUD_STORAGE = 0;
 
   return (
     <div className="p-6">
@@ -139,7 +146,7 @@ export function Dashboard() {
         <div className="grid grid-cols-3 gap-4 mt-4">
           <div className="text-center">
             <p className="text-2xl font-bold">
-              {limits.scenes === -1 ? '∞' : limits.scenes}
+              {limits.scenes === UNLIMITED ? '∞' : limits.scenes}
             </p>
             <p className="text-sm text-gray-600">Scènes/projet</p>
           </div>
@@ -149,7 +156,9 @@ export function Dashboard() {
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold">
-              {limits.storage === -1 ? '∞' : limits.storage}
+              {limits.storage === UNLIMITED ? '∞' : 
+               limits.storage === NO_CLOUD_STORAGE ? 'Local' : 
+               limits.storage}
             </p>
             <p className="text-sm text-gray-600">Projets cloud</p>
           </div>

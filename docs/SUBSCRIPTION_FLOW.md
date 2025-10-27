@@ -119,12 +119,14 @@ import { BillingHistoryPage } from '@/pages/pricing';
 From `src/config/api.ts`:
 
 ```typescript
+// Note: Pricing endpoints use /v1 versioning from API guide
 pricing: {
   plans: `${prefix}/v1/pricing/plans`,
   planDetail: (planId: string) => `${prefix}/v1/pricing/plans/${planId}`,
   billingHistory: `${prefix}/v1/pricing/billing-history`,
 }
 
+// Legacy subscription endpoints (to be updated to /v1 in future)
 subscription: {
   checkout: `${prefix}/subscription/checkout`,
   cancel: `${prefix}/subscription/cancel`,
@@ -138,7 +140,7 @@ subscription: {
 #### Create Checkout Session
 ```typescript
 // Request
-POST /subscription/checkout
+POST https://api.doodlio.com/api/subscription/checkout
 {
   "planId": "pro",
   "billingPeriod": "yearly",
@@ -161,7 +163,7 @@ POST /subscription/checkout
 #### Get Billing History
 ```typescript
 // Request
-GET /v1/pricing/billing-history?page=1&limit=20
+GET https://api.doodlio.com/api/v1/pricing/billing-history?page=1&limit=20
 
 // Response
 {

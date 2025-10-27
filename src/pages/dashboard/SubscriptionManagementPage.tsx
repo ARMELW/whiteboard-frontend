@@ -3,7 +3,7 @@ import { PLANS } from '@/app/subscription';
 import {
   useCancelSubscription,
   useUpgradeSubscription,
-  useDowngradeSubscription,
+  useBillingPortal,
 } from '@/app/subscription/hooks';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +25,7 @@ export function SubscriptionManagementPage() {
   const { user, isLoading: sessionLoading } = useSession();
   const { mutate: cancelSubscription, isPending: isCanceling } = useCancelSubscription();
   const { mutate: upgradeSubscription, isPending: isUpgrading } = useUpgradeSubscription();
-  const { mutate: downgradeSubscription, isPending: isDowngrading } = useDowngradeSubscription();
+  const { mutate: openBillingPortal, isPending: isOpeningPortal } = useBillingPortal();
 
   if (sessionLoading) {
     return (
@@ -50,15 +50,15 @@ export function SubscriptionManagementPage() {
   const currentPlanIndex = planOrder.indexOf(user.planId);
 
   const handleUpgrade = (newPlanId: string) => {
-    upgradeSubscription(newPlanId);
-  };
-
-  const handleDowngrade = (newPlanId: string) => {
-    downgradeSubscription(newPlanId);
+    upgradeSubscription({ planId: newPlanId });
   };
 
   const handleCancel = () => {
-    cancelSubscription();
+    cancelSubscription({});
+  };
+
+  const handleBillingPortal = () => {
+    openBillingPortal();
   };
 
   return (
@@ -124,36 +124,53 @@ export function SubscriptionManagementPage() {
 
           <div className="flex gap-4">
             {user.planId !== 'free' && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" disabled={isCanceling}>
-                    {isCanceling ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Annulation...
-                      </>
-                    ) : (
-                      'Annuler l\'abonnement'
-                    )}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Votre abonnement sera annulé à la fin de la période de facturation
-                      actuelle. Vous conserverez l'accès aux fonctionnalités premium
-                      jusqu'à cette date.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Annuler</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleCancel}>
-                      Confirmer l'annulation
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={handleBillingPortal}
+                  disabled={isOpeningPortal}
+                >
+                  {isOpeningPortal ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Chargement...
+                    </>
+                  ) : (
+                    'Gérer l\'abonnement'
+                  )}
+                </Button>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" disabled={isCanceling}>
+                      {isCanceling ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Annulation...
+                        </>
+                      ) : (
+                        'Annuler l\'abonnement'
+                      )}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Votre abonnement sera annulé à la fin de la période de facturation
+                        actuelle. Vous conserverez l'accès aux fonctionnalités premium
+                        jusqu'à cette date.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleCancel}>
+                        Confirmer l'annulation
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
             )}
 
             <Link to="/pricing">
@@ -163,7 +180,7 @@ export function SubscriptionManagementPage() {
         </CardContent>
       </Card>
 
-      {/* Upgrade/Downgrade Options */}
+      {/* Upgrade Options */}
       <h2 className="text-2xl font-bold mb-4">Changer de plan</h2>
       <div className="grid md:grid-cols-3 gap-6">
         {planOrder.map((planId, index) => {
@@ -171,7 +188,7 @@ export function SubscriptionManagementPage() {
           
           const plan = PLANS[planId as keyof typeof PLANS];
           const isUpgrade = index > currentPlanIndex;
-          const isProcessing = isUpgrading || isDowngrading;
+          const isProcessing = isUpgrading;
 
           return (
             <Card key={planId}>
@@ -199,12 +216,10 @@ export function SubscriptionManagementPage() {
                 </ul>
 
                 <Button
-                  onClick={() =>
-                    isUpgrade ? handleUpgrade(planId) : handleDowngrade(planId)
-                  }
+                  onClick={() => handleUpgrade(planId)}
                   variant={isUpgrade ? 'default' : 'outline'}
                   className="w-full"
-                  disabled={isProcessing}
+                  disabled={isProcessing || !isUpgrade}
                 >
                   {isProcessing ? (
                     <>
@@ -214,7 +229,7 @@ export function SubscriptionManagementPage() {
                   ) : isUpgrade ? (
                     'Passer à ce plan'
                   ) : (
-                    'Rétrograder'
+                    'Contactez-nous'
                   )}
                 </Button>
               </CardContent>

@@ -1,17 +1,33 @@
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
-import { subscriptionService, type CreateCheckoutRequest } from '../services/subscriptionService';
+import { authClient } from '@/lib/auth-client';
 import { toast } from 'sonner';
 
+export interface CreateCheckoutRequest {
+  planId: string;
+  billingPeriod: 'monthly' | 'yearly';
+  successUrl?: string;
+  cancelUrl?: string;
+}
+
 export function useCreateCheckout(): UseMutationResult<
-  { sessionId: string; url: string; planId: string; priceId: string },
+  any,
   Error,
   CreateCheckoutRequest
 > {
   return useMutation({
-    mutationFn: (data: CreateCheckoutRequest) =>
-      subscriptionService.createCheckoutSession(data),
+    mutationFn: async (data: CreateCheckoutRequest) => {
+      const result = await authClient.subscription.upgrade({
+        plan: data.planId,
+        annual: data.billingPeriod === 'yearly',
+        successUrl: data.successUrl || window.location.origin + '/dashboard?checkout=success',
+        cancelUrl: data.cancelUrl || window.location.origin + '/pricing?checkout=cancel',
+      });
+      return result;
+    },
     onSuccess: (data) => {
-      window.location.href = data.url;
+      if (data?.url) {
+        window.location.href = data.url;
+      }
     },
     onError: (error) => {
       toast.error('Erreur lors de la création de la session de paiement');
@@ -21,14 +37,24 @@ export function useCreateCheckout(): UseMutationResult<
 }
 
 export function useCancelSubscription(): UseMutationResult<
-  { success: boolean; message?: string },
+  any,
   Error,
-  void
+  { subscriptionId?: string }
 > {
   return useMutation({
-    mutationFn: () => subscriptionService.cancelSubscription(),
+    mutationFn: async (params) => {
+      const result = await authClient.subscription.cancel({
+        returnUrl: window.location.origin + '/dashboard',
+        subscriptionId: params?.subscriptionId,
+      });
+      return result;
+    },
     onSuccess: (data) => {
-      toast.success(data.message || 'Abonnement annulé avec succès');
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast.success('Abonnement annulé avec succès');
+      }
     },
     onError: (error) => {
       toast.error('Erreur lors de l\'annulation de l\'abonnement');
@@ -37,16 +63,49 @@ export function useCancelSubscription(): UseMutationResult<
   });
 }
 
-export function useUpgradeSubscription(): UseMutationResult<
-  { success: boolean; message?: string },
+export function useRestoreSubscription(): UseMutationResult<
+  any,
   Error,
-  string
+  { subscriptionId?: string }
 > {
   return useMutation({
-    mutationFn: (newPlanId: string) =>
-      subscriptionService.upgradeSubscription(newPlanId),
+    mutationFn: async (params) => {
+      const result = await authClient.subscription.restore({
+        subscriptionId: params?.subscriptionId,
+      });
+      return result;
+    },
+    onSuccess: () => {
+      toast.success('Abonnement restauré avec succès');
+    },
+    onError: (error) => {
+      toast.error('Erreur lors de la restauration de l\'abonnement');
+      console.error('Restore subscription error:', error);
+    },
+  });
+}
+
+export function useUpgradeSubscription(): UseMutationResult<
+  any,
+  Error,
+  { planId: string; annual?: boolean }
+> {
+  return useMutation({
+    mutationFn: async (data) => {
+      const result = await authClient.subscription.upgrade({
+        plan: data.planId,
+        annual: data.annual,
+        successUrl: window.location.origin + '/dashboard?upgrade=success',
+        cancelUrl: window.location.origin + '/dashboard?upgrade=cancel',
+      });
+      return result;
+    },
     onSuccess: (data) => {
-      toast.success(data.message || 'Abonnement mis à niveau avec succès');
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast.success('Abonnement mis à niveau avec succès');
+      }
     },
     onError: (error) => {
       toast.error('Erreur lors de la mise à niveau de l\'abonnement');
@@ -55,22 +114,26 @@ export function useUpgradeSubscription(): UseMutationResult<
   });
 }
 
-export function useDowngradeSubscription(): UseMutationResult<
-  { success: boolean; message?: string },
+export function useBillingPortal(): UseMutationResult<
+  any,
   Error,
-  string
+  void
 > {
   return useMutation({
-    mutationFn: (newPlanId: string) =>
-      subscriptionService.downgradeSubscription(newPlanId),
+    mutationFn: async () => {
+      const result = await authClient.subscription.billingPortal({
+        returnUrl: window.location.origin + '/dashboard',
+      });
+      return result;
+    },
     onSuccess: (data) => {
-      toast.success(
-        data.message || 'Votre abonnement sera rétrogradé à la fin de la période actuelle'
-      );
+      if (data?.url) {
+        window.location.href = data.url;
+      }
     },
     onError: (error) => {
-      toast.error('Erreur lors de la rétrogradation de l\'abonnement');
-      console.error('Downgrade subscription error:', error);
+      toast.error('Erreur lors de l\'accès au portail de facturation');
+      console.error('Billing portal error:', error);
     },
   });
 }

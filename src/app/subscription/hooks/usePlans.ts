@@ -13,8 +13,20 @@ export const PLANS_QUERY_KEYS = {
 export function usePlans(): UseQueryResult<ApiPlan[], Error> {
   return useQuery({
     queryKey: PLANS_QUERY_KEYS.list(),
-    queryFn: () => plansService.getPlans(),
+    queryFn: async () => {
+      console.log('[usePlans] Fetching plans...');
+      try {
+        const plans = await plansService.getPlans();
+        console.log('[usePlans] Successfully fetched plans:', plans.length);
+        return plans;
+      } catch (error) {
+        console.error('[usePlans] Error fetching plans:', error);
+        throw error;
+      }
+    },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     refetchOnWindowFocus: false,
+    retry: 2, // Retry failed requests twice
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 }

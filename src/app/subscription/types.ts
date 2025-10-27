@@ -2,7 +2,7 @@ import type { PlanId } from './config/plans';
 
 export interface Subscription {
   id: string;
-  plan: string;
+  plan: PlanId;
   referenceId: string;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;

@@ -1,5 +1,4 @@
-import { httpClient } from '@/services/api/httpClient';
-import { API_ENDPOINTS } from '@/config/api';
+import { authClient } from '@/lib/auth-client';
 
 export interface CreateCheckoutRequest {
   planId: string;
@@ -28,34 +27,68 @@ export class SubscriptionService {
   async createCheckoutSession(
     data: CreateCheckoutRequest
   ): Promise<CheckoutSessionResponse['data']> {
-    const response = await httpClient.post<CheckoutSessionResponse>(
-      API_ENDPOINTS.subscription.checkout,
-      data
-    );
-    return response.data.data;
+    const result = await authClient.subscription.upgrade({
+      plan: data.planId,
+      annual: data.billingPeriod === 'yearly',
+      successUrl: data.successUrl || window.location.origin + '/dashboard?checkout=success',
+      cancelUrl: data.cancelUrl || window.location.origin + '/pricing?checkout=cancel',
+    });
+    
+    return {
+      sessionId: result.id || '',
+      url: result.url || '',
+      planId: data.planId,
+      priceId: result.id || '',
+    };
   }
 
-  async cancelSubscription(): Promise<SubscriptionActionResponse> {
-    const response = await httpClient.post<SubscriptionActionResponse>(
-      API_ENDPOINTS.subscription.cancel
-    );
-    return response.data;
+  async cancelSubscription(subscriptionId?: string): Promise<SubscriptionActionResponse> {
+    const result = await authClient.subscription.cancel({
+      returnUrl: window.location.origin + '/dashboard',
+      subscriptionId,
+    });
+    
+    return {
+      success: true,
+      message: 'Abonnement annulé avec succès',
+    };
   }
 
-  async upgradeSubscription(newPlanId: string): Promise<SubscriptionActionResponse> {
-    const response = await httpClient.post<SubscriptionActionResponse>(
-      API_ENDPOINTS.subscription.upgrade,
-      { planId: newPlanId }
-    );
-    return response.data;
+  async upgradeSubscription(newPlanId: string, annual?: boolean): Promise<SubscriptionActionResponse> {
+    const result = await authClient.subscription.upgrade({
+      plan: newPlanId,
+      annual,
+      successUrl: window.location.origin + '/dashboard?upgrade=success',
+      cancelUrl: window.location.origin + '/dashboard?upgrade=cancel',
+    });
+    
+    if (result?.url) {
+      window.location.href = result.url;
+    }
+    
+    return {
+      success: true,
+      message: 'Abonnement mis à niveau avec succès',
+    };
   }
 
-  async downgradeSubscription(newPlanId: string): Promise<SubscriptionActionResponse> {
-    const response = await httpClient.post<SubscriptionActionResponse>(
-      API_ENDPOINTS.subscription.downgrade,
-      { planId: newPlanId }
-    );
-    return response.data;
+  async restoreSubscription(subscriptionId?: string): Promise<SubscriptionActionResponse> {
+    await authClient.subscription.restore({
+      subscriptionId,
+    });
+    
+    return {
+      success: true,
+      message: 'Abonnement restauré avec succès',
+    };
+  }
+
+  async openBillingPortal(): Promise<{ url: string }> {
+    const result = await authClient.subscription.billingPortal({
+      returnUrl: window.location.origin + '/dashboard',
+    });
+    
+    return result;
   }
 }
 

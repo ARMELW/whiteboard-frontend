@@ -5,5 +5,6 @@ export {
   useCreateCheckout,
   useCancelSubscription,
   useUpgradeSubscription,
-  useDowngradeSubscription,
+  useRestoreSubscription,
+  useBillingPortal,
 } from './useSubscriptionActions';

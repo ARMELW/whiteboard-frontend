@@ -28,8 +28,8 @@ export function SignupForm() {
     
     await signup(data, {
       onSuccess: () => {
-        toast.success('Compte créé avec succès !');
-        navigate('/', { replace: true });
+        toast.success('Compte créé avec succès ! Choisissez votre plan.');
+        navigate('/pricing', { replace: true });
       },
       onError: (err: Error) => {
         const message = err?.message || 'Erreur lors de la création du compte';

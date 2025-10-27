@@ -21,15 +21,17 @@ export function useSceneCreationWithLimits() {
     }
   };
 
-  const UpgradeModal = () => (
-    <UpgradePlanModal
-      isOpen={showUpgradeModal}
-      onClose={() => setShowUpgradeModal(false)}
-      currentPlanId="free" // This should come from user session
-      feature="Créer plus de scènes"
-      requiredPlanId="starter"
-    />
-  );
+  const UpgradeModal = () => {
+    return (
+      <UpgradePlanModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        currentPlanId="free"
+        feature="Créer plus de scènes"
+        requiredPlanId="starter"
+      />
+    );
+  };
 
   return {
     canCreateScene,

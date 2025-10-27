@@ -1,17 +1,44 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChannelsList } from '@/app/channels/components/ChannelsList';
 import { CreateChannelModal } from '@/app/channels/components/CreateChannelModal';
 import { ChannelSettingsModal } from '@/app/channels/components/ChannelSettingsModal';
 import { Channel } from '@/app/channels/types';
 import { useChannels } from '@/app/channels/hooks/useChannels';
+import { toast } from 'sonner';
 
 export function Dashboard() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const { refetch } = useChannels();
+
+  useEffect(() => {
+    const checkoutStatus = searchParams.get('checkout');
+    const upgradeStatus = searchParams.get('upgrade');
+
+    if (checkoutStatus === 'success') {
+      toast.success('Abonnement activé avec succès ! Bienvenue 🎉');
+      searchParams.delete('checkout');
+      setSearchParams(searchParams);
+    } else if (checkoutStatus === 'cancel') {
+      toast.info('Paiement annulé. Vous pouvez réessayer à tout moment.');
+      searchParams.delete('checkout');
+      setSearchParams(searchParams);
+    }
+
+    if (upgradeStatus === 'success') {
+      toast.success('Votre plan a été mis à niveau avec succès ! 🚀');
+      searchParams.delete('upgrade');
+      setSearchParams(searchParams);
+    } else if (upgradeStatus === 'cancel') {
+      toast.info('Mise à niveau annulée.');
+      searchParams.delete('upgrade');
+      setSearchParams(searchParams);
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleChannelClick = (channel: Channel) => {
     navigate(`/channels/${channel.id}`);

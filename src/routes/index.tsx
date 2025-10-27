@@ -9,6 +9,7 @@ import { LoginPage } from '@/pages/auth/LoginPage';
 import { SignupPage } from '@/pages/auth/SignupPage';
 import { PricingPage } from '@/pages/pricing/PricingPage';
 import { ProtectedRoute } from '@/app/auth/components';
+import { SubscriptionFeaturesDemo } from '@/pages/demo/SubscriptionFeaturesDemo';
 
 export const router = createBrowserRouter([
   {
@@ -22,6 +23,10 @@ export const router = createBrowserRouter([
   {
     path: '/pricing',
     element: <PricingPage />,
+  },
+  {
+    path: '/demo/subscription',
+    element: <SubscriptionFeaturesDemo />,
   },
   {
     path: '/',

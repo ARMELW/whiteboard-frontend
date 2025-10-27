@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useChannelStore } from '../store';
-import { channelMockService } from '../api/channelMockService';
+import { channelService } from '../api/channelService';
 
 export const useChannels = () => {
   const channels = useChannelStore((state) => state.channels);
@@ -21,7 +21,7 @@ export const useChannels = () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await channelMockService.list();
+      const result = await channelService.list();
       setChannels(result.data.channels);
     } catch (error) {
       setError(error as Error);

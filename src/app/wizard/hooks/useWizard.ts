@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useWizardStore } from '../store';
 import { WizardStep } from '../types';
-import { generateFullProject } from '../api/mockAiService';
+import { generateFullProject } from '../api/aiService';
 import { useScenesActionsWithHistory } from '../../hooks/useScenesActionsWithHistory';
 import { toast } from 'sonner';
 

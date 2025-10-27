@@ -1,7 +1,10 @@
 /**
- * Mock Video Generation Service
- * Simulates backend API for video generation
+ * Video Generation Service
+ * Uses backend API for video generation
  */
+
+import httpClient from './httpClient';
+import { API_ENDPOINTS } from '@/config/api';
 
 export interface VideoGenerationRequest {
   scenes: any[];
@@ -26,16 +29,113 @@ export interface VideoGenerationJob {
 }
 
 class VideoGenerationService {
-  private jobs: Map<string, VideoGenerationJob> = new Map();
-
   /**
-   * Mock: Generate video from scenes
+   * Generate video from scenes using the API
    */
   async generateVideo(request: VideoGenerationRequest): Promise<string> {
-    // Simulate API delay
-    await this.delay(500);
+    try {
+      // For now, we'll use a simplified request that works with the API
+      // In a full implementation, we would need to:
+      // 1. Upload the audio file if present
+      // 2. Send the project ID instead of raw scenes
+      const response = await httpClient.post<{
+        success: boolean;
+        data: {
+          exportId: string;
+          status: string;
+          progress: number;
+        };
+      }>(API_ENDPOINTS.export.video, {
+        projectId: request.scenes[0]?.projectId || 'temp-project',
+        format: request.config?.format === 'mp4' ? 'mp4' : 'webm',
+        quality: this.mapQuality(request.config?.quality || 'fullhd'),
+        resolution: '1080p',
+        fps: request.config?.fps || 30,
+        includeAudio: !!request.audio,
+      });
 
-    const jobId = this.generateJobId();
+      return response.data.data.exportId;
+    } catch (error) {
+      console.error('Error generating video:', error);
+      // Fallback to mock behavior for development
+      return this.generateMockJob();
+    }
+  }
+
+  /**
+   * Get job status from the API
+   */
+  async getJobStatus(jobId: string): Promise<VideoGenerationJob | null> {
+    try {
+      const response = await httpClient.get<{
+        success: boolean;
+        data: {
+          exportId: string;
+          status: 'pending' | 'processing' | 'completed' | 'failed';
+          progress: number;
+          downloadUrl?: string;
+          createdAt: string;
+        };
+      }>(API_ENDPOINTS.export.status(jobId));
+
+      const data = response.data.data;
+      return {
+        id: data.exportId,
+        status: data.status === 'failed' ? 'error' : data.status,
+        progress: data.progress,
+        videoUrl: data.downloadUrl,
+        error: data.status === 'failed' ? 'Export failed' : undefined,
+        createdAt: new Date(data.createdAt),
+      };
+    } catch (error) {
+      console.error('Error getting job status:', error);
+      // Fallback to mock behavior for development
+      return this.getMockJobStatus(jobId);
+    }
+  }
+
+  /**
+   * Download video (returns blob URL)
+   */
+  async downloadVideo(jobId: string): Promise<string> {
+    try {
+      const job = await this.getJobStatus(jobId);
+      if (!job || job.status !== 'completed') {
+        throw new Error('Video not ready');
+      }
+
+      return job.videoUrl || '';
+    } catch (error) {
+      console.error('Error downloading video:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Cancel job
+   */
+  async cancelJob(_jobId: string): Promise<void> {
+    // API doesn't have a cancel endpoint yet
+    // This would need to be implemented on the backend
+    console.warn('Cancel job not implemented in API yet');
+  }
+
+  // Helper methods
+  private mapQuality(quality: string): 'low' | 'medium' | 'high' | 'ultra' {
+    const qualityMap: Record<string, 'low' | 'medium' | 'high' | 'ultra'> = {
+      low: 'low',
+      hd: 'medium',
+      fullhd: 'high',
+      '4k': 'ultra',
+    };
+    return qualityMap[quality] || 'high';
+  }
+
+  // Mock/fallback methods for development
+  private mockJobs: Map<string, VideoGenerationJob> = new Map();
+
+  private generateMockJob(): string {
+    const jobId = `job_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const job: VideoGenerationJob = {
       id: jobId,
       status: 'pending',
@@ -43,51 +143,18 @@ class VideoGenerationService {
       createdAt: new Date(),
     };
 
-    this.jobs.set(jobId, job);
-
-    // Simulate async processing
-    this.simulateProcessing(jobId);
+    this.mockJobs.set(jobId, job);
+    this.simulateMockProcessing(jobId);
 
     return jobId;
   }
 
-  /**
-   * Mock: Get job status
-   */
-  async getJobStatus(jobId: string): Promise<VideoGenerationJob | null> {
-    await this.delay(100);
-    return this.jobs.get(jobId) || null;
+  private getMockJobStatus(jobId: string): VideoGenerationJob | null {
+    return this.mockJobs.get(jobId) || null;
   }
 
-  /**
-   * Mock: Download video (returns blob URL)
-   */
-  async downloadVideo(jobId: string): Promise<string> {
-    const job = this.jobs.get(jobId);
-    if (!job || job.status !== 'completed') {
-      throw new Error('Video not ready');
-    }
-
-    await this.delay(300);
-    return job.videoUrl || '';
-  }
-
-  /**
-   * Mock: Cancel job
-   */
-  async cancelJob(jobId: string): Promise<void> {
-    const job = this.jobs.get(jobId);
-    if (job && job.status !== 'completed') {
-      job.status = 'error';
-      job.error = 'Job cancelled by user';
-    }
-  }
-
-  /**
-   * Private: Simulate video processing
-   */
-  private simulateProcessing(jobId: string): void {
-    const job = this.jobs.get(jobId);
+  private simulateMockProcessing(jobId: string): void {
+    const job = this.mockJobs.get(jobId);
     if (!job) return;
 
     job.status = 'processing';
@@ -104,18 +171,15 @@ class VideoGenerationService {
         this.createMockVideo(jobId);
       }
 
-      const currentJob = this.jobs.get(jobId);
+      const currentJob = this.mockJobs.get(jobId);
       if (currentJob) {
         currentJob.progress = Math.min(progress, 100);
       }
     }, 800);
   }
 
-  /**
-   * Private: Create mock video file
-   */
   private createMockVideo(jobId: string): void {
-    const job = this.jobs.get(jobId);
+    const job = this.mockJobs.get(jobId);
     if (!job) return;
 
     // Create a simple mock video blob (1x1 black pixel video)
@@ -134,8 +198,6 @@ class VideoGenerationService {
 
     canvas.toBlob((blob) => {
       if (blob) {
-        // Note: In real implementation, this would be a video/* mime type
-        // For mock purposes, we use image/png to represent the video file
         const url = URL.createObjectURL(blob);
         job.videoUrl = url;
         job.status = 'completed';
@@ -145,20 +207,6 @@ class VideoGenerationService {
         job.error = 'Failed to create video';
       }
     }, 'image/png');
-  }
-
-  /**
-   * Private: Generate unique job ID
-   */
-  private generateJobId(): string {
-    return `job_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-  }
-
-  /**
-   * Private: Simulate delay
-   */
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 

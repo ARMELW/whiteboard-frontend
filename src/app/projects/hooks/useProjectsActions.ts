@@ -1,5 +1,5 @@
 import { useProjectStore } from '../store';
-import { projectMockService } from '../api/projectMockService';
+import { projectService } from '../api/projectService';
 import { ProjectPayload, Project } from '../types';
 import { toast } from 'sonner';
 
@@ -13,7 +13,7 @@ export const useProjectsActions = () => {
     createProject: async (channelId: string, payload: ProjectPayload) => {
       useProjectStore.setState({ loading: true });
       try {
-        const result = await projectMockService.create(channelId, payload);
+        const result = await projectService.create(channelId, payload);
         addProject(result.data);
         toast.success('Projet créé avec succès');
         return result.data;
@@ -31,7 +31,7 @@ export const useProjectsActions = () => {
     ) => {
       useProjectStore.setState({ loading: true });
       try {
-        const result = await projectMockService.update(id, payload);
+        const result = await projectService.update(id, payload);
         updateProject(result.data);
         toast.success('Projet mis à jour avec succès');
         return result.data;
@@ -46,7 +46,7 @@ export const useProjectsActions = () => {
     duplicateProject: async (id: string, newTitle: string, channelId?: string) => {
       useProjectStore.setState({ loading: true });
       try {
-        const result = await projectMockService.duplicate(id, {
+        const result = await projectService.duplicate(id, {
           new_title: newTitle,
           channel_id: channelId,
         });
@@ -64,7 +64,7 @@ export const useProjectsActions = () => {
     deleteProject: async (id: string) => {
       useProjectStore.setState({ loading: true });
       try {
-        await projectMockService.delete(id);
+        await projectService.delete(id);
         deleteProject(id);
         toast.success('Projet supprimé avec succès');
       } catch (error) {
@@ -77,7 +77,7 @@ export const useProjectsActions = () => {
 
     autosave: async (id: string, data: { scenes: any[]; audio_tracks: any[] }) => {
       try {
-        await projectMockService.autosave(id, data);
+        await projectService.autosave(id, data);
       } catch (error) {
         console.error('Autosave error:', error);
       }

@@ -1,15 +1,34 @@
 import { PLANS, type Plan, type PlanId } from '@/app/subscription';
-import { usePricingPlans } from '@/app/subscription/hooks';
+import { usePricingPlans, useCreateCheckout } from '@/app/subscription/hooks';
+import { useSession } from '@/app/auth';
 import { Button } from '@/components/ui/button';
 import { Check, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
 export function PricingPage() {
   const { data: apiPlans, isLoading, error } = usePricingPlans();
+  const { mutate: createCheckout, isPending: isCreatingCheckout } = useCreateCheckout();
+  const { user, isAuthenticated } = useSession();
+  const [selectedBilling, setSelectedBilling] = useState<'monthly' | 'yearly'>('monthly');
   const planOrder: PlanId[] = ['free', 'starter', 'pro', 'enterprise'];
 
   const handleSelectPlan = (planId: string) => {
-    // TODO: Implement plan selection/checkout
-    console.log('Selected plan:', planId);
+    if (!isAuthenticated) {
+      window.location.href = '/auth/login?redirect=/pricing';
+      return;
+    }
+
+    if (planId === 'free') {
+      console.log('User selected free plan - no checkout needed');
+      return;
+    }
+
+    createCheckout({
+      planId,
+      billingPeriod: selectedBilling,
+      successUrl: window.location.origin + '/dashboard?checkout=success',
+      cancelUrl: window.location.origin + '/pricing?checkout=cancel',
+    });
   };
 
   const displayPlans = apiPlans?.length
@@ -42,17 +61,50 @@ export function PricingPage() {
           <p className="text-xl text-gray-600">
             Démarrez gratuitement, upgradez quand vous êtes prêt
           </p>
+
+          {/* Billing Toggle */}
+          <div className="flex items-center justify-center gap-4 mt-6">
+            <button
+              onClick={() => setSelectedBilling('monthly')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                selectedBilling === 'monthly'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700'
+              }`}
+            >
+              Mensuel
+            </button>
+            <button
+              onClick={() => setSelectedBilling('yearly')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                selectedBilling === 'yearly'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700'
+              }`}
+            >
+              Annuel
+              <span className="ml-2 text-xs bg-green-500 text-white px-2 py-1 rounded">
+                -17%
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {displayPlans.map((plan: any) => {
             const localPlan = PLANS[plan.id as PlanId];
+            const currentPlan = localPlan || plan;
+            const isCurrentPlan = user?.planId === plan.id;
+            
             return (
               <PricingCard
                 key={plan.id}
-                plan={localPlan || plan}
+                plan={currentPlan}
+                billingPeriod={selectedBilling}
                 onSelect={() => handleSelectPlan(plan.id)}
+                isLoading={isCreatingCheckout}
+                isCurrentPlan={isCurrentPlan}
               />
             );
           })}
@@ -74,10 +126,21 @@ export function PricingPage() {
 
 interface PricingCardProps {
   plan: Plan;
+  billingPeriod: 'monthly' | 'yearly';
   onSelect: () => void;
+  isLoading: boolean;
+  isCurrentPlan: boolean;
 }
 
-function PricingCard({ plan, onSelect }: PricingCardProps) {
+function PricingCard({ plan, billingPeriod, onSelect, isLoading, isCurrentPlan }: PricingCardProps) {
+  const price = billingPeriod === 'yearly' && plan.priceYearly
+    ? plan.priceYearly
+    : plan.price;
+  
+  const displayPrice = billingPeriod === 'yearly' && plan.priceYearly
+    ? Math.round(plan.priceYearly / 12)
+    : plan.price;
+
   return (
     <div
       className={`relative bg-white rounded-lg shadow-sm p-6 flex flex-col ${
@@ -98,15 +161,15 @@ function PricingCard({ plan, onSelect }: PricingCardProps) {
       <div className="mb-6">
         <div className="flex items-baseline">
           <span className="text-4xl font-bold">
-            {plan.price === 0 ? 'Gratuit' : `${plan.price}€`}
+            {displayPrice === 0 ? 'Gratuit' : `${displayPrice}€`}
           </span>
-          {plan.price > 0 && (
+          {displayPrice > 0 && (
             <span className="text-gray-500 ml-2">/mois</span>
           )}
         </div>
-        {plan.priceYearly && (
+        {billingPeriod === 'yearly' && plan.priceYearly && plan.priceYearly > 0 && (
           <p className="text-sm text-gray-600 mt-1">
-            ou {plan.priceYearly}€/an (2 mois offerts)
+            Facturé {plan.priceYearly}€/an
           </p>
         )}
       </div>
@@ -124,8 +187,20 @@ function PricingCard({ plan, onSelect }: PricingCardProps) {
         onClick={onSelect}
         variant={plan.popular ? 'default' : 'outline'}
         className="w-full"
+        disabled={isLoading || isCurrentPlan}
       >
-        {plan.price === 0 ? 'Commencer gratuitement' : 'Choisir ce plan'}
+        {isLoading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            Chargement...
+          </>
+        ) : isCurrentPlan ? (
+          'Plan actuel'
+        ) : plan.price === 0 ? (
+          'Commencer gratuitement'
+        ) : (
+          'Choisir ce plan'
+        )}
       </Button>
     </div>
   );

@@ -1,16 +1,19 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, FolderOpen, Settings, ChevronLeft, LogOut } from 'lucide-react';
+import { Home, FolderOpen, Settings, ChevronLeft, LogOut, Crown } from 'lucide-react';
 import { useAuth, useSession } from '@/app/auth';
+import { PLANS } from '@/app/subscription';
 
 export function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout, isLoggingOut } = useAuth();
-  const { user } = useSession();
+  const { user, planId } = useSession();
 
   const isHome = location.pathname === '/';
   const isProjects = location.pathname === '/projects';
+
+  const currentPlan = PLANS[planId as keyof typeof PLANS] || PLANS.free;
 
   const navigateToHome = () => {
     navigate('/');
@@ -59,9 +62,20 @@ export function DashboardLayout() {
             </div>
             <div className="flex items-center gap-4">
               {user && (
-                <span className="text-sm text-gray-600">
-                  {user.email}
-                </span>
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/pricing')}
+                    className="flex items-center gap-2"
+                  >
+                    <Crown className="h-4 w-4" />
+                    <span className="font-medium">{currentPlan.name}</span>
+                  </Button>
+                  <span className="text-sm text-gray-600">
+                    {user.email}
+                  </span>
+                </>
               )}
               <Button variant="ghost" size="icon">
                 <Settings className="h-5 w-5" />

@@ -3,6 +3,7 @@ import { authClient } from '@/lib/auth-client';
 export interface CreateCheckoutRequest {
   planId: string;
   billingPeriod: 'monthly' | 'yearly';
+  stripePriceId?: string;
   successUrl?: string;
   cancelUrl?: string;
 }
@@ -27,18 +28,26 @@ export class SubscriptionService {
   async createCheckoutSession(
     data: CreateCheckoutRequest
   ): Promise<CheckoutSessionResponse['data']> {
-    const result = await authClient.subscription.upgrade({
-      plan: data.planId,
-      annual: data.billingPeriod === 'yearly',
+    const upgradeParams: any = {
       successUrl: data.successUrl || window.location.origin + '/?checkout=success',
       cancelUrl: data.cancelUrl || window.location.origin + '/pricing?checkout=cancel',
-    });
+    };
+
+    // If stripePriceId is provided, use it directly; otherwise use plan name
+    if (data.stripePriceId) {
+      upgradeParams.priceId = data.stripePriceId;
+    } else {
+      upgradeParams.plan = data.planId;
+      upgradeParams.annual = data.billingPeriod === 'yearly';
+    }
+    
+    const result = await authClient.subscription.upgrade(upgradeParams);
     
     return {
       sessionId: result.id || '',
       url: result.url || '',
       planId: data.planId,
-      priceId: result.id || '',
+      priceId: data.stripePriceId || result.id || '',
     };
   }
 
@@ -54,13 +63,25 @@ export class SubscriptionService {
     };
   }
 
-  async upgradeSubscription(newPlanId: string, annual?: boolean): Promise<SubscriptionActionResponse> {
-    const result = await authClient.subscription.upgrade({
-      plan: newPlanId,
-      annual,
+  async upgradeSubscription(
+    newPlanId: string, 
+    annual?: boolean,
+    stripePriceId?: string
+  ): Promise<SubscriptionActionResponse> {
+    const upgradeParams: any = {
       successUrl: window.location.origin + '/?upgrade=success',
       cancelUrl: window.location.origin + '/?upgrade=cancel',
-    });
+    };
+
+    // If stripePriceId is provided, use it directly; otherwise use plan name
+    if (stripePriceId) {
+      upgradeParams.priceId = stripePriceId;
+    } else {
+      upgradeParams.plan = newPlanId;
+      upgradeParams.annual = annual;
+    }
+    
+    const result = await authClient.subscription.upgrade(upgradeParams);
     
     if (result?.url) {
       window.location.href = result.url;

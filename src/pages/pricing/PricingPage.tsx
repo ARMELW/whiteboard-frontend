@@ -1,6 +1,7 @@
 import { PLANS, type Plan, type PlanId } from '@/app/subscription';
 import { usePlans, useCreateCheckout } from '@/app/subscription/hooks';
 import { convertApiPlanToLocalPlan } from '@/app/subscription/utils/planConverter';
+import { getStripePriceId } from '@/app/subscription/utils/getStripePriceId';
 import { useSession } from '@/app/auth';
 import { Button } from '@/components/ui/button';
 import { Check, Loader2 } from 'lucide-react';
@@ -26,9 +27,21 @@ export function PricingPage() {
       return;
     }
 
+    // Find the API plan to get the Stripe price ID
+    const apiPlan = apiPlans?.find(p => p.slug === planId || p.id === planId);
+    const stripePriceId = apiPlan ? getStripePriceId(apiPlan, selectedBilling) : undefined;
+
+    console.log('[PricingPage] Creating checkout:', {
+      planId,
+      billingPeriod: selectedBilling,
+      stripePriceId,
+      hasApiPlan: !!apiPlan,
+    });
+
     createCheckout({
       planId,
       billingPeriod: selectedBilling,
+      stripePriceId,
       successUrl: window.location.origin + '/?checkout=success',
       cancelUrl: window.location.origin + '/pricing?checkout=cancel',
     });

@@ -5,11 +5,26 @@ import { ChannelProjectsPage } from '@/pages/dashboard/ChannelProjectsPage';
 import { AnimationContainer } from '@/components/organisms';
 import { DashboardLayout } from '@/pages/layouts/DashboardLayout';
 import { EditorLayout } from '@/pages/layouts/EditorLayout';
+import { LoginPage } from '@/pages/auth/LoginPage';
+import { SignupPage } from '@/pages/auth/SignupPage';
+import { ProtectedRoute } from '@/app/auth/components';
 
 export const router = createBrowserRouter([
   {
+    path: '/login',
+    element: <LoginPage />,
+  },
+  {
+    path: '/signup',
+    element: <SignupPage />,
+  },
+  {
     path: '/',
-    element: <DashboardLayout />,
+    element: (
+      <ProtectedRoute>
+        <DashboardLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,
@@ -27,7 +42,11 @@ export const router = createBrowserRouter([
   },
   {
     path: '/channels/:channelId/editor/:projectId',
-    element: <EditorLayout />,
+    element: (
+      <ProtectedRoute>
+        <EditorLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,

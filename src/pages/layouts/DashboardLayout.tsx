@@ -1,10 +1,13 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, FolderOpen, Settings, ChevronLeft } from 'lucide-react';
+import { Home, FolderOpen, Settings, ChevronLeft, LogOut } from 'lucide-react';
+import { useAuth, useSession } from '@/app/auth';
 
 export function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout, isLoggingOut } = useAuth();
+  const { user } = useSession();
 
   const isHome = location.pathname === '/';
   const isProjects = location.pathname === '/projects';
@@ -15,6 +18,10 @@ export function DashboardLayout() {
 
   const navigateToAllProjects = () => {
     navigate('/projects');
+  };
+
+  const handleLogout = async () => {
+    await logout();
   };
 
   return (
@@ -50,9 +57,24 @@ export function DashboardLayout() {
                 </Button>
               </div>
             </div>
-            <Button variant="ghost" size="icon">
-              <Settings className="h-5 w-5" />
-            </Button>
+            <div className="flex items-center gap-4">
+              {user && (
+                <span className="text-sm text-gray-600">
+                  {user.email}
+                </span>
+              )}
+              <Button variant="ghost" size="icon">
+                <Settings className="h-5 w-5" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </nav>

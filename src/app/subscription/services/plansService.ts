@@ -12,11 +12,11 @@ export class PlansService {
   async getPlans(): Promise<ApiPlan[]> {
     try {
       console.log('[PlansService] Fetching plans from:', API_ENDPOINTS.plans.list);
-      
+
       const response = await httpClient.get<PlansApiResponse>(
         API_ENDPOINTS.plans.list
       );
-      
+
       console.log('[PlansService] API Response:', {
         success: response.data.success,
         plansCount: response.data.data?.length ?? 0,
@@ -32,7 +32,18 @@ export class PlansService {
         return [];
       }
 
-      return response.data.data;
+      const plans = response.data.data;
+
+      for (const plan of plans) {
+        plan.stripePriceIds = plan.stripePriceIds ?? {};
+        const monthly = (plan as any).stripePriceIdMonthly ?? null;
+        const yearly = (plan as any).stripePriceIdYearly ?? null;
+
+        plan.stripePriceIds.monthly = monthly;
+        plan.stripePriceIds.yearly = yearly;
+      }
+
+      return plans;
     } catch (error) {
       console.error('[PlansService] Failed to fetch plans:', error);
       throw error;

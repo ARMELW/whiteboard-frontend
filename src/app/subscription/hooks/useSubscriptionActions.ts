@@ -20,20 +20,15 @@ export function useCreateCheckout(): UseMutationResult<
       const upgradeParams: any = {
         successUrl: data.successUrl || window.location.origin + '/?checkout=success',
         cancelUrl: data.cancelUrl || window.location.origin + '/pricing?checkout=cancel',
+        plan: data.stripePriceId,
+        annual: data.billingPeriod === 'yearly',
       };
 
-      // If stripePriceId is provided, use it directly; otherwise use plan name
-      if (data.stripePriceId) {
-        upgradeParams.priceId = data.stripePriceId;
-      } else {
-        upgradeParams.plan = data.planId;
-        upgradeParams.annual = data.billingPeriod === 'yearly';
-      }
-      
       const result = await authClient.subscription.upgrade(upgradeParams);
       return result;
     },
     onSuccess: (data) => {
+      console.log('Checkout success data:', data);
       if (data?.url) {
         window.location.href = data.url;
       }
@@ -113,7 +108,7 @@ export function useUpgradeSubscription(): UseMutationResult<
         upgradeParams.plan = data.planId;
         upgradeParams.annual = data.annual;
       }
-      
+
       const result = await authClient.subscription.upgrade(upgradeParams);
       return result;
     },

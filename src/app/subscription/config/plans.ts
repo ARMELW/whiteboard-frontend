@@ -23,6 +23,11 @@ export interface Plan {
   price: number; // monthly price in euros
   priceYearly?: number; // yearly price in euros
   popular?: boolean;
+  // Add optional stripePriceIds to allow runtime mapping from API plans
+  stripePriceIds?: {
+    monthly?: string;
+    yearly?: string;
+  };
   limits: PlanLimits;
   features: string[];
 }

@@ -129,6 +129,7 @@ export function convertApiPlanToLocalPlan(apiPlan: ApiPlan): Plan & { id: string
     name: apiPlan.name,
     description: apiPlan.description,
     price: monthlyPrice,
+    stripePriceIds: apiPlan.stripePriceIds,
     priceYearly: yearlyPrice > 0 ? yearlyPrice : undefined,
     popular: apiPlan.sortOrder === 2, // Typically the middle plan is popular
     limits: {

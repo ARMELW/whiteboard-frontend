@@ -33,6 +33,7 @@ export function PricingPage() {
 
     console.log('[PricingPage] Creating checkout:', {
       planId,
+      apiPlan,
       billingPeriod: selectedBilling,
       stripePriceId,
       hasApiPlan: !!apiPlan,
@@ -90,7 +91,7 @@ export function PricingPage() {
               </div>
               <div className="ml-3 flex-1">
                 <p className="text-sm text-yellow-800">
-                  <strong>Mode hors ligne:</strong> Impossible de charger les tarifs depuis l'API. 
+                  <strong>Mode hors ligne:</strong> Impossible de charger les tarifs depuis l'API.
                   Les prix affichés sont indicatifs et peuvent ne pas être à jour.
                   {error && <span className="block mt-1 text-xs">Erreur: {error.message}</span>}
                 </p>
@@ -136,21 +137,19 @@ export function PricingPage() {
           <div className="flex items-center justify-center gap-4 mt-6">
             <button
               onClick={() => setSelectedBilling('monthly')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                selectedBilling === 'monthly'
+              className={`px-4 py-2 rounded-lg transition-colors ${selectedBilling === 'monthly'
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-200 text-gray-700'
-              }`}
+                }`}
             >
               Mensuel
             </button>
             <button
               onClick={() => setSelectedBilling('yearly')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                selectedBilling === 'yearly'
+              className={`px-4 py-2 rounded-lg transition-colors ${selectedBilling === 'yearly'
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-200 text-gray-700'
-              }`}
+                }`}
             >
               Annuel
               <span className="ml-2 text-xs bg-green-500 text-white px-2 py-1 rounded">
@@ -164,13 +163,13 @@ export function PricingPage() {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {displayPlans.map((plan: any) => {
             const isCurrentPlan = user?.planId === plan.id;
-            
+            console.log('[PricingPage] Rendering plan card:', plan);
             return (
               <PricingCard
                 key={plan.id}
                 plan={plan}
                 billingPeriod={selectedBilling}
-                onSelect={() => handleSelectPlan(plan.id)}
+                onSelect={() => handleSelectPlan(plan.stripePriceIds[selectedBilling] ? plan.id : 'free')}
                 isLoading={isCreatingCheckout}
                 isCurrentPlan={isCurrentPlan}
               />
@@ -204,16 +203,15 @@ function PricingCard({ plan, billingPeriod, onSelect, isLoading, isCurrentPlan }
   const price = billingPeriod === 'yearly' && plan.priceYearly
     ? plan.priceYearly
     : plan.price;
-  
+
   const displayPrice = billingPeriod === 'yearly' && plan.priceYearly
     ? Math.round(plan.priceYearly / 12)
     : plan.price;
 
   return (
     <div
-      className={`relative bg-white rounded-lg shadow-sm p-6 flex flex-col ${
-        plan.popular ? 'ring-2 ring-blue-500' : ''
-      }`}
+      className={`relative bg-white rounded-lg shadow-sm p-6 flex flex-col ${plan.popular ? 'ring-2 ring-blue-500' : ''
+        }`}
     >
       {plan.popular && (
         <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-lg">

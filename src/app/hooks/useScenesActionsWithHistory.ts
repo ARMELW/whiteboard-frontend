@@ -123,9 +123,8 @@ export const useScenesActionsWithHistory = () => {
       // This will handle both history tracking AND store update
       duplicateLayerWithHistory(params.sceneId, newLayer, layerIndex);
       
-      // Note: We don't call standardActions.duplicateLayer here because
-      // duplicateLayerWithHistory already handles the store update
-      // Calling both would create duplicate layers
+      // Now persist the duplicate to the backend by calling addLayer
+      await standardActions.addLayer({ sceneId: params.sceneId, layer: newLayer });
     },
     
     // Property operations with history - calls both history tracking AND API

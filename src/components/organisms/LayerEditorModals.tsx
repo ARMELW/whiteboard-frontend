@@ -14,7 +14,7 @@ interface LayerEditorModalsProps {
   onCloseShapeToolbar: () => void;
   onCloseThumbnailMaker: () => void;
   onAddShape: (shapeLayer: any) => void;
-  onCropComplete: (croppedImageUrl: string) => void;
+  onCropComplete: (croppedImageUrl: string, imageDimensions?: { width: number; height: number }, tags?: string[]) => void;
   onCropCancel: () => void;
   onSaveThumbnail: (updatedScene: any) => void;
 }

@@ -46,14 +46,16 @@ export const useLayerCreationHandlers = ({
     croppedImageUrl: string,
     imageDimensions: any,
     pendingImageData: any,
-    layersLength: number
+    layersLength: number,
+    tags?: string[]
   ) => {
-    console.debug('[useLayerCreationHandlers] handleCropCompleteWrapper called', { croppedImageUrl, imageDimensions, layersLength });
+    console.debug('[useLayerCreationHandlers] handleCropCompleteWrapper called', { croppedImageUrl, imageDimensions, layersLength, tags });
     const newLayer = await baseCropComplete(
       croppedImageUrl,
       imageDimensions,
       pendingImageData,
-      layersLength
+      layersLength,
+      tags
     );
     console.debug('[useLayerCreationHandlers] baseCropComplete returned', newLayer);
     if (newLayer) {

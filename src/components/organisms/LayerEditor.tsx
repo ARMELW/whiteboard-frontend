@@ -79,6 +79,28 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
     onSelectLayer: (layerId: string | null) => setSelectedLayerId(layerId)
   });
 
+  // Track scene ID that has been initialized to avoid duplicate camera initialization
+  const camerasInitializedRef = React.useRef<string | null>(null);
+
+  // Ensure sceneCameras is initialized with default camera if empty
+  React.useEffect(() => {
+    if (scene?.id && (!scene.sceneCameras || scene.sceneCameras.length === 0)) {
+      // Only initialize once per scene
+      if (camerasInitializedRef.current !== scene.id) {
+        camerasInitializedRef.current = scene.id;
+        const defaultCam = createDefaultCamera('16:9');
+        handleUpdateScene({ sceneCameras: [defaultCam] });
+        setSelectedCamera(defaultCam);
+      }
+    } else if (scene?.id && scene.sceneCameras && scene.sceneCameras.length > 0) {
+      // Mark scene as initialized if it already has cameras
+      camerasInitializedRef.current = scene.id;
+      // Update selected camera when scene changes
+      const defaultCam: Camera = scene.sceneCameras.find((cam: Camera) => cam.isDefault) || scene.sceneCameras[0];
+      setSelectedCamera(defaultCam);
+    }
+  }, [scene?.id, scene?.sceneCameras, handleUpdateScene]);
+
   const {
     handleAddShape,
     handleCropComplete: handleCropCompleteBase
@@ -162,8 +184,8 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
   }, [handleSave]);
   **/
 
-  const handleCropComplete = async (croppedImageUrl: string, imageDimensions?: { width: number; height: number }) => {
-    const newLayer = await handleCropCompleteBase(croppedImageUrl, imageDimensions, pendingImageData, editedScene.layers.length);
+  const handleCropComplete = async (croppedImageUrl: string, imageDimensions?: { width: number; height: number }, tags?: string[]) => {
+    const newLayer = await handleCropCompleteBase(croppedImageUrl, imageDimensions, pendingImageData, editedScene.layers.length, tags);
     if (!newLayer) {
       try {
         if (croppedImageUrl && pendingImageData) {

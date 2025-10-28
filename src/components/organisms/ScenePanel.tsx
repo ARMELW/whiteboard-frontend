@@ -21,11 +21,6 @@ interface ScenePanelProps {
 }
 
 const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
-  // Local state for generated thumbnails
-  const [sceneThumbnails, setSceneThumbnails] = useState<{ [sceneId: string]: string }>({});
-
-  // Generate thumbnails for scenes missing sceneImage
-
   // Pour ouvrir asset library et shape toolbar
   // const setShowAssetLibrary = useSceneStore((state) => state.setShowAssetLibrary);
   const { scenes, loading: scenesLoading } = useScenes();
@@ -33,6 +28,7 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   const selectedSceneIndex = useSceneStore((state) => state.selectedSceneIndex);
   const setSelectedSceneIndex = useSceneStore((state) => state.setSelectedSceneIndex);
   const setScenes = useSceneStore((state) => state.setScenes);
+  const storedScenes = useSceneStore((state) => state.scenes);
   const openWizard = useWizardStore((state) => state.openWizard);
   
   const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false);
@@ -48,10 +44,14 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   // Use actions from useScenesActionsWithHistory hook for history tracking
   const { createScene, deleteScene, duplicateScene, reorderScenes } = useScenesActionsWithHistory();
 
-  // Sync scenes from React Query to Zustand store
+  // Sync scenes from React Query to Zustand store and update thumbnails
   useEffect(() => {
     if (!scenesLoading) {
       setScenes(scenes);
+      // Update thumbnails for all scenes after they're loaded
+      scenes.forEach(scene => {
+        useSceneStore.getState().updateSceneThumbnail(scene.id);
+      });
     }
   }, [scenes, scenesLoading, setScenes]);
 
@@ -77,49 +77,6 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
     }
   }, [selectedSceneIndex]);
 
-  // Regenerate thumbnail for every scene when scenes change (layer add, modify, etc)
-  useEffect(() => {
-    const generateThumbnails = async () => {
-      const updates: { [sceneId: string]: string } = {};
-      for (const scene of scenes) {
-        // Always regenerate thumbnail for every scene
-        const { generateSceneThumbnail, THUMBNAIL_CONFIG } = await import('@/utils/sceneThumbnail');
-        const thumb = await generateSceneThumbnail(scene, {
-          thumbnailWidth: THUMBNAIL_CONFIG.WIDTH,
-          thumbnailHeight: THUMBNAIL_CONFIG.HEIGHT,
-        });
-        updates[scene.id] = thumb;
-      }
-      if (Object.keys(updates).length > 0) {
-        setSceneThumbnails((prev) => ({ ...prev, ...updates }));
-      }
-    };
-    if (scenes.length > 0) {
-      generateThumbnails();
-    }
-  }, [scenes]);
-  useEffect(() => {
-    const generateThumbnails = async () => {
-      const updates: { [sceneId: string]: string } = {};
-      for (const scene of scenes) {
-        if (!scene.sceneImage && !sceneThumbnails[scene.id]) {
-          // Dynamically import to avoid SSR issues
-          const { generateSceneThumbnail, THUMBNAIL_CONFIG } = await import('@/utils/sceneThumbnail');
-          const thumb = await generateSceneThumbnail(scene, {
-            thumbnailWidth: THUMBNAIL_CONFIG.WIDTH,
-            thumbnailHeight: THUMBNAIL_CONFIG.HEIGHT,
-          });
-          updates[scene.id] = thumb;
-        }
-      }
-      if (Object.keys(updates).length > 0) {
-        setSceneThumbnails((prev) => ({ ...prev, ...updates }));
-      }
-    };
-    if (scenes.length > 0) {
-      generateThumbnails();
-    }
-  }, [scenes]);
   // Navigate to previous scene
   const handleNavigatePrevious = useCallback(() => {
     if (selectedSceneIndex > 0) {
@@ -129,10 +86,10 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
 
   // Navigate to next scene
   const handleNavigateNext = useCallback(() => {
-    if (selectedSceneIndex < scenes.length - 1) {
+    if (selectedSceneIndex < storedScenes.length - 1) {
       setSelectedSceneIndex(selectedSceneIndex + 1);
     }
-  }, [selectedSceneIndex, scenes.length, setSelectedSceneIndex]);
+  }, [selectedSceneIndex, storedScenes.length, setSelectedSceneIndex]);
 
   const handleAddScene = useCallback(async () => {
     // Show dialog to choose between blank and template
@@ -140,7 +97,7 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   }, []);
 
   const handleCreateBlankScene = useCallback(async () => {
-    const currentLength = scenes.length;
+    const currentLength = storedScenes.length;
     console.log('Creating blank scene with projectId:', projectId);
     await createScene({
       projectId: projectId || undefined,
@@ -149,7 +106,7 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
     // React Query will refetch and scenes array will have +1 length
     // So we set to currentLength which will be the new scene's index
     setSelectedSceneIndex(currentLength);
-  }, [scenes.length, createScene, setSelectedSceneIndex]);
+  }, [storedScenes.length, createScene, setSelectedSceneIndex, projectId]);
 
   const handleCreateFromTemplate = useCallback(() => {
     // Open template library via parent callback
@@ -165,43 +122,43 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
 
   const handleMoveScene = useCallback(async (index: number, direction: 'left' | 'right') => {
     const newIndex = direction === 'left' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= scenes.length) return;
+    if (newIndex < 0 || newIndex >= storedScenes.length) return;
 
-    const reorderedScenes = [...scenes];
+    const reorderedScenes = [...storedScenes];
     const [movedScene] = reorderedScenes.splice(index, 1);
     reorderedScenes.splice(newIndex, 0, movedScene);
 
     await reorderScenes(reorderedScenes.map(s => s.id));
     setSelectedSceneIndex(newIndex);
-  }, [scenes, reorderScenes, setSelectedSceneIndex]);
+  }, [storedScenes, reorderScenes, setSelectedSceneIndex]);
 
   const handleDuplicateScene = useCallback(async (index: number) => {
-    const scene = scenes[index];
+    const scene = storedScenes[index];
     await duplicateScene(scene.id);
     // After duplication, the new scene is inserted right after the current one
     setSelectedSceneIndex(index + 1);
-  }, [scenes, duplicateScene, setSelectedSceneIndex]);
+  }, [storedScenes, duplicateScene, setSelectedSceneIndex]);
 
   const handleDeleteScene = useCallback(async (index: number) => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette scène ?')) return;
     
-    const scene = scenes[index];
+    const scene = storedScenes[index];
     await deleteScene(scene.id);
     
     // Adjust selected index after deletion
-    if (selectedSceneIndex >= scenes.length - 1) {
-      setSelectedSceneIndex(Math.max(0, scenes.length - 2));
+    if (selectedSceneIndex >= storedScenes.length - 1) {
+      setSelectedSceneIndex(Math.max(0, storedScenes.length - 2));
     }
-  }, [scenes, selectedSceneIndex, deleteScene, setSelectedSceneIndex]);
+  }, [storedScenes, selectedSceneIndex, deleteScene, setSelectedSceneIndex]);
 
   const handleSaveAsTemplate = useCallback((index: number) => {
-    const scene = scenes[index];
+    const scene = storedScenes[index];
     setSceneToSaveAsTemplate(scene);
     setShowSaveAsTemplate(true);
-  }, [scenes]);
+  }, [storedScenes]);
 
   const handlePreviewScene = useCallback(async (index: number) => {
-    const scene = scenes[index];
+    const scene = storedScenes[index];
     
     // Set loading state in store
     useSceneStore.getState().setPreviewLoading(true);
@@ -222,7 +179,7 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
     
     // Start preview with the mock URL (this will set loading to false)
     useSceneStore.getState().startPreview(mockVideoUrl, 'scene');
-  }, [scenes]);
+  }, [storedScenes]);
 
   const formatSceneDuration = (duration: number): string => {
     if (typeof duration !== 'number' || isNaN(duration) || !isFinite(duration)) {
@@ -252,9 +209,9 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
       {/* Right Navigation Button */}
       <button
         onClick={handleNavigateNext}
-        disabled={selectedSceneIndex >= scenes.length - 1}
+        disabled={selectedSceneIndex >= storedScenes.length - 1}
         className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 bg-white hover:bg-gray-100 rounded-full shadow-lg border border-gray-200 transition-all ${
-          selectedSceneIndex >= scenes.length - 1 ? 'opacity-30 cursor-not-allowed' : 'opacity-90 hover:opacity-100'
+          selectedSceneIndex >= storedScenes.length - 1 ? 'opacity-30 cursor-not-allowed' : 'opacity-90 hover:opacity-100'
         }`}
         title="Scène suivante"
       >
@@ -272,7 +229,7 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
       >
         <div className="flex gap-4 h-full items-start">
           {/* Render all scenes without chapters */}
-          {scenes.map((scene, index) => (
+          {storedScenes.map((scene, index) => (
             <Card
               key={scene.id}
               ref={(el) => (sceneRefs.current[index] = el)}
@@ -288,13 +245,6 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
                   {scene.sceneImage ? (
                     <img
                       src={scene.sceneImage}
-                      alt={`Scene ${index + 1}`}
-                      className="w-full h-full object-contain"
-                      style={{ backgroundColor: THUMBNAIL_CONFIG.BACKGROUND_COLOR }}
-                    />
-                  ) : sceneThumbnails[scene.id] ? (
-                    <img
-                      src={sceneThumbnails[scene.id]}
                       alt={`Scene ${index + 1}`}
                       className="w-full h-full object-contain"
                       style={{ backgroundColor: THUMBNAIL_CONFIG.BACKGROUND_COLOR }}
@@ -353,7 +303,7 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
                         e.stopPropagation();
                         handleMoveScene(index, 'right');
                       }}
-                      disabled={index === scenes.length - 1}
+                      disabled={index === storedScenes.length - 1}
                     >
                       <ArrowRight className="h-3.5 w-3.5" />
                     </Button>

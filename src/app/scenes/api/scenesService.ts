@@ -32,7 +32,7 @@ class ScenesService extends BaseService<Scene> {
 
   /**
    * Transform scene data to match backend API expectations
-   * Converts project_id to projectId and handles backgroundImage null values
+   * Handles backgroundImage null values
    */
   private transformSceneForBackend(scene: Partial<Scene>): any {
     const { projectId, backgroundImage, ...rest } = scene;
@@ -51,7 +51,7 @@ class ScenesService extends BaseService<Scene> {
 
   /**
    * Transform scene data from backend to internal format
-   * Converts projectId to project_id
+   * Ensures backgroundImage is set properly
    */
   private transformSceneFromBackend(scene: any): Scene {
     const { projectId, ...rest } = scene;
@@ -88,11 +88,10 @@ class ScenesService extends BaseService<Scene> {
       delete defaultScene.backgroundImage;
     }
 
-    console.log('[scenesService.create] Creating scene in local storage', defaultScene);
-
     // Transform for backend if using API
     const useBackend = await this.shouldUseBackendAsync();
     if (useBackend) {
+      console.log('[scenesService.create] Creating scene via API', defaultScene);
       const transformedScene = this.transformSceneForBackend(defaultScene);
       const response = await this.createWithTransform(transformedScene);
       return this.transformSceneFromBackend(response);
@@ -139,7 +138,7 @@ class ScenesService extends BaseService<Scene> {
       ...scene,
       id: `scene-${Date.now()}`,
       title: `${scene.title} (Copie)`,
-      project_id: scene.project_id,
+      projectId: scene.projectId,
       sceneCameras,
       multiTimeline: scene.multiTimeline || createMultiTimeline(scene.duration),
       createdAt: new Date().toISOString(),

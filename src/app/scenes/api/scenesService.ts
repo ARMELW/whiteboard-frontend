@@ -30,11 +30,42 @@ class ScenesService extends BaseService<Scene> {
     super(STORAGE_KEYS.SCENES, API_ENDPOINTS.scenes);
   }
 
+  /**
+   * Transform scene data to match backend API expectations
+   * Converts project_id to projectId and handles backgroundImage null values
+   */
+  private transformSceneForBackend(scene: Partial<Scene>): any {
+    const { project_id, backgroundImage, ...rest } = scene;
+    const transformed: any = {
+      ...rest,
+      projectId: project_id, // Backend expects projectId not project_id
+    };
+
+    // Only include backgroundImage if it has a value
+    if (backgroundImage) {
+      transformed.backgroundImage = backgroundImage;
+    }
+
+    return transformed;
+  }
+
+  /**
+   * Transform scene data from backend to internal format
+   * Converts projectId to project_id
+   */
+  private transformSceneFromBackend(scene: any): Scene {
+    const { projectId, ...rest } = scene;
+    return {
+      ...rest,
+      project_id: projectId,
+      backgroundImage: scene.backgroundImage || null,
+    } as Scene;
+  }
+
   async create(payload: ScenePayload = {}): Promise<Scene> {
     const defaultCamera = createDefaultCamera();
 
     // For backwards compatibility, use a default project_id if not provided
-    // TODO: Remove this fallback once all scene creation flows are updated
     const projectId = payload.project_id || DEFAULT_IDS.PROJECT;
 
     const defaultScene: Partial<Scene> = {
@@ -43,7 +74,6 @@ class ScenesService extends BaseService<Scene> {
       title: 'Nouvelle Scène',
       content: 'Ajoutez votre contenu ici...',
       duration: 5,
-      backgroundImage: null,
       animation: 'fade',
       layers: [],
       cameras: [],
@@ -53,7 +83,37 @@ class ScenesService extends BaseService<Scene> {
       ...payload,
     };
 
+    // Don't set backgroundImage to null if not provided
+    if (!payload.backgroundImage) {
+      delete defaultScene.backgroundImage;
+    }
+
+    // Transform for backend if using API
+    const useBackend = await this.shouldUseBackendAsync();
+    if (useBackend) {
+      const transformedScene = this.transformSceneForBackend(defaultScene);
+      const response = await this.createWithTransform(transformedScene);
+      return this.transformSceneFromBackend(response);
+    }
+
     return super.create(defaultScene);
+  }
+
+  /**
+   * Helper method to create with transformed data
+   */
+  private async createWithTransform(transformedData: any): Promise<any> {
+    const httpClient = await import('../../../services/api/httpClient');
+    const response = await httpClient.default.post(this.endpoints.create!, transformedData);
+    return response.data;
+  }
+
+  /**
+   * Check if backend should be used (using parent's protected method)
+   */
+  private async shouldUseBackendAsync(): Promise<boolean> {
+    const httpClient = await import('../../../services/api/httpClient');
+    return this.useBackend && this.mode !== 'localStorage' && httpClient.default.checkIsOnline();
   }
 
   async duplicate(id: string): Promise<Scene> {

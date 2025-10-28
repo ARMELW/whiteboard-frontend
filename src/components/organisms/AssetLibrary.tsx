@@ -61,12 +61,20 @@ const AssetLibrary: React.FC = () => {
   const handleCropComplete = async (croppedImageUrl: string, imageDimensions?: { width: number; height: number }, tags?: string[]) => {
     if (!pendingImageData) return;
     try {
-      await addAsset({
+      // Convert dataURL to File and upload to backend
+      const { dataUrlToFile, getExtensionFromDataUrl } = await import('../../utils/fileHelpers');
+      const extension = getExtensionFromDataUrl(croppedImageUrl);
+      const filename = `${pendingImageData.fileName.replace(/\.[^.]+$/, '')}.${extension}`;
+      const file = dataUrlToFile(croppedImageUrl, filename);
+      
+      // Use assetsService to upload to backend
+      const { default: assetsService } = await import('../../app/assets/api/assetsService');
+      await assetsService.upload(file, {
         name: pendingImageData.fileName,
-        dataUrl: croppedImageUrl,
-        type: pendingImageData.fileType,
-        tags: tags || []
+        tags: tags || [],
+        dimensions: imageDimensions || null,
       });
+      
       loadAssets();
       refreshTagsAndStats();
     } catch (error) {

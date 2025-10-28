@@ -8,14 +8,15 @@ export const useImageHandling = (options: LayerCreationOptions) => {
     croppedImageUrl: string,
     imageDimensions: any,
     pendingImageData: any,
-    layersLength: number
+    layersLength: number,
+    tags?: string[]
   ) => {
     if (!pendingImageData) return null;
 
     let imageUrl = croppedImageUrl;
 
     try {
-      console.debug('[useImageHandling] handleCropComplete called', { croppedImageUrl, imageDimensions, pendingImageData, layersLength });
+      console.debug('[useImageHandling] handleCropComplete called', { croppedImageUrl, imageDimensions, pendingImageData, layersLength, tags });
       
       // Upload to backend instead of localStorage
       const { dataUrlToFile, getExtensionFromDataUrl } = await import('../../../utils/fileHelpers');
@@ -27,7 +28,7 @@ export const useImageHandling = (options: LayerCreationOptions) => {
       
       const uploadedAsset = await assetsService.upload(file, {
         name: pendingImageData.fileName,
-        tags: [],
+        tags: tags || [],
         dimensions: imageDimensions || null,
       });
       

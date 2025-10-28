@@ -79,6 +79,15 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
     onSelectLayer: (layerId: string | null) => setSelectedLayerId(layerId)
   });
 
+  // Ensure sceneCameras is initialized with default camera if empty
+  React.useEffect(() => {
+    if (scene?.id && (!scene.sceneCameras || scene.sceneCameras.length === 0)) {
+      const defaultCam = createDefaultCamera('16:9');
+      handleUpdateScene({ sceneCameras: [defaultCam] });
+      setSelectedCamera(defaultCam);
+    }
+  }, [scene?.id, scene?.sceneCameras, handleUpdateScene]);
+
   const {
     handleAddShape,
     handleCropComplete: handleCropCompleteBase
@@ -162,8 +171,8 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
   }, [handleSave]);
   **/
 
-  const handleCropComplete = async (croppedImageUrl: string, imageDimensions?: { width: number; height: number }) => {
-    const newLayer = await handleCropCompleteBase(croppedImageUrl, imageDimensions, pendingImageData, editedScene.layers.length);
+  const handleCropComplete = async (croppedImageUrl: string, imageDimensions?: { width: number; height: number }, tags?: string[]) => {
+    const newLayer = await handleCropCompleteBase(croppedImageUrl, imageDimensions, pendingImageData, editedScene.layers.length, tags);
     if (!newLayer) {
       try {
         if (croppedImageUrl && pendingImageData) {

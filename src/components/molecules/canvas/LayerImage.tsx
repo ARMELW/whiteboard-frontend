@@ -38,10 +38,9 @@ export const LayerImage: React.FC<LayerImageProps> = ({
     const node = imageRef.current;
     if (!node) return pos;
 
-    const scaleX = (layer.scale || 1.0) * (layer.scaleX || 1.0);
-    const scaleY = (layer.scale || 1.0) * (layer.scaleY || 1.0);
-    const width = img.width * scaleX;
-    const height = img.height * scaleY;
+    const scale = layer.scale || 1.0;
+    const width = img.width * scale;
+    const height = img.height * scale;
     
     let newX = pos.x;
     let newY = pos.y;
@@ -80,34 +79,12 @@ export const LayerImage: React.FC<LayerImageProps> = ({
           };
         }}
         onDragMove={(e) => {
-          // Update drag start position during drag for multi-layer support
-          // but don't call onChange during drag to avoid excessive updates
+          // If multiple layers are selected, move them all together
           if (selectedLayerIds.length > 1 && dragStartPosRef.current) {
-            dragStartPosRef.current = {
-              x: e.target.x(),
-              y: e.target.y()
-            };
-          }
-        }}
-        onDragEnd={(e) => {
-          const finalX = e.target.x();
-          const finalY = e.target.y();
-          
-          // Update main layer position
-          onChange({
-            ...layer,
-            position: {
-              x: finalX,
-              y: finalY,
-            }
-          });
-          
-          // If multiple layers were selected, update their positions as well
-          if (selectedLayerIds.length > 1 && dragStartPosRef.current) {
-            const deltaX = finalX - dragStartPosRef.current.x;
-            const deltaY = finalY - dragStartPosRef.current.y;
+            const deltaX = e.target.x() - dragStartPosRef.current.x;
+            const deltaY = e.target.y() - dragStartPosRef.current.y;
             
-            // Update all other selected layers
+            // Move all other selected layers
             selectedLayerIds.forEach((layerId) => {
               if (layerId !== layer.id) {
                 const targetLayer = allLayers.find(l => l.id === layerId);
@@ -122,26 +99,29 @@ export const LayerImage: React.FC<LayerImageProps> = ({
                 }
               }
             });
+            
+            // Update drag start position for next move
+            dragStartPosRef.current = {
+              x: e.target.x(),
+              y: e.target.y()
+            };
           }
-          
+        }}
+        onDragEnd={(e) => {
+          onChange({
+            ...layer,
+            position: {
+              x: e.target.x(),
+              y: e.target.y(),
+            }
+          });
           dragStartPosRef.current = null;
         }}
         onTransformEnd={() => {
           const node = imageRef.current;
           if (!node) return;
           
-          const transformScaleX = node.scaleX();
-          const transformScaleY = node.scaleY();
-          const currentScale = layer.scale || 1.0;
-          const currentScaleX = layer.scaleX || 1.0;
-          const currentScaleY = layer.scaleY || 1.0;
-          
-          const newScaleX = currentScale * currentScaleX * transformScaleX;
-          const newScaleY = currentScale * currentScaleY * transformScaleY;
-
-          // Reset node scales BEFORE calling onChange to prevent re-render with stale values
-          node.scaleX(1);
-          node.scaleY(1);
+          const scaleX = node.scaleX();
 
           onChange({
             ...layer,
@@ -149,11 +129,12 @@ export const LayerImage: React.FC<LayerImageProps> = ({
               x: node.x(),
               y: node.y(),
             },
-            scale: newScaleX,
-            scaleX: 1.0,
-            scaleY: Math.abs(newScaleX) > Number.EPSILON ? newScaleY / newScaleX : 1.0,
+            scale: scaleX,
             rotation: node.rotation(),
           });
+          
+          node.scaleX(1);
+          node.scaleY(1);
         }}
       />
       {isSelected && !layer.locked && (

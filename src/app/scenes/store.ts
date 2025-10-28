@@ -98,6 +98,26 @@ const initialDataState = {
   currentProjectId: null,
 };
 
+// Debounce timers for thumbnail generation (one per scene)
+const thumbnailUpdateTimers = new Map<string, NodeJS.Timeout>();
+
+// Debounced thumbnail update helper
+const debouncedUpdateThumbnail = (sceneId: string, delay = 500) => {
+  // Clear existing timer for this scene
+  const existingTimer = thumbnailUpdateTimers.get(sceneId);
+  if (existingTimer) {
+    clearTimeout(existingTimer);
+  }
+  
+  // Set new timer
+  const timer = setTimeout(() => {
+    useSceneStore.getState().updateSceneThumbnail(sceneId);
+    thumbnailUpdateTimers.delete(sceneId);
+  }, delay);
+  
+  thumbnailUpdateTimers.set(sceneId, timer);
+};
+
 export const useSceneStore = create<SceneState>((set) => ({
   ...initialDataState,
   ...initialUIState,
@@ -126,23 +146,24 @@ export const useSceneStore = create<SceneState>((set) => ({
   },
   updateScene: (scene: Scene) => {
     set(state => ({ scenes: state.scenes.map(s => s.id === scene.id ? scene : s) }));
-    setTimeout(() => useSceneStore.getState().updateSceneThumbnail(scene.id), 0);
+    debouncedUpdateThumbnail(scene.id);
   },
   updateSceneProperty: (sceneId: string, property: string, value: any) => {
     set(state => ({
       scenes: state.scenes.map(s => s.id === sceneId ? { ...s, [property]: value } : s)
     }));
-    setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+    // Only update thumbnail if property affects visual appearance
+    const visualProperties = ['backgroundImage', 'title', 'content', 'animation'];
+    if (visualProperties.includes(property)) {
+      debouncedUpdateThumbnail(sceneId);
+    }
   },
   deleteScene: (id: string) => set(state => ({ scenes: state.scenes.filter(s => s.id !== id) })),
   reorderScenes: (sceneIds: string[]) => {
     set(state => ({
       scenes: sceneIds.map(id => state.scenes.find(s => s.id === id)).filter(Boolean) as Scene[]
     }));
-    // Update thumbnails for all scenes after reorder
-    setTimeout(() => {
-      sceneIds.forEach(id => useSceneStore.getState().updateSceneThumbnail(id));
-    }, 0);
+    // No need to update thumbnails on reorder - visual content hasn't changed
   },
   addLayer: (sceneId: string, layer: Layer) => {
     set(state => ({
@@ -152,14 +173,14 @@ export const useSceneStore = create<SceneState>((set) => ({
     if (layer.type === 'image' && layer.image_path) {
       const img = new window.Image();
       img.onload = () => {
-        setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+        debouncedUpdateThumbnail(sceneId);
       };
       img.onerror = () => {
-        setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+        debouncedUpdateThumbnail(sceneId);
       };
       img.src = layer.image_path;
     } else {
-      setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+      debouncedUpdateThumbnail(sceneId);
     }
   },
   updateLayer: (sceneId: string, layer: Layer) => {
@@ -169,7 +190,7 @@ export const useSceneStore = create<SceneState>((set) => ({
         layers: (s.layers || []).map(l => l.id === layer.id ? layer : l)
       } : s)
     }));
-    setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+    debouncedUpdateThumbnail(sceneId);
   },
   updateLayerProperty: (sceneId: string, layerId: string, property: string, value: any) => {
     set(state => ({
@@ -178,7 +199,11 @@ export const useSceneStore = create<SceneState>((set) => ({
         layers: (s.layers || []).map(l => l.id === layerId ? { ...l, [property]: value } : l)
       } : s)
     }));
-    setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+    // Only update thumbnail if property affects visual appearance
+    const visualProperties = ['position', 'scale', 'opacity', 'image_path', 'text', 'locked'];
+    if (visualProperties.includes(property)) {
+      debouncedUpdateThumbnail(sceneId);
+    }
   },
   deleteLayer: (sceneId: string, layerId: string) => {
     set(state => ({
@@ -187,7 +212,7 @@ export const useSceneStore = create<SceneState>((set) => ({
         layers: (s.layers || []).filter(l => l.id !== layerId)
       } : s)
     }));
-    setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+    debouncedUpdateThumbnail(sceneId);
   },
   addCamera: (sceneId: string, camera: Camera) => set(state => ({
     scenes: state.scenes.map(s => s.id === sceneId ? {
@@ -205,7 +230,7 @@ export const useSceneStore = create<SceneState>((set) => ({
         return { ...s, layers };
       })
     }));
-    setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+    debouncedUpdateThumbnail(sceneId);
   },
   duplicateLayer: (sceneId: string, layer: Layer, afterIndex?: number) => {
     set(state => ({
@@ -225,7 +250,7 @@ export const useSceneStore = create<SceneState>((set) => ({
         return { ...s, layers };
       })
     }));
-    setTimeout(() => useSceneStore.getState().updateSceneThumbnail(sceneId), 0);
+    debouncedUpdateThumbnail(sceneId);
   },
 
   // Generate and update the scene thumbnail in real time (async, does not block UI)

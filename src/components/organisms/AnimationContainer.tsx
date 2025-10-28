@@ -34,8 +34,11 @@ const AnimationContainer: React.FC = () => {
   // Load fonts dynamically from API
   const { fonts, loading: fontsLoading } = useFonts();
   
-  // Load scenes dynamically from API
-  const { scenes, loading: scenesLoading, refetch: refetchScenes } = useScenes();
+  // Get current project ID from store
+  const currentProjectId = useSceneStore((state) => state.currentProjectId);
+  
+  // Load scenes dynamically from API, filtered by current project
+  const { scenes, loading: scenesLoading, refetch: refetchScenes } = useScenes(currentProjectId ?? undefined);
   const scenesActions = useScenesActions();
   const setScenes = useSceneStore((state) => state.setScenes);
   

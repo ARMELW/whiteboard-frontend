@@ -62,9 +62,16 @@ export const useScenesActions = () => {
     mutationFn: ({ sceneId, layer }: { sceneId: string; layer: Layer }) =>
       scenesService.addLayer(sceneId, layer),
     onSuccess: (scene) => {
-      // Invalidate queries to refetch scenes with the new layer
-      // The ScenePanel will sync the refetched scenes to the store
-      queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
+      // Update the store with the returned scene (which includes the new layer)
+      // This prevents the issue where refetch overwrites local changes
+      updateSceneInStore(scene);
+      
+      // Invalidate queries to keep cache in sync, but don't auto-refetch
+      // as we've already updated the store with the correct data
+      queryClient.invalidateQueries({ 
+        queryKey: scenesKeys.lists(),
+        refetchType: 'none' // Don't auto-refetch, just mark as stale
+      });
     },
   });
 
@@ -72,9 +79,15 @@ export const useScenesActions = () => {
     mutationFn: ({ sceneId, layerId, layerData }: { sceneId: string; layerId: string; layerData: Partial<Layer> }) =>
       scenesService.updateLayer(sceneId, layerId, layerData),
     onSuccess: (scene) => {
-      // Invalidate queries to refetch scenes with the updated layer
-      // The ScenePanel will sync the refetched scenes to the store
-      queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
+      // Update the store with the returned scene (which includes the updated layer)
+      // This prevents the issue where refetch overwrites local changes
+      updateSceneInStore(scene);
+      
+      // Invalidate queries to keep cache in sync, but don't auto-refetch
+      queryClient.invalidateQueries({ 
+        queryKey: scenesKeys.lists(),
+        refetchType: 'none' // Don't auto-refetch, just mark as stale
+      });
     },
   });
 
@@ -82,9 +95,15 @@ export const useScenesActions = () => {
     mutationFn: ({ sceneId, layerId }: { sceneId: string; layerId: string }) =>
       scenesService.deleteLayer(sceneId, layerId),
     onSuccess: (scene) => {
-      // Invalidate queries to refetch scenes without the deleted layer
-      // The ScenePanel will sync the refetched scenes to the store
-      queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
+      // Update the store with the returned scene (which excludes the deleted layer)
+      // This prevents the issue where refetch overwrites local changes
+      updateSceneInStore(scene);
+      
+      // Invalidate queries to keep cache in sync, but don't auto-refetch
+      queryClient.invalidateQueries({ 
+        queryKey: scenesKeys.lists(),
+        refetchType: 'none' // Don't auto-refetch, just mark as stale
+      });
     },
   });
 
@@ -92,9 +111,15 @@ export const useScenesActions = () => {
     mutationFn: ({ sceneId, camera }: { sceneId: string; camera: Camera }) =>
       scenesService.addCamera(sceneId, camera),
     onSuccess: (scene) => {
-      // Invalidate queries to refetch scenes with the new camera
-      // The ScenePanel will sync the refetched scenes to the store
-      queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
+      // Update the store with the returned scene (which includes the new camera)
+      // This prevents the issue where refetch overwrites local changes
+      updateSceneInStore(scene);
+      
+      // Invalidate queries to keep cache in sync, but don't auto-refetch
+      queryClient.invalidateQueries({ 
+        queryKey: scenesKeys.lists(),
+        refetchType: 'none' // Don't auto-refetch, just mark as stale
+      });
     },
   });
 

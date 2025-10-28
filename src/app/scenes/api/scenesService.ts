@@ -35,10 +35,11 @@ class ScenesService extends BaseService<Scene> {
    * Handles backgroundImage null values
    */
   private transformSceneForBackend(scene: Partial<Scene>): any {
-    const { projectId, backgroundImage, ...rest } = scene;
+    const { projectId, backgroundImage, sceneCameras, ...rest } = scene;
     const transformed: any = {
       ...rest,
       projectId: projectId,
+      sceneCameras: sceneCameras ?? [],
     };
 
     // Only include backgroundImage if it has a value
@@ -54,10 +55,11 @@ class ScenesService extends BaseService<Scene> {
    * Ensures backgroundImage is set properly
    */
   private transformSceneFromBackend(scene: any): Scene {
-    const { projectId, ...rest } = scene;
+    const { projectId, sceneCameras, ...rest } = scene;
     return {
       ...rest,
       projectId: projectId,
+      sceneCameras: Array.isArray(sceneCameras) ? sceneCameras : [],
       backgroundImage: scene.backgroundImage || null,
     } as Scene;
   }

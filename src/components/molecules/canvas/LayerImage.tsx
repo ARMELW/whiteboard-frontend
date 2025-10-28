@@ -130,6 +130,12 @@ export const LayerImage: React.FC<LayerImageProps> = ({
           if (!node) return;
           
           const scaleX = node.scaleX();
+          const scaleY = node.scaleY();
+          const currentScale = layer.scale || 1.0;
+          const currentScaleX = layer.scaleX || 1.0;
+          const currentScaleY = layer.scaleY || 1.0;
+          
+          const newScale = currentScale * currentScaleX * scaleX;
 
           onChange({
             ...layer,
@@ -137,7 +143,9 @@ export const LayerImage: React.FC<LayerImageProps> = ({
               x: node.x(),
               y: node.y(),
             },
-            scale: scaleX,
+            scale: newScale,
+            scaleX: 1.0,
+            scaleY: 1.0,
             rotation: node.rotation(),
           });
           

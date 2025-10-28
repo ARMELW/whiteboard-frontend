@@ -58,6 +58,44 @@ export const ScenePropertiesForm: React.FC<ScenePropertiesFormProps> = ({ scene,
         />
       </div>
 
+      {/* Scene Dimensions */}
+      <div>
+        <label className="block text-white font-semibold mb-2 text-sm">
+          Dimensions de la scène (pixels)
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-white/70 text-xs mb-1">Largeur</label>
+            <input
+              type="number"
+              min="1920"
+              max="10000"
+              step="100"
+              value={scene.sceneWidth || 1920}
+              onChange={(e) => onChange('sceneWidth', parseInt(e.target.value) || 1920)}
+              className="w-full bg-secondary/30 text-white border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+              placeholder="1920"
+            />
+          </div>
+          <div>
+            <label className="block text-white/70 text-xs mb-1">Hauteur</label>
+            <input
+              type="number"
+              min="1080"
+              max="10000"
+              step="100"
+              value={scene.sceneHeight || 1080}
+              onChange={(e) => onChange('sceneHeight', parseInt(e.target.value) || 1080)}
+              className="w-full bg-secondary/30 text-white border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+              placeholder="1080"
+            />
+          </div>
+        </div>
+        <p className="text-xs text-white/50 mt-1">
+          Dimensions par défaut: 1920x1080. Utilisez des valeurs plus grandes pour des scènes immenses.
+        </p>
+      </div>
+
       {/* Slide Duration */}
       <div>
         <label className="block text-white font-semibold mb-2 text-sm">

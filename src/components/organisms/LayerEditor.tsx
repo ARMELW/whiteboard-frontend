@@ -79,11 +79,24 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
     onSelectLayer: (layerId: string | null) => setSelectedLayerId(layerId)
   });
 
+  // Track if we've initialized cameras to avoid duplicate initialization
+  const camerasInitializedRef = React.useRef<string | null>(null);
+
   // Ensure sceneCameras is initialized with default camera if empty
   React.useEffect(() => {
     if (scene?.id && (!scene.sceneCameras || scene.sceneCameras.length === 0)) {
-      const defaultCam = createDefaultCamera('16:9');
-      handleUpdateScene({ sceneCameras: [defaultCam] });
+      // Only initialize once per scene
+      if (camerasInitializedRef.current !== scene.id) {
+        camerasInitializedRef.current = scene.id;
+        const defaultCam = createDefaultCamera('16:9');
+        handleUpdateScene({ sceneCameras: [defaultCam] });
+        setSelectedCamera(defaultCam);
+      }
+    } else if (scene?.id && scene.sceneCameras && scene.sceneCameras.length > 0) {
+      // Reset ref if scene now has cameras (e.g., after load from backend)
+      camerasInitializedRef.current = null;
+      // Update selected camera when scene changes
+      const defaultCam = scene.sceneCameras.find((cam: any) => cam.isDefault) || scene.sceneCameras[0];
       setSelectedCamera(defaultCam);
     }
   }, [scene?.id, scene?.sceneCameras, handleUpdateScene]);

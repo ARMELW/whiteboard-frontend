@@ -8,6 +8,7 @@ import { Play, Video } from 'lucide-react';
 import { useScenePreview } from '@/hooks/useScenePreview';
 import { useCompletePreview } from '@/hooks/useCompletePreview';
 import { useSceneStore } from '@/app/scenes/store';
+import { Scene } from '@/app/scenes/types';
 import { Button } from '@/components/atoms';
 
 interface PreviewButtonsExampleProps {
@@ -203,7 +204,7 @@ export const useProgrammaticPreview = () => {
   const { generatePreview: generateCompletePreview } = useCompletePreview();
 
   // Function to generate preview for a specific scene
-  const previewScene = async (scene: any) => {
+  const previewScene = async (scene: Scene) => {
     try {
       await generateScenePreview(scene);
     } catch (error) {
@@ -212,7 +213,7 @@ export const useProgrammaticPreview = () => {
   };
 
   // Function to generate preview for all scenes in a project
-  const previewProject = async (projectId: string, scenes: any[]) => {
+  const previewProject = async (projectId: string, scenes: Scene[]) => {
     try {
       await generateCompletePreview(projectId, scenes);
     } catch (error) {

@@ -33,9 +33,20 @@ export const useScenesActions = () => {
     mutationFn: ({ id, data }: { id: string; data: Partial<any> }) =>
       scenesService.update(id, data),
     onSuccess: (scene) => {
-      queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: scenesKeys.detail(scene.id) });
+      // Update the store with the returned scene
+      // This prevents the issue where refetch overwrites local changes
       updateSceneInStore(scene);
+      
+      // Invalidate queries to keep cache in sync, but don't auto-refetch
+      // This prevents autosave from causing focus loss and deselection
+      queryClient.invalidateQueries({ 
+        queryKey: scenesKeys.lists(),
+        refetchType: 'none' // Don't auto-refetch, just mark as stale
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: scenesKeys.detail(scene.id),
+        refetchType: 'none' // Don't auto-refetch, just mark as stale
+      });
     },
   });
 
@@ -126,7 +137,12 @@ export const useScenesActions = () => {
   const reorderMutation = useMutation({
     mutationFn: (sceneIds: string[]) => scenesService.reorder(sceneIds),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
+      // Invalidate queries to keep cache in sync, but don't auto-refetch
+      // This prevents reordering from causing focus loss and deselection
+      queryClient.invalidateQueries({ 
+        queryKey: scenesKeys.lists(),
+        refetchType: 'none' // Don't auto-refetch, just mark as stale
+      });
     },
   });
 

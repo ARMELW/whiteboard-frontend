@@ -34,11 +34,11 @@ export const generateSceneThumbnail = async (scene: Scene, options: {
 
   try {
     // Check if scene has a default camera
-    const defaultCamera = scene.sceneCameras?.find((cam: Camera) => (cam as any).isDefault);
+    const defaultCamera = scene.sceneCameras?.find((cam: Camera) => cam.isDefault);
     
     if (!defaultCamera) {
-      console.warn('Scene has no default camera, cannot generate thumbnail');
-      return '';
+      console.warn('Scene has no default camera, generating placeholder thumbnail');
+      return generatePlaceholderThumbnail(thumbnailWidth, thumbnailHeight, scene.title || 'Scene');
     }
 
     // Use the exportSceneImage function to generate the thumbnail with higher pixel ratio
@@ -54,8 +54,69 @@ export const generateSceneThumbnail = async (scene: Scene, options: {
     return await resizeImageToThumbnail(sceneImage, thumbnailWidth, thumbnailHeight);
   } catch (error) {
     console.error('Error generating scene thumbnail:', error);
+    // Return a placeholder instead of empty string to ensure UI always has a thumbnail
+    return generatePlaceholderThumbnail(thumbnailWidth, thumbnailHeight, scene.title || 'Scene');
+  }
+};
+
+/**
+ * Generate a placeholder thumbnail when scene rendering fails or has no camera
+ * @param {number} width - Thumbnail width
+ * @param {number} height - Thumbnail height
+ * @param {string} sceneTitle - Title to display on placeholder
+ * @returns {string} Data URL of the placeholder thumbnail
+ */
+const generatePlaceholderThumbnail = (width: number, height: number, sceneTitle: string): string => {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  
+  if (!ctx) {
+    console.error('Failed to get canvas context for placeholder thumbnail');
     return '';
   }
+
+  // Fill background
+  ctx.fillStyle = THUMBNAIL_CONFIG.BACKGROUND_COLOR;
+  ctx.fillRect(0, 0, width, height);
+
+  // Draw a border
+  ctx.strokeStyle = '#cccccc';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, width - 2, height - 2);
+
+  // Draw scene icon (simple camera icon representation)
+  const iconSize = Math.min(width, height) * 0.3;
+  const iconX = width / 2;
+  const iconY = height / 2 - 10;
+  
+  ctx.fillStyle = '#999999';
+  ctx.beginPath();
+  ctx.roundRect(iconX - iconSize / 2, iconY - iconSize / 2, iconSize, iconSize * 0.7, 4);
+  ctx.fill();
+  
+  // Draw lens circle
+  ctx.fillStyle = '#666666';
+  ctx.beginPath();
+  ctx.arc(iconX, iconY, iconSize * 0.25, 0, 2 * Math.PI);
+  ctx.fill();
+
+  // Draw scene title
+  ctx.fillStyle = '#666666';
+  ctx.font = '12px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  
+  // Truncate title if too long
+  const maxLength = 20;
+  const displayTitle = sceneTitle.length > maxLength 
+    ? sceneTitle.substring(0, maxLength) + '...' 
+    : sceneTitle;
+  
+  ctx.fillText(displayTitle, width / 2, height - 25);
+
+  return canvas.toDataURL('image/png', THUMBNAIL_CONFIG.QUALITY);
 };
 
 /**

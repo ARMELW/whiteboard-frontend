@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scene Thumbnail Generation Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+    }
+    .test-section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .thumbnail-container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .thumbnail-item {
+      border: 2px solid #ddd;
+      padding: 10px;
+      border-radius: 4px;
+      background: #fafafa;
+    }
+    .thumbnail-item h3 {
+      margin-top: 0;
+      font-size: 14px;
+      color: #666;
+    }
+    .thumbnail-item img {
+      display: block;
+      max-width: 320px;
+      border: 1px solid #ccc;
+    }
+    .status {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+    .success { background-color: #d4edda; color: #155724; }
+    .error { background-color: #f8d7da; color: #721c24; }
+    .info { background-color: #d1ecf1; color: #0c5460; }
+    .loading { background-color: #fff3cd; color: #856404; }
+    pre {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎬 Scene Thumbnail Generation Test</h1>
+  
+  <div class="test-section">
+    <h2>Test Status</h2>
+    <div id="status" class="status loading">⏳ Loading module...</div>
+  </div>
+
+  <div class="test-section">
+    <h2>Generated Thumbnails</h2>
+    <div id="thumbnails" class="thumbnail-container"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Console Output</h2>
+    <pre id="console-output"></pre>
+  </div>
+
+  <script type="module">
+    const consoleOutput = document.getElementById('console-output');
+    const statusDiv = document.getElementById('status');
+    const thumbnailsDiv = document.getElementById('thumbnails');
+    
+    // Capture console logs
+    const logs = [];
+    const originalLog = console.log;
+    const originalWarn = console.warn;
+    const originalError = console.error;
+    
+    console.log = (...args) => {
+      originalLog(...args);
+      logs.push('[LOG] ' + args.join(' '));
+      consoleOutput.textContent = logs.join('\n');
+    };
+    
+    console.warn = (...args) => {
+      originalWarn(...args);
+      logs.push('[WARN] ' + args.join(' '));
+      consoleOutput.textContent = logs.join('\n');
+    };
+    
+    console.error = (...args) => {
+      originalError(...args);
+      logs.push('[ERROR] ' + args.join(' '));
+      consoleOutput.textContent = logs.join('\n');
+    };
+
+    // Mock scene data
+    const mockScenes = [
+      {
+        id: 'scene-with-camera',
+        title: 'Scene with Default Camera',
+        backgroundImage: null,
+        sceneCameras: [
+          {
+            id: 'default-camera',
+            name: 'Default Camera',
+            position: { x: 0.5, y: 0.5 },
+            width: 1920,
+            height: 1080,
+            isDefault: true,
+            zoom: 1.0,
+          }
+        ],
+        layers: [
+          {
+            id: 'text-1',
+            name: 'Text Layer',
+            type: 'text',
+            position: { x: 960, y: 540 },
+            scale: 1.0,
+            opacity: 1.0,
+            rotation: 0,
+            visible: true,
+            z_index: 1,
+            text_config: {
+              text: 'Hello World',
+              size: 72,
+              font: 'Arial',
+              style: 'bold',
+              color: '#0066cc'
+            }
+          },
+          {
+            id: 'shape-1',
+            name: 'Shape Layer',
+            type: 'shape',
+            position: { x: 500, y: 300 },
+            scale: 1.0,
+            opacity: 1.0,
+            rotation: 0,
+            visible: true,
+            z_index: 2,
+            shape_config: {
+              shape: 'rectangle',
+              width: 200,
+              height: 150,
+              fill: '#ff6b6b',
+              stroke: '#c92a2a',
+              strokeWidth: 3,
+              fillMode: 'both'
+            }
+          }
+        ]
+      },
+      {
+        id: 'scene-without-camera',
+        title: 'Scene without Default Camera',
+        backgroundImage: null,
+        sceneCameras: [],
+        layers: []
+      },
+      {
+        id: 'scene-with-long-title',
+        title: 'Scene with a Very Long Title That Should Be Truncated',
+        backgroundImage: null,
+        sceneCameras: [],
+        layers: []
+      }
+    ];
+
+    // Run tests
+    async function runTests() {
+      try {
+        console.log('Starting thumbnail generation tests...');
+        statusDiv.className = 'status loading';
+        statusDiv.textContent = '⏳ Generating thumbnails...';
+
+        // Import the module
+        const module = await import('/src/utils/sceneThumbnail.ts');
+        console.log('Module loaded successfully');
+
+        let successCount = 0;
+        let failureCount = 0;
+
+        // Generate thumbnails for each mock scene
+        for (const scene of mockScenes) {
+          try {
+            console.log(`Generating thumbnail for: ${scene.title}`);
+            const thumbnail = await module.generateSceneThumbnail(scene);
+            
+            if (thumbnail) {
+              console.log(`✓ Thumbnail generated for "${scene.title}" (${thumbnail.length} characters)`);
+              
+              // Display the thumbnail
+              const item = document.createElement('div');
+              item.className = 'thumbnail-item';
+              item.innerHTML = `
+                <h3>${scene.title}</h3>
+                <img src="${thumbnail}" alt="${scene.title}">
+                <p style="font-size: 12px; color: #666;">
+                  Cameras: ${scene.sceneCameras?.length || 0} | 
+                  Default: ${scene.sceneCameras?.find(c => c.isDefault) ? 'Yes' : 'No'}
+                </p>
+              `;
+              thumbnailsDiv.appendChild(item);
+              successCount++;
+            } else {
+              console.error(`✗ No thumbnail generated for "${scene.title}"`);
+              failureCount++;
+            }
+          } catch (error) {
+            console.error(`✗ Error generating thumbnail for "${scene.title}":`, error);
+            failureCount++;
+          }
+        }
+
+        // Update status
+        if (failureCount === 0) {
+          statusDiv.className = 'status success';
+          statusDiv.textContent = `✅ All ${successCount} thumbnails generated successfully!`;
+        } else {
+          statusDiv.className = 'status error';
+          statusDiv.textContent = `⚠️ ${successCount} succeeded, ${failureCount} failed`;
+        }
+
+        console.log(`\nTest completed: ${successCount} succeeded, ${failureCount} failed`);
+      } catch (error) {
+        console.error('Fatal error during tests:', error);
+        statusDiv.className = 'status error';
+        statusDiv.textContent = '❌ Fatal error: ' + error.message;
+      }
+    }
+
+    runTests();
+  </script>
+</body>
+</html>

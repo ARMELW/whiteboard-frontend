@@ -25,11 +25,11 @@ This file contains test scenarios to validate the multi-camera implementation.
 
 ### Steps:
 1. Open a scene
-2. Click "+ Caméra" button in header
+2. Click "+ Camera" button in header (UI shows "+ Caméra")
 3. Verify Camera 1 appears on canvas
-4. Click "+ Caméra" again
+4. Click "+ Camera" again
 5. Verify Camera 2 appears on canvas
-6. Check camera count badge shows "2 caméras"
+6. Check camera count badge shows "2 cameras" (UI shows "2 caméras")
 
 **Expected Result:**
 - Each new camera has a unique ID
@@ -77,11 +77,11 @@ This file contains test scenarios to validate the multi-camera implementation.
 
 ### Steps:
 1. Add 3 cameras with different positions/sizes
-2. Click "Gérer" button to open Camera Manager
+2. Click "Manage" button (UI shows "Gérer") to open Camera Manager
 3. Edit Camera 1 name to "Vue Principale"
 4. Change Camera 2 zoom to 1.5
 5. Archive Camera 3
-6. Click "Enregistrer"
+6. Click "Save" (UI shows "Enregistrer")
 
 **Expected Result:**
 - Camera Manager shows all cameras with their properties

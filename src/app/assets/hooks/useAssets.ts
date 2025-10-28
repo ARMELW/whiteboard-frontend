@@ -1,16 +1,11 @@
-// Hook for managing assets
 import { useState, useEffect, useCallback } from 'react';
-import assetsService from '../api/assetsService';
+import assetsService, { Asset, UploadAssetData } from '../api/assetsService';
 
-/**
- * Hook for managing assets (images, audio, etc.)
- */
 export const useAssets = () => {
-  const [assets, setAssets] = useState([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<Error | null>(null);
 
-  // Load assets on mount
   useEffect(() => {
     loadAssets();
   }, []);
@@ -24,30 +19,32 @@ export const useAssets = () => {
       setAssets(result.data);
     } catch (err) {
       console.error('Error loading assets:', err);
-      setError(err.message);
+      setError(err as Error);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const uploadAsset = useCallback(async (assetData) => {
+  const uploadAsset = useCallback(async (file: File, options?: UploadAssetData): Promise<Asset>;
+  async function uploadAsset(assetData: UploadAssetData): Promise<Asset>;
+  async function uploadAsset(fileOrData: File | UploadAssetData, options?: UploadAssetData): Promise<Asset> {
     setLoading(true);
     setError(null);
     
     try {
-      const newAsset = await assetsService.upload(assetData);
+      const newAsset = await assetsService.upload(fileOrData as any, options);
       setAssets(prev => [...prev, newAsset]);
       return newAsset;
     } catch (err) {
       console.error('Error uploading asset:', err);
-      setError(err.message);
+      setError(err as Error);
       throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const deleteAsset = useCallback(async (id) => {
+  const deleteAsset = useCallback(async (id: string) => {
     setLoading(true);
     setError(null);
     
@@ -57,14 +54,14 @@ export const useAssets = () => {
       return true;
     } catch (err) {
       console.error('Error deleting asset:', err);
-      setError(err.message);
+      setError(err as Error);
       throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const getAssetsByType = useCallback(async (type) => {
+  const getAssetsByType = useCallback(async (type: string) => {
     setLoading(true);
     setError(null);
     
@@ -73,14 +70,14 @@ export const useAssets = () => {
       return filtered;
     } catch (err) {
       console.error('Error filtering assets:', err);
-      setError(err.message);
+      setError(err as Error);
       throw err;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const searchAssets = useCallback(async (query) => {
+  const searchAssets = useCallback(async (query: string) => {
     setLoading(true);
     setError(null);
     
@@ -89,7 +86,7 @@ export const useAssets = () => {
       return results;
     } catch (err) {
       console.error('Error searching assets:', err);
-      setError(err.message);
+      setError(err as Error);
       throw err;
     } finally {
       setLoading(false);

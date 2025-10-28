@@ -126,7 +126,7 @@ export interface AudioConfig {
 
 export interface Scene {
   id: string;
-  project_id: string;
+  projectId: string;
   title: string;
   content: string;
   duration: number;
@@ -148,7 +148,7 @@ export interface Scene {
 }
 
 export interface ScenePayload {
-  project_id?: string;
+  projectId?: string;
   title?: string;
   content?: string;
   duration?: number;

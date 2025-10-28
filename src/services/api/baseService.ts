@@ -170,7 +170,8 @@ class BaseService<T extends { id: string }> {
       id: payload.id || `${this.storageKey}-${Date.now()}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    } as T;
+      ...(payload.hasOwnProperty('projectId') ? { projectId: (payload as any).projectId } : {}),
+    } as unknown as T;
 
     if (this.shouldUseBackend() && this.endpoints.create) {
       try {

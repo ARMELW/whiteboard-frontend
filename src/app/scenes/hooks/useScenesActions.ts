@@ -19,6 +19,7 @@ export const useScenesActions = () => {
 
   return {
     createScene: async (payload?: ScenePayload) => {
+      console.log('[useScenesActions] createScene with payload:', payload);
       const scene = await scenesService.create(payload);
       addScene(scene);
       return scene;

@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useParams } from 'react-router-dom';
 
 interface TemplateLibraryProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ interface TemplateLibraryProps {
 
 const TemplateLibrary: React.FC<TemplateLibraryProps> = ({ isOpen, onClose }) => {
   const [filters, setFilters] = useState<TemplateFilter>({});
+  const {projectId} = useParams();
   const { templates, loading: loadingTemplates, refetch } = useTemplates(filters);
   const { deleteTemplate, exportTemplate, importTemplate, loading: actionLoading } = useTemplateActions();
   const { createScene } = useScenesActionsWithHistory();
@@ -29,7 +31,7 @@ const TemplateLibrary: React.FC<TemplateLibraryProps> = ({ isOpen, onClose }) =>
       // Create a new scene from the template's scene data
       await createScene({
         ...template.sceneData,
-        id: undefined, // Let the service generate a new ID
+        projectId: projectId || undefined,
         title: `${template.name} - Copie`,
       });
       onClose();

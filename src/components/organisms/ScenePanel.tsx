@@ -85,8 +85,9 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
 
   const handleCreateBlankScene = useCallback(async () => {
     const currentLength = scenes.length;
+    console.log('Creating blank scene with projectId:', projectId);
     await createScene({
-
+      projectId: projectId || undefined,
     });
     // After creation, the new scene will be at the end of the array
     // React Query will refetch and scenes array will have +1 length

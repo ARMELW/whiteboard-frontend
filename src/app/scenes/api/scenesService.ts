@@ -35,10 +35,10 @@ class ScenesService extends BaseService<Scene> {
    * Converts project_id to projectId and handles backgroundImage null values
    */
   private transformSceneForBackend(scene: Partial<Scene>): any {
-    const { project_id, backgroundImage, ...rest } = scene;
+    const { projectId, backgroundImage, ...rest } = scene;
     const transformed: any = {
       ...rest,
-      projectId: project_id, // Backend expects projectId not project_id
+      projectId: projectId,
     };
 
     // Only include backgroundImage if it has a value
@@ -57,7 +57,7 @@ class ScenesService extends BaseService<Scene> {
     const { projectId, ...rest } = scene;
     return {
       ...rest,
-      project_id: projectId,
+      projectId: projectId,
       backgroundImage: scene.backgroundImage || null,
     } as Scene;
   }
@@ -65,12 +65,12 @@ class ScenesService extends BaseService<Scene> {
   async create(payload: ScenePayload = {}): Promise<Scene> {
     const defaultCamera = createDefaultCamera();
 
-    // For backwards compatibility, use a default project_id if not provided
-    const projectId = payload.project_id || DEFAULT_IDS.PROJECT;
+    // Use projectId from payload, fallback to default if not provided
+    const projectId = payload.projectId || DEFAULT_IDS.PROJECT;
 
     const defaultScene: Partial<Scene> = {
       id: `scene-${Date.now()}`,
-      project_id: projectId,
+      projectId,
       title: 'Nouvelle Scène',
       content: 'Ajoutez votre contenu ici...',
       duration: 5,
@@ -88,6 +88,8 @@ class ScenesService extends BaseService<Scene> {
       delete defaultScene.backgroundImage;
     }
 
+    console.log('[scenesService.create] Creating scene in local storage', defaultScene);
+
     // Transform for backend if using API
     const useBackend = await this.shouldUseBackendAsync();
     if (useBackend) {
@@ -95,6 +97,7 @@ class ScenesService extends BaseService<Scene> {
       const response = await this.createWithTransform(transformedScene);
       return this.transformSceneFromBackend(response);
     }
+    console.log('[scenesService.create] Creating scene in local storage', defaultScene);
 
     return super.create(defaultScene);
   }

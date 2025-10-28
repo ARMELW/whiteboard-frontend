@@ -37,7 +37,7 @@ export const useScenes = (projectId?: string) => {
 
   // Filter scenes by projectId if provided
   const filteredScenes = projectId
-    ? scenes.filter((s) => s.project_id === projectId)
+    ? scenes.filter((s) => s.projectId === projectId)
     : scenes;
 
   return {

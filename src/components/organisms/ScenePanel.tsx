@@ -4,6 +4,7 @@ import { Plus, ArrowLeft, ArrowRight, Copy, Trash2, Download, MoreVertical, Musi
 import { useScenes, useSceneStore } from '@/app/scenes';
 import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import { useWizardStore } from '@/app/wizard';
+import { useScenePreview } from '@/hooks/useScenePreview';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +41,9 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   // Refs for scene navigation
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const sceneRefs = useRef<(HTMLDivElement | null)[]>([]);
+  
+  // Preview hook
+  const { generatePreview: generateScenePreview, isGenerating: isGeneratingPreview } = useScenePreview();
   
   // Remove imageInputRef and importInputRef, handled in asset library
   
@@ -165,26 +169,18 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   const handlePreviewScene = useCallback(async (index: number) => {
     const scene = storedScenes[index];
     
-    // Set loading state in store
-    useSceneStore.getState().setPreviewLoading(true);
-    useSceneStore.getState().setPreviewMode(true);
+    if (!scene) {
+      return;
+    }
     
-    // Set the starting scene index for preview
+    // Set preview mode and starting scene index
+    useSceneStore.getState().setPreviewMode(true);
     useSceneStore.getState().setPreviewStartSceneIndex(index);
     
-    // Simulate video generation/retrieval (mock)
-    // In a real implementation, this would call the backend to generate a preview
-    // or use a pre-generated preview URL from the scene data
-    
-    // Mock delay to simulate video processing
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Mock video URL
-    const mockVideoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-    
-    // Start preview with the mock URL (this will set loading to false)
-    useSceneStore.getState().startPreview(mockVideoUrl, 'scene');
-  }, [storedScenes]);
+    // Use the preview service to generate the preview
+    // This will automatically handle loading states and show the preview when ready
+    await generateScenePreview(scene);
+  }, [storedScenes, generateScenePreview]);
 
   const formatSceneDuration = (duration: number): string => {
     if (typeof duration !== 'number' || isNaN(duration) || !isFinite(duration)) {

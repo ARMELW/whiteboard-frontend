@@ -38,7 +38,7 @@ export const LayerImage: React.FC<LayerImageProps> = ({
     const node = imageRef.current;
     if (!node) return pos;
 
-    const scale = layer.scale || 1.0;
+    const scale = (layer.scale || 1.0) * (layer.scaleX || 1.0);
     const width = img.width * scale;
     const height = img.height * scale;
     

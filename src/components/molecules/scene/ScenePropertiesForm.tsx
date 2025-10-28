@@ -18,34 +18,34 @@ export const ScenePropertiesForm: React.FC<ScenePropertiesFormProps> = ({ scene,
     <div className="space-y-6">
       {/* Title */}
       <div>
-        <label className="block text-white font-semibold mb-2 text-sm">
+        <label className="block  font-semibold mb-2 text-sm">
           Titre de la scène
         </label>
         <input
           type="text"
           value={scene.title}
           onChange={(e) => onChange('title', e.target.value)}
-          className="w-full bg-secondary/30 text-white border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+          className="w-full bg-secondary/30  border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
           placeholder="Entrez le titre..."
         />
       </div>
 
       {/* Content */}
       <div>
-        <label className="block text-white font-semibold mb-2 text-sm">
+        <label className="block  font-semibold mb-2 text-sm">
           Contenu
         </label>
         <textarea
           value={scene.content}
           onChange={(e) => onChange('content', e.target.value)}
-          className="w-full bg-secondary/30 text-white border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary h-28 resize-none transition-all"
+          className="w-full bg-secondary/30  border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary h-28 resize-none transition-all"
           placeholder="Entrez le contenu..."
         />
       </div>
 
       {/* Duration */}
       <div>
-        <label className="block text-white font-semibold mb-2 text-sm">
+        <label className="block  font-semibold mb-2 text-sm">
           Durée (secondes)
         </label>
         <input
@@ -54,18 +54,18 @@ export const ScenePropertiesForm: React.FC<ScenePropertiesFormProps> = ({ scene,
           max="60"
           value={scene.duration}
           onChange={(e) => onChange('duration', parseInt(e.target.value) || 5)}
-          className="w-full bg-secondary/30 text-white border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+          className="w-full bg-secondary/30  border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
         />
       </div>
 
       {/* Scene Dimensions */}
       <div>
-        <label className="block text-white font-semibold mb-2 text-sm">
+        <label className="block  font-semibold mb-2 text-sm">
           Dimensions de la scène (pixels)
         </label>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-white/70 text-xs mb-1">Largeur</label>
+            <label className="block /70 text-xs mb-1">Largeur</label>
             <input
               type="number"
               min="1920"
@@ -73,12 +73,12 @@ export const ScenePropertiesForm: React.FC<ScenePropertiesFormProps> = ({ scene,
               step="100"
               value={scene.sceneWidth || 1920}
               onChange={(e) => onChange('sceneWidth', parseInt(e.target.value) || 1920)}
-              className="w-full bg-secondary/30 text-white border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+              className="w-full bg-secondary/30  border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
               placeholder="1920"
             />
           </div>
           <div>
-            <label className="block text-white/70 text-xs mb-1">Hauteur</label>
+            <label className="block /70 text-xs mb-1">Hauteur</label>
             <input
               type="number"
               min="1080"
@@ -86,19 +86,19 @@ export const ScenePropertiesForm: React.FC<ScenePropertiesFormProps> = ({ scene,
               step="100"
               value={scene.sceneHeight || 1080}
               onChange={(e) => onChange('sceneHeight', parseInt(e.target.value) || 1080)}
-              className="w-full bg-secondary/30 text-white border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+              className="w-full bg-secondary/30  border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
               placeholder="1080"
             />
           </div>
         </div>
-        <p className="text-xs text-white/50 mt-1">
+        <p className="text-xs /50 mt-1">
           Dimensions par défaut: 1920x1080. Utilisez des valeurs plus grandes pour des scènes immenses.
         </p>
       </div>
 
       {/* Slide Duration */}
       <div>
-        <label className="block text-white font-semibold mb-2 text-sm">
+        <label className="block  font-semibold mb-2 text-sm">
           Durée du slide (secondes)
         </label>
         <input
@@ -107,20 +107,20 @@ export const ScenePropertiesForm: React.FC<ScenePropertiesFormProps> = ({ scene,
           max="60"
           value={scene.slide_duration || 5}
           onChange={(e) => onChange('slide_duration', parseInt(e.target.value) || 5)}
-          className="w-full bg-secondary/30 text-white border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+          className="w-full bg-secondary/30  border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
         />
       </div>
 
       {/* Background Image */}
       <div>
-        <label className="block text-white font-semibold mb-2 text-sm">
+        <label className="block  font-semibold mb-2 text-sm">
           Image de fond (URL)
         </label>
         <input
           type="text"
           value={scene.backgroundImage || ''}
           onChange={(e) => onChange('backgroundImage', e.target.value || null)}
-          className="w-full bg-secondary/30 text-white border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+          className="w-full bg-secondary/30  border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
           placeholder="https://example.com/image.jpg"
         />
         {scene.backgroundImage && (
@@ -139,14 +139,14 @@ export const ScenePropertiesForm: React.FC<ScenePropertiesFormProps> = ({ scene,
 
       {/* Animation Type */}
       <div>
-        <label className="block text-white font-semibold mb-2 text-sm">
+        <label className="block  font-semibold mb-2 text-sm">
           Type d'animation
         </label>
         <Select
           value={scene.animation}
           onValueChange={(value) => onChange('animation', value)}
         >
-          <SelectTrigger className="w-full bg-secondary/30 text-white border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+          <SelectTrigger className="w-full bg-secondary/30  border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all">
             <SelectValue placeholder="Sélectionner une animation" />
           </SelectTrigger>
           <SelectContent>
@@ -159,14 +159,14 @@ export const ScenePropertiesForm: React.FC<ScenePropertiesFormProps> = ({ scene,
 
       {/* Transition Type */}
       <div>
-        <label className="block text-white font-semibold mb-2 text-sm">
+        <label className="block  font-semibold mb-2 text-sm">
           Type de transition
         </label>
         <Select
           value={scene.transition_type || 'none'}
           onValueChange={(value) => onChange('transition_type', value)}
         >
-          <SelectTrigger className="w-full bg-secondary/30 text-white border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+          <SelectTrigger className="w-full bg-secondary/30  border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all">
             <SelectValue placeholder="Sélectionner une transition" />
           </SelectTrigger>
           <SelectContent>
@@ -181,14 +181,14 @@ export const ScenePropertiesForm: React.FC<ScenePropertiesFormProps> = ({ scene,
 
       {/* Dragging Speed */}
       <div>
-        <label className="block text-white font-semibold mb-2 text-sm">
+        <label className="block  font-semibold mb-2 text-sm">
           Vitesse de défilement
         </label>
         <Select
           value={(scene.dragging_speed || 1).toString()}
           onValueChange={(value) => onChange('dragging_speed', parseFloat(value))}
         >
-          <SelectTrigger className="w-full bg-secondary/30 text-white border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+          <SelectTrigger className="w-full bg-secondary/30  border border-border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary transition-all">
             <SelectValue placeholder="Sélectionner une vitesse" />
           </SelectTrigger>
           <SelectContent>
@@ -201,7 +201,7 @@ export const ScenePropertiesForm: React.FC<ScenePropertiesFormProps> = ({ scene,
 
       {/* Sync Slide with Voice Over */}
       <div className="flex items-center justify-between">
-        <label className="text-white font-semibold text-sm">
+        <label className=" font-semibold text-sm">
           Synchroniser le slide avec la voix off
         </label>
         <Switch

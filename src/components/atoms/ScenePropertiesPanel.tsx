@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/accordion';
 import { FileText, Clock, Image as ImageIcon, Play, Music } from 'lucide-react';
 import SceneAudioControl from '../molecules/SceneAudioControl';
+import { ScenePropertiesForm } from '../molecules/scene/ScenePropertiesForm';
 
 interface ScenePropertiesPanelProps {
   scene: any;
@@ -34,41 +35,7 @@ const ScenePropertiesPanel: React.FC<ScenePropertiesPanelProps> = ({ scene, hand
         </AccordionTrigger>
         <AccordionContent>
           <div className="space-y-3">
-            <div>
-              <label className="block text-foreground text-xs mb-1.5">
-                Titre de la scène
-              </label>
-              <input
-                type="text"
-                value={scene.title || ''}
-                onChange={(e) => handleSceneChange('title', e.target.value)}
-                className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="Entrez le titre..."
-              />
-            </div>
-            <div>
-              <label className="block text-foreground text-xs mb-1.5">
-                Contenu
-              </label>
-              <textarea
-                value={scene.content || ''}
-                onChange={(e) => handleSceneChange('content', e.target.value)}
-                className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm h-20 resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="Entrez le contenu..."
-              />
-            </div>
-            <div>
-              <label className="block text-foreground text-xs mb-1.5">
-                Image de fond (URL)
-              </label>
-              <input
-                type="text"
-                value={scene.backgroundImage || ''}
-                onChange={(e) => handleSceneChange('backgroundImage', e.target.value)}
-                className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="https://example.com/image.jpg"
-              />
-            </div>
+            <ScenePropertiesForm scene={scene} onChange={handleSceneChange} />
           </div>
         </AccordionContent>
       </AccordionItem>

@@ -93,7 +93,12 @@ const generatePlaceholderThumbnail = (width: number, height: number, sceneTitle:
   
   ctx.fillStyle = '#999999';
   ctx.beginPath();
-  ctx.roundRect(iconX - iconSize / 2, iconY - iconSize / 2, iconSize, iconSize * 0.7, 4);
+  // Use roundRect if available, otherwise use regular rect for compatibility
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(iconX - iconSize / 2, iconY - iconSize / 2, iconSize, iconSize * 0.7, 4);
+  } else {
+    ctx.rect(iconX - iconSize / 2, iconY - iconSize / 2, iconSize, iconSize * 0.7);
+  }
   ctx.fill();
   
   // Draw lens circle

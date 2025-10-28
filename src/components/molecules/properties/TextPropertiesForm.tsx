@@ -23,7 +23,7 @@ export interface TextPropertiesFormProps {
   onPropertyChange: (layerId: string, property: string, value: any) => void;
 }
 
-export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = ({
+export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = React.memo(({
   layer,
   onPropertyChange
 }) => {
@@ -339,4 +339,4 @@ export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = ({
     />
     </>
   );
-};
+});

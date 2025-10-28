@@ -21,7 +21,7 @@ interface ImagePropertiesFormProps {
   onPropertyChange: (layerId: string, property: string, value: any) => void;
 }
 
-export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = ({ layer, onPropertyChange }) => {
+export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = React.memo(({ layer, onPropertyChange }) => {
   const [showHandLibrary, setShowHandLibrary] = useState(false);
   
   const handlePositionChange = (axis: 'x' | 'y', value: number) => {
@@ -318,4 +318,4 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = ({ layer,
     />
     </>
   );
-};
+});

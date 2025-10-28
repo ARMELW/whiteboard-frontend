@@ -98,4 +98,4 @@ const LayersTab: React.FC = () => {
   );
 };
 
-export default LayersTab;
+export default React.memo(LayersTab);

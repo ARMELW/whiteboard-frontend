@@ -46,4 +46,4 @@ const TextTab: React.FC = () => {
   );
 };
 
-export default TextTab;
+export default React.memo(TextTab);

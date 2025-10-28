@@ -44,13 +44,16 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   // Use actions from useScenesActionsWithHistory hook for history tracking
   const { createScene, deleteScene, duplicateScene, reorderScenes } = useScenesActionsWithHistory();
 
-  // Sync scenes from React Query to Zustand store and update thumbnails
+  // Sync scenes from React Query to Zustand store
+  // Only generate thumbnails for scenes that don't have one yet
   useEffect(() => {
     if (!scenesLoading) {
       setScenes(scenes);
-      // Update thumbnails for all scenes after they're loaded
+      // Only update thumbnails for scenes that don't have one
       scenes.forEach(scene => {
-        useSceneStore.getState().updateSceneThumbnail(scene.id);
+        if (!scene.sceneImage && scene.layers && scene.layers.length > 0) {
+          useSceneStore.getState().updateSceneThumbnail(scene.id);
+        }
       });
     }
   }, [scenes, scenesLoading, setScenes]);

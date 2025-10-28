@@ -58,7 +58,10 @@ export interface Layer {
   skip_rate?: number;
   image_path?: string;
   text?: string;
+  text_config?: any;
+  shape_config?: any;
   locked?: boolean;
+  visible?: boolean;
   animation_type?: string;
   animation_speed?: number;
   end_delay?: number;
@@ -132,6 +135,7 @@ export interface Scene {
   duration: number;
   animation: string;
   backgroundImage: string | null;
+  backgroundColor?: string;
   sceneImage?: string | null;
   layers: Layer[];
   cameras: Camera[];

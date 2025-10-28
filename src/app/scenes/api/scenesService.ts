@@ -88,11 +88,10 @@ class ScenesService extends BaseService<Scene> {
       delete defaultScene.backgroundImage;
     }
 
-    console.log('[scenesService.create] Creating scene in local storage', defaultScene);
-
     // Transform for backend if using API
     const useBackend = await this.shouldUseBackendAsync();
     if (useBackend) {
+      console.log('[scenesService.create] Creating scene via API', defaultScene);
       const transformedScene = this.transformSceneForBackend(defaultScene);
       const response = await this.createWithTransform(transformedScene);
       return this.transformSceneFromBackend(response);

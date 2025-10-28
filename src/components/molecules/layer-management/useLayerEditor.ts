@@ -38,12 +38,34 @@ export const useLayerEditor = ({
   }, [externalOnSelectLayer]);
 
   useEffect(() => {
-    setEditedScene(scene);
-    // If the selected layer is no longer in the scene, deselect it.
-    if (selectedLayerId && !scene?.layers?.some((l: any) => l.id === selectedLayerId)) {
-      setSelectedLayerId(null);
-    }
-  }, [scene, selectedLayerId, setSelectedLayerId]);
+    // Flush any pending layer updates before switching scenes
+    const flushPendingUpdates = async () => {
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+        updateTimerRef.current = null;
+      }
+      
+      const updates = Array.from(pendingLayerUpdatesRef.current.values());
+      pendingLayerUpdatesRef.current.clear();
+      
+      // Execute updates sequentially to avoid race conditions
+      for (const update of updates) {
+        try {
+          await updateLayer(update);
+        } catch (error) {
+          console.error('[useLayerEditor] Failed to flush pending update:', error);
+        }
+      }
+    };
+    
+    flushPendingUpdates().then(() => {
+      setEditedScene(scene);
+      // If the selected layer is no longer in the scene, deselect it.
+      if (selectedLayerId && !scene?.layers?.some((l: any) => l.id === selectedLayerId)) {
+        setSelectedLayerId(null);
+      }
+    });
+  }, [scene, selectedLayerId, setSelectedLayerId, updateLayer]);
 
   const handleChange = useCallback((field: string, value: any) => {
     setEditedScene((prev: any) => ({ ...prev, [field]: value }));
@@ -71,7 +93,7 @@ export const useLayerEditor = ({
       
       // Debounce layer updates to avoid excessive API calls during drag/transform
       if (prev.id) {
-        // Store the pending update
+        // Store the pending update - this ensures only the latest update per layer is kept
         pendingLayerUpdatesRef.current.set(updatedLayer.id, { sceneId: prev.id, layer: updatedLayer });
         
         // Clear existing timer
@@ -80,13 +102,20 @@ export const useLayerEditor = ({
         }
         
         // Set new timer to batch updates
-        updateTimerRef.current = setTimeout(() => {
+        updateTimerRef.current = setTimeout(async () => {
           // Process all pending updates
-          pendingLayerUpdatesRef.current.forEach((update) => {
-            updateLayer(update);
-          });
+          const updates = Array.from(pendingLayerUpdatesRef.current.values());
           pendingLayerUpdatesRef.current.clear();
           updateTimerRef.current = null;
+          
+          // Execute updates sequentially to avoid race conditions
+          for (const update of updates) {
+            try {
+              await updateLayer(update);
+            } catch (error) {
+              console.error('[useLayerEditor] Failed to update layer:', error);
+            }
+          }
         }, 100); // 100ms debounce
       }
       
@@ -99,29 +128,45 @@ export const useLayerEditor = ({
     return () => {
       if (updateTimerRef.current) {
         clearTimeout(updateTimerRef.current);
-        // Flush any pending updates
-        pendingLayerUpdatesRef.current.forEach((update) => {
-          updateLayer(update);
-        });
-        pendingLayerUpdatesRef.current.clear();
+        updateTimerRef.current = null;
       }
+      
+      // Flush any pending updates synchronously on unmount
+      // Note: We can't use async in cleanup, so we trigger the updates without waiting
+      const updates = Array.from(pendingLayerUpdatesRef.current.values());
+      pendingLayerUpdatesRef.current.clear();
+      
+      updates.forEach((update) => {
+        updateLayer(update).catch(error => {
+          console.error('[useLayerEditor] Failed to flush update on unmount:', error);
+        });
+      });
     };
   }, [updateLayer]);
 
-  const handleAddLayer = useCallback((newLayer: any) => {
+  const handleAddLayer = useCallback(async (newLayer: any) => {
+    // First, update local state immediately for responsive UI
     setEditedScene((prev: any) => {
-      // Add layer locally
       const updated = {
         ...prev,
         layers: [...prev.layers, newLayer]
       };
-      // Persist to global store if scene has an id (with history tracking)
-      if (prev.id) {
-        addLayer({ sceneId: prev.id, layer: newLayer });
-      }
       return updated;
     });
     setSelectedLayerId(newLayer.id);
+    
+    // Then persist to backend (ensuring completion before allowing scene changes)
+    // This is wrapped in a try-catch to handle errors gracefully
+    try {
+      const sceneId = useSceneStore.getState().scenes[useSceneStore.getState().selectedSceneIndex]?.id;
+      if (sceneId) {
+        await addLayer({ sceneId, layer: newLayer });
+      }
+    } catch (error) {
+      console.error('[useLayerEditor] Failed to persist layer:', error);
+      // Optionally: show error toast to user
+      // For now, layer remains in local state even if backend fails
+    }
   }, [setSelectedLayerId, addLayer]);
 
   const handleDeleteLayer = useCallback((layerId: string) => {
@@ -190,7 +235,7 @@ export const useLayerEditor = ({
       if (prev.id) {
         const updatedLayer = newLayers.find((l: any) => l.id === layerId);
         if (updatedLayer) {
-          // Store the pending update
+          // Store the pending update - this ensures only the latest update per layer is kept
           pendingLayerUpdatesRef.current.set(layerId, { sceneId: prev.id, layer: updatedLayer });
           
           // Clear existing timer
@@ -199,13 +244,20 @@ export const useLayerEditor = ({
           }
           
           // Set new timer to batch updates
-          updateTimerRef.current = setTimeout(() => {
+          updateTimerRef.current = setTimeout(async () => {
             // Process all pending updates
-            pendingLayerUpdatesRef.current.forEach((update) => {
-              updateLayer(update);
-            });
+            const updates = Array.from(pendingLayerUpdatesRef.current.values());
             pendingLayerUpdatesRef.current.clear();
             updateTimerRef.current = null;
+            
+            // Execute updates sequentially to avoid race conditions
+            for (const update of updates) {
+              try {
+                await updateLayer(update);
+              } catch (error) {
+                console.error('[useLayerEditor] Failed to update layer property:', error);
+              }
+            }
           }, 100); // 100ms debounce
         }
       }

@@ -128,7 +128,7 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
                   <SelectItem value="none">Aucune sélection</SelectItem>
                   {cameras.map((camera, index) => (
                     <SelectItem key={camera.id} value={camera.id}>
-                      {index + 1}. {camera.name || `Camera ${camera.id}`} ({camera.zoom.toFixed(1)}x)
+                      {index + 1}. {camera.name || `Camera ${camera.id}`} ({camera.zoom ? camera.zoom.toFixed(1) : '1.0'}x)
                     </SelectItem>
                   ))}
                 </SelectContent>

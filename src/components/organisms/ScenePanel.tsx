@@ -21,6 +21,11 @@ interface ScenePanelProps {
 }
 
 const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
+  // Local state for generated thumbnails
+  const [sceneThumbnails, setSceneThumbnails] = useState<{ [sceneId: string]: string }>({});
+
+  // Generate thumbnails for scenes missing sceneImage
+
   // Pour ouvrir asset library et shape toolbar
   // const setShowAssetLibrary = useSceneStore((state) => state.setShowAssetLibrary);
   const { scenes, loading: scenesLoading } = useScenes();
@@ -72,6 +77,49 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
     }
   }, [selectedSceneIndex]);
 
+  // Regenerate thumbnail for every scene when scenes change (layer add, modify, etc)
+  useEffect(() => {
+    const generateThumbnails = async () => {
+      const updates: { [sceneId: string]: string } = {};
+      for (const scene of scenes) {
+        // Always regenerate thumbnail for every scene
+        const { generateSceneThumbnail, THUMBNAIL_CONFIG } = await import('@/utils/sceneThumbnail');
+        const thumb = await generateSceneThumbnail(scene, {
+          thumbnailWidth: THUMBNAIL_CONFIG.WIDTH,
+          thumbnailHeight: THUMBNAIL_CONFIG.HEIGHT,
+        });
+        updates[scene.id] = thumb;
+      }
+      if (Object.keys(updates).length > 0) {
+        setSceneThumbnails((prev) => ({ ...prev, ...updates }));
+      }
+    };
+    if (scenes.length > 0) {
+      generateThumbnails();
+    }
+  }, [scenes]);
+  useEffect(() => {
+    const generateThumbnails = async () => {
+      const updates: { [sceneId: string]: string } = {};
+      for (const scene of scenes) {
+        if (!scene.sceneImage && !sceneThumbnails[scene.id]) {
+          // Dynamically import to avoid SSR issues
+          const { generateSceneThumbnail, THUMBNAIL_CONFIG } = await import('@/utils/sceneThumbnail');
+          const thumb = await generateSceneThumbnail(scene, {
+            thumbnailWidth: THUMBNAIL_CONFIG.WIDTH,
+            thumbnailHeight: THUMBNAIL_CONFIG.HEIGHT,
+          });
+          updates[scene.id] = thumb;
+        }
+      }
+      if (Object.keys(updates).length > 0) {
+        setSceneThumbnails((prev) => ({ ...prev, ...updates }));
+      }
+    };
+    if (scenes.length > 0) {
+      generateThumbnails();
+    }
+  }, [scenes]);
   // Navigate to previous scene
   const handleNavigatePrevious = useCallback(() => {
     if (selectedSceneIndex > 0) {
@@ -185,6 +233,7 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
     const seconds = totalSeconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
+  console.log('Rendering ScenePanel with scenes:', scenes);
 
   return (
     <div className="bg-white flex h-full shadow-sm relative">
@@ -239,6 +288,13 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
                   {scene.sceneImage ? (
                     <img
                       src={scene.sceneImage}
+                      alt={`Scene ${index + 1}`}
+                      className="w-full h-full object-contain"
+                      style={{ backgroundColor: THUMBNAIL_CONFIG.BACKGROUND_COLOR }}
+                    />
+                  ) : sceneThumbnails[scene.id] ? (
+                    <img
+                      src={sceneThumbnails[scene.id]}
                       alt={`Scene ${index + 1}`}
                       className="w-full h-full object-contain"
                       style={{ backgroundColor: THUMBNAIL_CONFIG.BACKGROUND_COLOR }}

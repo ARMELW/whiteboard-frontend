@@ -331,7 +331,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   const scaledSceneHeight = sceneHeight * effectiveSceneZoom;
 
   return (
-    <div className="flex relative flex-col h-full bg-secondary">
+    <div className="flex relative flex-col h-full bg-white">
       <div className="flex flex-1 min-h-0 bg-white" style={{ height: '100%' }}>
         {/* Canvas Area - Centered viewport */}
         <div
@@ -356,7 +356,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
             }}
           >
             {/* Konva Stage for layers and cameras */}
-            <div style={{ position: 'relative', zIndex: 2 }}>
+            <div style={{ position: 'relative', zIndex: 2, backgroundColor: 'white' }}>
               <Stage
                 width={sceneWidth}
                 height={sceneHeight}

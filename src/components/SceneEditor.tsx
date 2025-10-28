@@ -94,7 +94,7 @@ const SceneEditor: React.FC<SceneEditorProps> = ({ scene, onClose, onSave }) => 
       
       <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex">
         {/* Left Side - Scene Preview */}
-        <div className="flex-1 bg-secondary relative">
+        <div className="flex-1 bg-white relative">
           <div className="absolute inset-0 overflow-hidden">
             <Scene
               {...editedScene}

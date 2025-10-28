@@ -234,6 +234,7 @@ export const useSceneStore = create<SceneState>((set) => ({
     const scene = state.scenes.find(s => s.id === sceneId);
     if (!scene) return;
     const thumbnail = await generateSceneThumbnail(scene);
+    console.log('Generated thumbnail for scene', sceneId, thumbnail);
     if (thumbnail) {
       useSceneStore.setState({
         scenes: state.scenes.map(s => s.id === sceneId ? { ...s, sceneImage: thumbnail } : s)

@@ -35,7 +35,7 @@ interface Endpoints {
 class BaseService<T extends { id: string }> {
   protected endpoints: Endpoints;
 
-  constructor(storageKey: string, endpoints: Endpoints) {
+  constructor(endpoints: Endpoints) {
     this.endpoints = endpoints;
   }
 

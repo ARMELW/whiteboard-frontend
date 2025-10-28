@@ -1,7 +1,6 @@
 import BaseService from '@/services/api/baseService';
 import httpClient from '@/services/api/httpClient';
 import API_ENDPOINTS from '@/config/api';
-import { STORAGE_KEYS } from '@/config/constants';
 
 export interface Asset {
   id: string;
@@ -38,7 +37,7 @@ export interface AssetStats {
 
 class AssetsService extends BaseService<Asset> {
   constructor() {
-    super(STORAGE_KEYS.ASSETS, API_ENDPOINTS.assets);
+    super(API_ENDPOINTS.assets);
   }
 
   async upload(file: File, options?: UploadAssetData): Promise<Asset>;

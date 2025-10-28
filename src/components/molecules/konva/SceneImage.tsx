@@ -58,6 +58,11 @@ const SceneImage: React.FC<SceneImageProps> = ({ image, isSelected, onSelect, on
           if (!node) return;
           const scaleX = node.scaleX();
           const scaleY = node.scaleY();
+          
+          // Reset node scales BEFORE calling onChange to prevent re-render with stale values
+          node.scaleX(1);
+          node.scaleY(1);
+          
           onChange({
             ...image,
             x: node.x(),
@@ -66,8 +71,6 @@ const SceneImage: React.FC<SceneImageProps> = ({ image, isSelected, onSelect, on
             height: Math.max(5, node.height() * scaleY),
             rotation: node.rotation(),
           });
-          node.scaleX(1);
-          node.scaleY(1);
         }}
       />
       {isSelected && (

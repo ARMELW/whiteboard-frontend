@@ -92,4 +92,4 @@ const HandTab: React.FC = () => {
   );
 };
 
-export default HandTab;
+export default React.memo(HandTab);

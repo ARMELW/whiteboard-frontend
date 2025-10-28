@@ -132,8 +132,9 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   const stageRef = useRef(null);
   const scrollContainerRef = useRef(null);
 
-  const sceneWidth = 1920;
-  const sceneHeight = 1080;
+  // Support for configurable scene dimensions (for immense scenes)
+  const sceneWidth = scene.sceneWidth || 1920;
+  const sceneHeight = scene.sceneHeight || 1080;
 
   // Calculate zoom to fit scene in viewport
   const calculateFitZoom = useCallback(() => {
@@ -161,9 +162,14 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
     const defaultPosition = defaultCamera ? defaultCamera.position : { x: 0.5, y: 0.5 };
     const cameraWidth = defaultCamera?.width || 800;
     const cameraHeight = defaultCamera?.height || 450;
+    
+    // Count non-default cameras to determine the next camera number
+    const nonDefaultCameras = sceneCameras.filter((cam: Camera) => !cam.isDefault);
+    const cameraNumber = nonDefaultCameras.length + 1;
+    
     const newCamera: Camera = {
       id: `camera-${Date.now()}`,
-      name: `Camera ${sceneCameras.length}`,
+      name: `Camera ${cameraNumber}`,
       position: { x: defaultPosition.x, y: defaultPosition.y },
       width: cameraWidth,
       height: cameraHeight,

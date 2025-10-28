@@ -123,6 +123,17 @@ export const KonvaCamera: React.FC<KonvaCameraProps> = ({
           dash={[5, 5]}
           opacity={isSelected ? 0.6 : 0.3}
         />
+        
+        {/* Camera Label */}
+        <Text
+          x={10}
+          y={10}
+          text={camera.name || 'Camera'}
+          fontSize={16}
+          fontFamily="Arial"
+          fill={isSelected ? '#ec4899' : '#f9a8d4'}
+          fontStyle="bold"
+        />
       </Group>
       
       {isSelected && !camera.locked && (

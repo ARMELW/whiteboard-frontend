@@ -145,6 +145,8 @@ export interface Scene {
   dragging_speed?: number;
   slide_duration?: number;
   sync_slide_with_voice?: boolean;
+  sceneWidth?: number;
+  sceneHeight?: number;
 }
 
 export interface ScenePayload {
@@ -165,4 +167,6 @@ export interface ScenePayload {
   dragging_speed?: number;
   slide_duration?: number;
   sync_slide_with_voice?: boolean;
+  sceneWidth?: number;
+  sceneHeight?: number;
 }

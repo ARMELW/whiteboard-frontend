@@ -122,7 +122,7 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
         <div className="h-6 w-px bg-gray-700" />
 
         {/* Camera Controls */}
-        {/**hasCurrentScene && cameras.length > 0 && (
+        {hasCurrentScene && cameras.length > 0 && (
           <>
             <div className="flex items-center gap-2">
               <Camera className="w-5 h-5 text-purple-500" />
@@ -135,13 +135,20 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
                 </SelectTrigger>
                 <SelectContent style={{ maxHeight: '300px' }}>
                   <SelectItem value="none">Aucune sélection</SelectItem>
-                  {cameras.map((camera, index) => (
+                  {cameras.map((camera) => (
                     <SelectItem key={camera.id} value={camera.id}>
-                      {index + 1}. {camera.name || `Camera ${camera.id}`} ({camera.zoom ? camera.zoom.toFixed(1) : '1.0'}x)
+                      {camera.name || `Camera ${camera.id}`} ({camera.zoom ? camera.zoom.toFixed(1) : '1.0'}x)
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              
+              {/* Camera count badge */}
+              {cameras.filter(c => !c.isDefault).length > 0 && (
+                <span className="px-2 py-0.5 text-xs font-semibold bg-purple-100 text-purple-700 rounded-full">
+                  {cameras.filter(c => !c.isDefault).length} caméra{cameras.filter(c => !c.isDefault).length > 1 ? 's' : ''}
+                </span>
+              )}
             </div>
             
             <button
@@ -150,6 +157,7 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
               title="Ajouter une caméra"
             >
               <Plus className="w-4 h-4" />
+              <span className="hidden md:inline">Caméra</span>
             </button>
             
             <button
@@ -157,7 +165,7 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
               className="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-1.5 px-3 rounded flex items-center gap-1 transition-colors text-sm"
               title="Gérer les caméras"
             >
-              Gérer
+              <span>Gérer</span>
             </button>
             
             <div className="flex items-center gap-2 ml-2">
@@ -191,13 +199,13 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
                 title={selectedCamera.locked ? 'Déverrouiller caméra' : 'Verrouiller caméra'}
               >
                 {selectedCamera.locked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-                <span className="text-xs">{selectedCamera.locked ? 'Verrouillé' : 'Déverrouillé'}</span>
+                <span className="text-xs hidden md:inline">{selectedCamera.locked ? 'Verrouillé' : 'Déverrouillé'}</span>
               </button>
             )}
             
             <div className="h-6 w-px bg-gray-700" />
           </>
-        )}**/}
+        )}
 
         {/* Center: Quick Actions */}
         {/* AI Wizard Button 

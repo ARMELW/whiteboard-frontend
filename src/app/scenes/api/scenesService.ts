@@ -153,10 +153,10 @@ class ScenesService extends BaseService<Scene> {
     return httpClient.default.checkIsOnline();
   }
 
-  async duplicate(id: string): Promise<Scene> {
+  async duplicate(id: string, projectId?: string | null): Promise<Scene> {
     await this.delay();
     const scene = await this.detail(id);
-
+    console.log('[scenesService.duplicate] original scene:', scene);
     // Ensure sceneCameras has at least a default camera
     let sceneCameras = scene.sceneCameras || [];
     if (sceneCameras.length === 0) {
@@ -173,7 +173,7 @@ class ScenesService extends BaseService<Scene> {
       ...scene,
       id: `scene-${Date.now()}`,
       title: `${scene.title} (Copie)`,
-      projectId: scene.projectId,
+      projectId: scene.id,
       sceneCameras,
       multiTimeline: scene.multiTimeline || createMultiTimeline(scene.duration),
       createdAt: new Date().toISOString(),

@@ -38,7 +38,7 @@ const AnimationContainer: React.FC = () => {
   const currentProjectId = useSceneStore((state) => state.currentProjectId);
   
   // Load scenes dynamically from API, filtered by current project
-  const { scenes, loading: scenesLoading, refetch: refetchScenes } = useScenes(currentProjectId || undefined);
+  const { scenes, loading: scenesLoading, refetch: refetchScenes } = useScenes(currentProjectId ?? undefined);
   const scenesActions = useScenesActions();
   const setScenes = useSceneStore((state) => state.setScenes);
   

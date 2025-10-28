@@ -119,6 +119,12 @@ export const API_ENDPOINTS = {
     version: `${prefix}/v1/version`,
     metrics: `${prefix}/v1/metrics`,
   },
+  preview: {
+    scene: `${prefix}/v1/preview/scene`,
+    complete: `${prefix}/v1/preview/complete`,
+    status: (previewId: string) => `${prefix}/v1/preview/status/${previewId}`,
+    cancel: (previewId: string) => `${prefix}/v1/preview/cancel/${previewId}`,
+  },
   channels: {
     base: `${prefix}/v1/channels`,
     list: `${prefix}/v1/channels`,

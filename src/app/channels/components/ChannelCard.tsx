@@ -13,39 +13,36 @@ interface ChannelCardProps {
 }
 
 export function ChannelCard({ channel, onSettings, onClick }: ChannelCardProps) {
-  const lastActivityText = channel.updated_at
-    ? formatDistanceToNow(new Date(channel.updated_at), {
-        addSuffix: true,
-        locale: fr,
-      })
+  const lastActivity = channel.updatedAt
+    ? formatDistanceToNow(new Date(channel.updatedAt), { addSuffix: true, locale: fr })
     : 'Jamais';
 
   return (
     <Card
-      className="hover:shadow-lg transition-shadow cursor-pointer group"
+      className="group cursor-pointer transition-all hover:shadow-lg hover:scale-[1.01]"
       onClick={() => onClick(channel)}
     >
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3 flex-1">
-            {channel.brand_kit.logo_url ? (
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            {channel.brandKit.logo_url ? (
               <img
-                src={channel.brand_kit.logo_url}
+                src={channel.brandKit.logo_url}
                 alt={channel.name}
-                className="w-12 h-12 rounded-lg object-cover"
+                className="w-12 h-12 rounded-lg object-cover shrink-0"
               />
             ) : (
               <div
-                className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-xl"
-                style={{ backgroundColor: channel.brand_kit.colors.primary }}
+                className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-semibold text-xl shrink-0"
+                style={{ backgroundColor: channel.brandKit.colors.primary }}
               >
-                {channel.name.charAt(0).toUpperCase()}
+                {channel.name[0].toUpperCase()}
               </div>
             )}
             <div className="flex-1 min-w-0">
               <CardTitle className="text-lg truncate">{channel.name}</CardTitle>
               {channel.description && (
-                <p className="text-sm text-muted-foreground truncate mt-1">
+                <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5">
                   {channel.description}
                 </p>
               )}
@@ -58,52 +55,26 @@ export function ChannelCard({ channel, onSettings, onClick }: ChannelCardProps) 
               e.stopPropagation();
               onSettings(channel);
             }}
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
+            className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            aria-label="Paramètres"
           >
             <Settings className="h-4 w-4" />
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
+
+      <CardContent className="pb-3">
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <Video className="h-4 w-4" />
-            <span>{channel.project_count} projets</span>
+            <span>{channel.projectCount} {channel.projectCount > 1 ? 'projets' : 'projet'}</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <Calendar className="h-4 w-4" />
-            <span>{lastActivityText}</span>
+            <span>{lastActivity}</span>
           </div>
         </div>
       </CardContent>
-      <CardFooter className="pt-0">
-        <div className="flex gap-2">
-          <Badge
-            style={{
-              backgroundColor: channel.brand_kit.colors.primary,
-              color: 'white',
-            }}
-          >
-            {channel.brand_kit.colors.primary}
-          </Badge>
-          <Badge
-            style={{
-              backgroundColor: channel.brand_kit.colors.secondary,
-              color: 'white',
-            }}
-          >
-            {channel.brand_kit.colors.secondary}
-          </Badge>
-          <Badge
-            style={{
-              backgroundColor: channel.brand_kit.colors.accent,
-              color: 'white',
-            }}
-          >
-            {channel.brand_kit.colors.accent}
-          </Badge>
-        </div>
-      </CardFooter>
     </Card>
   );
 }

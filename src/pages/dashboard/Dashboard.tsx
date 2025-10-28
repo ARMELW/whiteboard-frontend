@@ -7,6 +7,17 @@ import { Channel } from '@/app/channels/types';
 import { useChannels } from '@/app/channels/hooks/useChannels';
 import { toast } from 'sonner';
 
+const STATUS_MESSAGES = {
+  checkout: {
+    success: 'Abonnement activé avec succès ! Bienvenue 🎉',
+    cancel: 'Paiement annulé. Vous pouvez réessayer à tout moment.',
+  },
+  upgrade: {
+    success: 'Votre plan a été mis à niveau avec succès ! 🚀',
+    cancel: 'Mise à niveau annulée.',
+  },
+} as const;
+
 export function Dashboard() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -16,33 +27,21 @@ export function Dashboard() {
   const { refetch } = useChannels();
 
   useEffect(() => {
-    const checkoutStatus = searchParams.get('checkout');
-    const upgradeStatus = searchParams.get('upgrade');
+    const params = ['checkout', 'upgrade'] as const;
+    
+    params.forEach((param) => {
+      const status = searchParams.get(param);
+      if (status === 'success' || status === 'cancel') {
+        const message = STATUS_MESSAGES[param][status];
+        status === 'success' ? toast.success(message) : toast.info(message);
+        searchParams.delete(param);
+      }
+    });
 
-    if (checkoutStatus === 'success') {
-      toast.success('Abonnement activé avec succès ! Bienvenue 🎉');
-      searchParams.delete('checkout');
-      setSearchParams(searchParams);
-    } else if (checkoutStatus === 'cancel') {
-      toast.info('Paiement annulé. Vous pouvez réessayer à tout moment.');
-      searchParams.delete('checkout');
-      setSearchParams(searchParams);
-    }
-
-    if (upgradeStatus === 'success') {
-      toast.success('Votre plan a été mis à niveau avec succès ! 🚀');
-      searchParams.delete('upgrade');
-      setSearchParams(searchParams);
-    } else if (upgradeStatus === 'cancel') {
-      toast.info('Mise à niveau annulée.');
-      searchParams.delete('upgrade');
+    if (searchParams.toString() !== new URLSearchParams().toString()) {
       setSearchParams(searchParams);
     }
   }, [searchParams, setSearchParams]);
-
-  const handleChannelClick = (channel: Channel) => {
-    navigate(`/channels/${channel.id}`);
-  };
 
   const handleChannelSettings = (channel: Channel) => {
     setSelectedChannel(channel);
@@ -50,31 +49,25 @@ export function Dashboard() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Tableau de bord</h1>
-        <p className="text-muted-foreground">
-          Gérez vos chaînes et vos projets vidéo
-        </p>
-      </div>
+    <div className="container mx-auto px-6 py-8 max-w-7xl">
 
       <ChannelsList
         onCreateChannel={() => setCreateModalOpen(true)}
         onChannelSettings={handleChannelSettings}
-        onChannelClick={handleChannelClick}
+        onChannelClick={(channel) => navigate(`/dashboard/channels/${channel.id}`)}
       />
 
       <CreateChannelModal
         open={createModalOpen}
         onOpenChange={setCreateModalOpen}
-        onSuccess={() => refetch()}
+        onSuccess={refetch}
       />
 
       <ChannelSettingsModal
         channel={selectedChannel}
         open={settingsModalOpen}
         onOpenChange={setSettingsModalOpen}
-        onUpdate={() => refetch()}
+        onUpdate={refetch}
       />
     </div>
   );

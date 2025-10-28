@@ -22,11 +22,9 @@ export const useProjects = (channelId?: string) => {
     setError(null);
     try {
       let result;
-      if (channelId) {
-        result = await projectService.list(channelId);
-      } else {
-        result = await projectService.listAll();
-      }
+      result = await projectService.list(channelId || '');
+
+      console.log('Fetched projects:', result.data);
       setProjects(result.data.projects);
     } catch (error) {
       setError(error as Error);
@@ -39,12 +37,8 @@ export const useProjects = (channelId?: string) => {
     refetch();
   }, [channelId]);
 
-  const filteredProjects = channelId
-    ? projects.filter((p) => p.channel_id === channelId)
-    : projects;
-
   return {
-    projects: filteredProjects,
+    projects,
     loading,
     error,
     refetch,

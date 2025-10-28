@@ -87,18 +87,6 @@ export function CreateChannelModal({
                 rows={3}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="youtube_url">URL YouTube</Label>
-              <Input
-                id="youtube_url"
-                type="url"
-                placeholder="https://youtube.com/@machaîne (optionnel)"
-                value={formData.youtube_url || ''}
-                onChange={(e) =>
-                  setFormData({ ...formData, youtube_url: e.target.value })
-                }
-              />
-            </div>
           </div>
           <DialogFooter>
             <Button

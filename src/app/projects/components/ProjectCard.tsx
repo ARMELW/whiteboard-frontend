@@ -37,8 +37,8 @@ export function ProjectCard({
   onDuplicate,
   onDelete,
 }: ProjectCardProps) {
-  const lastUpdateText = project.updated_at
-    ? formatDistanceToNow(new Date(project.updated_at), {
+  const lastUpdateText = project.updatedAt
+    ? formatDistanceToNow(new Date(project.updatedAt), {
         addSuffix: true,
         locale: fr,
       })
@@ -54,9 +54,9 @@ export function ProjectCard({
     <Card className="hover:shadow-lg transition-shadow group">
       <CardHeader className="p-0">
         <div className="relative aspect-video bg-muted rounded-t-lg overflow-hidden">
-          {project.thumbnail_url ? (
+          {project.thumbnailUrl ? (
             <img
-              src={project.thumbnail_url}
+              src={project.thumbnailUrl}
               alt={project.title}
               className="w-full h-full object-cover"
             />
@@ -112,7 +112,7 @@ export function ProjectCard({
         )}
       </CardContent>
       <CardFooter className="p-4 pt-0 flex items-center justify-between text-sm text-muted-foreground">
-        <span>{project.aspect_ratio}</span>
+        <span>{project.aspectRatio}</span>
         <span>{formatDuration(project.duration)}</span>
         <span>{lastUpdateText}</span>
       </CardFooter>

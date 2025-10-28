@@ -20,7 +20,8 @@ export function useCreateCheckout(): UseMutationResult<
       const upgradeParams: any = {
         successUrl: data.successUrl || window.location.origin + '/?checkout=success',
         cancelUrl: data.cancelUrl || window.location.origin + '/pricing?checkout=cancel',
-        plan: data.stripePriceId,
+        plan: data.planId,
+        referenceId: 'checkout_' + Date.now(),
         annual: data.billingPeriod === 'yearly',
       };
 

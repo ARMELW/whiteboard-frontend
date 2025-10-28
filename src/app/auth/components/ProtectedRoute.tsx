@@ -9,10 +9,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated } = useSession();
   const location = useLocation();
 
-  if (!isAuthenticated) {
+  // Ne protège que les routes autres que '/'
+  /**if (!isAuthenticated && location.pathname !== '/') {
     // Redirect to landing page while saving the attempted location
     return <Navigate to="/" state={{ from: location }} replace />;
-  }
+  }**/
 
   return <>{children}</>;
 }

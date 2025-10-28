@@ -1,18 +1,18 @@
 export interface Project {
   id: string;
-  user_id: string;
-  channel_id: string;
+  userId: string;
+  channelId: string;
   title: string;
   description: string | null;
-  thumbnail_url: string | null;
+  thumbnailUrl: string | null;
   resolution: '720p' | '1080p' | '4k';
-  aspect_ratio: '16:9' | '9:16' | '1:1' | '4:5';
+  aspectRatio: '16:9' | '9:16' | '1:1' | '4:5';
   fps: 24 | 30 | 60;
   duration: number;
   status: 'draft' | 'in_progress' | 'completed';
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
 }
 
 export interface ProjectPayload {

@@ -12,16 +12,16 @@ export interface BrandKit {
 
 export interface Channel {
   id: string;
-  user_id: string;
+  userId: string;
   name: string;
   description: string | null;
-  youtube_url: string | null;
-  brand_kit: BrandKit;
-  project_count: number;
-  total_videos_exported: number;
+  youtubeUrl: string | null;
+  brandKit: BrandKit;
+  projectCount: number;
+  totalVideosExported: number;
   status: 'active' | 'archived';
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ChannelPayload {

@@ -50,6 +50,7 @@ export function ChannelSettingsModal({
     e.preventDefault();
     try {
       await updateChannel(channel.id, formData);
+      onOpenChange(false);
       onUpdate?.();
     } catch (error) {
       // Error handled by action
@@ -87,9 +88,8 @@ export function ChannelSettingsModal({
           </DialogHeader>
 
           <Tabs defaultValue="general" className="mt-4">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="general">Général</TabsTrigger>
-              <TabsTrigger value="brand">Brand Kit</TabsTrigger>
               <TabsTrigger value="stats">Statistiques</TabsTrigger>
             </TabsList>
 
@@ -116,17 +116,7 @@ export function ChannelSettingsModal({
                     rows={3}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="youtube_url">URL YouTube</Label>
-                  <Input
-                    id="youtube_url"
-                    type="url"
-                    defaultValue={channel.youtube_url || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, youtube_url: e.target.value })
-                    }
-                  />
-                </div>
+              
                 <div className="flex gap-2">
                   <Button type="submit" disabled={isUpdating}>
                     {isUpdating ? (
@@ -138,47 +128,29 @@ export function ChannelSettingsModal({
                       'Enregistrer les modifications'
                     )}
                   </Button>
-                </div>
-              </form>
-
-              <div className="pt-6 border-t space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Zone de danger</h3>
                   <div className="flex gap-2">
                     <Button
-                      variant="outline"
+                      variant="destructive"
                       onClick={handleArchive}
                       disabled={isUpdating}
                     >
                       Archiver la chaîne
                     </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={() => setDeleteDialogOpen(true)}
-                      disabled={isUpdating}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Supprimer la chaîne
-                    </Button>
                   </div>
                 </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="brand" className="mt-4">
-              <BrandKitEditor channel={channel} onUpdate={onUpdate} />
+              </form>
             </TabsContent>
 
             <TabsContent value="stats" className="mt-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="border rounded-lg p-4">
                   <p className="text-sm text-muted-foreground">Projets</p>
-                  <p className="text-2xl font-bold">{channel.project_count}</p>
+                  <p className="text-2xl font-bold">{channel.projectCount}</p>
                 </div>
                 <div className="border rounded-lg p-4">
                   <p className="text-sm text-muted-foreground">Vidéos exportées</p>
                   <p className="text-2xl font-bold">
-                    {channel.total_videos_exported}
+                    {channel.totalVideosExported}
                   </p>
                 </div>
               </div>
@@ -187,7 +159,7 @@ export function ChannelSettingsModal({
                   Dernière activité
                 </p>
                 <p className="text-sm">
-                  {new Date(channel.updated_at).toLocaleDateString('fr-FR', {
+                  {new Date(channel.updatedAt).toLocaleDateString('fr-FR', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',

@@ -49,11 +49,11 @@ export const useScenesActions = () => {
   });
 
   const duplicateMutation = useMutation({
-    mutationFn: (id: string) => scenesService.duplicate(id),
-    onSuccess: (scene, sceneId) => {
+    mutationFn: ({ sceneId, projectId }: { sceneId: string; projectId?: string | null }) => scenesService.duplicate(sceneId, projectId),
+    onSuccess: (scene, variables) => {
       queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
       const scenes = useSceneStore.getState().scenes;
-      const sceneIndex = scenes.findIndex(s => s.id === sceneId);
+      const sceneIndex = scenes.findIndex(s => s.id === variables.sceneId);
       addSceneToStore(scene, sceneIndex);
     },
   });
@@ -234,7 +234,13 @@ export const useScenesActions = () => {
         const scenes = useSceneStore.getState().scenes;
         const scene = scenes.find(s => s.id === params.sceneId);
         if (scene?.layers) {
-          layerIndex = scene.layers.findIndex(l => l.id === params.layer.id);
+          // Avoid direct access to params.layer.id (params.layer may be undefined from TS perspective)
+          const layerId = params.layer?.id;
+          if (layerId) {
+            layerIndex = scene.layers.findIndex(l => l.id === layerId);
+          } else {
+            layerIndex = -1;
+          }
         }
       }
       
@@ -264,7 +270,10 @@ export const useScenesActions = () => {
 
     // Ajout duplication de scène
     duplicateScene: async (sceneId: string) => {
-      return await duplicateMutation.mutateAsync(sceneId);
+  // Récupère le projectId courant depuis le store
+  const currentProjectId = useSceneStore.getState().currentProjectId;
+  // Passe le projectId à la mutation de duplication
+  return await duplicateMutation.mutateAsync({ sceneId, projectId: currentProjectId });
     },
   };
 };

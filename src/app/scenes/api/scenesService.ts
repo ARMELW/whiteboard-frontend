@@ -153,7 +153,7 @@ class ScenesService extends BaseService<Scene> {
     return httpClient.default.checkIsOnline();
   }
 
-  async duplicate(id: string): Promise<Scene> {
+  async duplicate(id: string, projectId?: string | null): Promise<Scene> {
     await this.delay();
     const scene = await this.detail(id);
 
@@ -188,7 +188,7 @@ class ScenesService extends BaseService<Scene> {
       ...scene,
       id: `scene-${Date.now()}`,
       title: `${scene.title} (Copie)`,
-      projectId: scene.projectId,
+      projectId: scene.id,
       sceneCameras,
       multiTimeline: scene.multiTimeline || createMultiTimeline(scene.duration),
       createdAt: new Date().toISOString(),

@@ -42,34 +42,8 @@ const LayersTab: React.FC = () => {
 
   return (
     <div className="p-3">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-bold">Layers</h3>
-        <div className="flex gap-1">
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            size="sm"
-            variant="outline"
-            className="gap-1"
-            title="Add Image"
-          >
-            <Upload className="w-3 h-3" />
-          </Button>
-          <Button
-            onClick={handleAddText}
-            size="sm"
-            className="gap-1"
-          >
-            <Plus className="w-3 h-3" />
-            Text
-          </Button>
-        </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleImageUpload}
-          className="hidden"
-        />
+      <div className="flex items-center justify-between mb-3 py-2 border-b border-gray-200">
+        <h3 className="text-md font-bold">Layers</h3>
       </div>
       {scene && scene.layers && scene.layers.length > 0 ? (
         <LayersListPanel

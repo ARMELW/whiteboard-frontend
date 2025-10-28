@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { Camera as CameraType } from '@/app/scenes/types';
+import { useNavigate } from 'react-router-dom';
 
 interface AnimationHeaderProps {
   onOpenTemplateLibrary: () => void;
@@ -49,9 +50,9 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
   const openWizard = useWizardStore((state) => state.openWizard);
   const { generatePreview, isGenerating } = useQuickPreview();
   const { saveAllScenes, isSaving, lastSaved } = useSaveScene();
-  
+  const navigate = useNavigate();
   const { undo, redo, canUndo, canRedo } = useHistory();
-  
+
   const effectiveSelectedCameraId = selectedCameraId || (cameras.length > 0 ? cameras[0].id : null);
   const selectedCamera = cameras.find(c => c.id === effectiveSelectedCameraId);
 
@@ -108,12 +109,20 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
       {/* Left: Logo & Project Name */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <FileVideo className="w-6 h-6 text-purple-500" />
+          <button
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium transition-all focus:outline-none focus:ring-2 focus:ring-primary"
+            onClick={() => navigate(-1)}
+          >
+            <svg width="20" height="20" fill="none" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12.5 16L7.5 10L12.5 4" stroke="#4B5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="hidden sm:inline">Retour</span>
+          </button>
         </div>
         <div className="h-6 w-px bg-gray-700" />
-        
+
         {/* Camera Controls */}
-        {hasCurrentScene && cameras.length > 0 && (
+        {/**hasCurrentScene && cameras.length > 0 && (
           <>
             <div className="flex items-center gap-2">
               <Camera className="w-5 h-5 text-purple-500" />
@@ -151,7 +160,6 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
               Gérer
             </button>
             
-            {/* Scene Zoom Controls */}
             <div className="flex items-center gap-2 ml-2">
               <button
                 onClick={() => onSceneZoom && onSceneZoom(Math.max(0.5, sceneZoom - 0.1))}
@@ -172,7 +180,6 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
               </button>
             </div>
             
-            {/* Camera Lock/Unlock (if camera selected and not default) */}
             {selectedCamera && !selectedCamera.isDefault && (
               <button
                 onClick={() => onToggleLock && onToggleLock(selectedCamera.id)}
@@ -190,12 +197,10 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
             
             <div className="h-6 w-px bg-gray-700" />
           </>
-        )}
-      </div>
+        )}**/}
 
-      {/* Center: Quick Actions */}
-      <div className="flex items-center gap-2">
-        {/* AI Wizard Button */}
+        {/* Center: Quick Actions */}
+        {/* AI Wizard Button 
         <button
           onClick={openWizard}
           className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded transition-all shadow-md hover:shadow-lg"
@@ -206,15 +211,14 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
         </button>
         
         <div className="h-6 w-px bg-gray-300 mx-2" />
-        
+        */}
         <button
           onClick={handleUndo}
           disabled={!canUndo}
-          className={`p-2 rounded transition-colors ${
-            canUndo
+          className={`p-2 rounded transition-colors ${!canUndo
               ? 'hover:bg-gray-800 text-gray-300'
               : 'text-gray-500 cursor-not-allowed'
-          }`}
+            }`}
           title="Annuler (Ctrl+Z)"
         >
           <Undo className="w-5 h-5" />
@@ -222,35 +226,37 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
         <button
           onClick={handleRedo}
           disabled={!canRedo}
-          className={`p-2 rounded transition-colors ${
-            canRedo
+          className={`p-2 rounded transition-colors ${!canRedo
               ? 'hover:bg-gray-800 text-gray-300'
               : 'text-gray-500 cursor-not-allowed'
-          }`}
+            }`}
           title="Rétablir (Ctrl+Y)"
         >
           <Redo className="w-5 h-5" />
         </button>
         <button
           onClick={() => setShowHistoryPanel(!showHistoryPanel)}
-          className={`p-2 rounded transition-colors ${
-            showHistoryPanel
+          className={`p-2 rounded transition-colors ${showHistoryPanel
               ? 'bg-purple-600 text-white'
               : 'hover:bg-gray-800 text-gray-300'
-          }`}
+            }`}
           title="Afficher l'historique"
         >
           <Clock className="w-5 h-5" />
         </button>
         <div className="h-6 w-px  mx-2" />
+
+      </div>
+
+      {/* Right: Save & Export */}
+      <div className="flex items-center gap-2">
         <button
           onClick={handlePreviewClick}
           disabled={isGenerating}
-          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
-            isGenerating
+          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${isGenerating
               ? 'bg-blue-400 cursor-not-allowed'
               : 'bg-blue-600 hover:bg-blue-700'
-          } text-white`}
+            } text-white`}
           title={isGenerating ? "Génération en cours..." : "Prévisualiser"}
         >
           {isGenerating ? (
@@ -260,10 +266,6 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
           )}
           {isGenerating ? 'Génération...' : ''}
         </button>
-      </div>
-
-      {/* Right: Save & Export */}
-      <div className="flex items-center gap-2">
         <button
           onClick={onOpenTemplateLibrary}
           className="flex items-center gap-2 px-3 py-2 hover:bg-gray-800 text-gray-300 rounded transition-colors"
@@ -275,11 +277,10 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
         <button
           onClick={onSaveAsTemplate}
           disabled={!hasCurrentScene}
-          className={`flex items-center gap-2 px-3 py-2 rounded transition-colors ${
-            hasCurrentScene
+          className={`flex items-center gap-2 px-3 py-2 rounded transition-colors ${hasCurrentScene
               ? 'hover:bg-gray-800 text-gray-300'
               : 'text-gray-500 cursor-not-allowed'
-          }`}
+            }`}
           title="Sauvegarder comme template"
         >
           <BookmarkPlus className="w-4 h-4" />
@@ -288,11 +289,10 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
           <button
             onClick={onOpenThumbnailMaker}
             disabled={!hasCurrentScene}
-            className={`flex items-center gap-2 px-3 py-2 rounded transition-colors ${
-              hasCurrentScene
+            className={`flex items-center gap-2 px-3 py-2 rounded transition-colors ${hasCurrentScene
                 ? 'hover:bg-gray-800 text-gray-300'
                 : 'text-gray-500 cursor-not-allowed'
-            }`}
+              }`}
             title="Créer une miniature YouTube"
           >
             <ImageIcon className="w-4 h-4" />
@@ -303,21 +303,20 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
         <button
           onClick={handleSaveClick}
           disabled={isSaving || !hasCurrentScene}
-          className={`flex items-center gap-2 px-3 py-2 rounded transition-colors ${
-            isSaving
+          className={`flex items-center gap-2 px-3 py-2 rounded transition-colors ${isSaving
               ? 'bg-gray-600 cursor-wait'
               : lastSaved
-              ? 'bg-green-600 hover:bg-green-700 text-white'
-              : hasCurrentScene
-              ? 'hover:bg-gray-800 text-gray-300'
-              : 'text-gray-500 cursor-not-allowed'
-          }`}
+                ? 'bg-green-600 hover:bg-green-700 text-white'
+                : hasCurrentScene
+                  ? 'hover:bg-gray-800 text-gray-300'
+                  : 'text-gray-500 cursor-not-allowed'
+            }`}
           title={
             isSaving
               ? 'Sauvegarde en cours...'
               : lastSaved
-              ? `Dernière sauvegarde: ${lastSaved.toLocaleTimeString()}`
-              : 'Sauvegarder (Ctrl+S)'
+                ? `Dernière sauvegarde: ${lastSaved.toLocaleTimeString()}`
+                : 'Sauvegarder (Ctrl+S)'
           }
         >
           {isSaving ? (

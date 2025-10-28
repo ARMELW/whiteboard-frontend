@@ -75,7 +75,7 @@ class BaseService<T extends { id: string }> {
     if (!this.endpoints.create) {
       throw new Error('Create endpoint not configured');
     }
-
+    
     const newItem = {
       ...payload,
       id: payload.id || `${Date.now()}`,

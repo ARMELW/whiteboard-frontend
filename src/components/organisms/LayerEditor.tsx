@@ -118,6 +118,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
   const lastSavedStateRef = useRef<string>('');
   const isSavingRef = useRef(false);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const handleSaveRef = useRef<() => Promise<void>>();
 
   // Fonction pour créer un hash simple de l'état (pour détecter les changements)
   const createStateHash = useCallback((state: any) => {
@@ -168,6 +169,11 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
     }
   }, [scene?.id, editedScene, updateScene, createStateHash]);
 
+  // Keep handleSaveRef up to date with latest handleSave
+  useEffect(() => {
+    handleSaveRef.current = handleSave;
+  }, [handleSave]);
+
   // Auto-save on scene changes with debounce
   useEffect(() => {
     if (!scene?.id || !editedScene) return;
@@ -179,7 +185,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
 
     // Set new timeout for auto-save (3 seconds after last change)
     autoSaveTimeoutRef.current = setTimeout(() => {
-      handleSave();
+      handleSaveRef.current?.();
     }, 3000);
 
     // Cleanup
@@ -188,20 +194,20 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
         clearTimeout(autoSaveTimeoutRef.current);
       }
     };
-  }, [editedScene, scene?.id]); // Removed handleSave from dependencies
+  }, [editedScene, scene?.id]);
 
   // Auto-save on window blur (when user switches tabs or windows)
   useEffect(() => {
     const handleWindowBlur = () => {
       // Save immediately when user defocuses the window
       if (scene?.id && editedScene) {
-        handleSave();
+        handleSaveRef.current?.();
       }
     };
 
     window.addEventListener('blur', handleWindowBlur);
     return () => window.removeEventListener('blur', handleWindowBlur);
-  }, [scene?.id, editedScene]); // Removed handleSave from dependencies
+  }, [scene?.id, editedScene]);
 
   // Sauvegarder avant de quitter la page
   useEffect(() => {
@@ -210,7 +216,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
       const currentStateHash = createStateHash(editedScene);
       if (currentStateHash !== lastSavedStateRef.current) {
         // Trigger save (note: this is best effort, browsers may not wait)
-        handleSave();
+        handleSaveRef.current?.();
         
         // Show warning to user
         e.preventDefault();
@@ -220,7 +226,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [editedScene, createStateHash]); // Removed handleSave from dependencies
+  }, [editedScene, createStateHash]);
 
   const handleCropComplete = async (croppedImageUrl: string, imageDimensions?: { width: number; height: number }, tags?: string[]) => {
     const newLayer = await handleCropCompleteBase(croppedImageUrl, imageDimensions, pendingImageData, editedScene.layers.length, tags);

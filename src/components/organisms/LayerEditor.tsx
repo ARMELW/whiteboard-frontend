@@ -188,7 +188,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
         clearTimeout(autoSaveTimeoutRef.current);
       }
     };
-  }, [editedScene, scene?.id, handleSave]);
+  }, [editedScene, scene?.id]); // Removed handleSave from dependencies
 
   // Auto-save on window blur (when user switches tabs or windows)
   useEffect(() => {
@@ -201,7 +201,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
 
     window.addEventListener('blur', handleWindowBlur);
     return () => window.removeEventListener('blur', handleWindowBlur);
-  }, [scene?.id, editedScene, handleSave]);
+  }, [scene?.id, editedScene]); // Removed handleSave from dependencies
 
   // Sauvegarder avant de quitter la page
   useEffect(() => {
@@ -220,7 +220,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [editedScene, handleSave, createStateHash]);
+  }, [editedScene, createStateHash]); // Removed handleSave from dependencies
 
   const handleCropComplete = async (croppedImageUrl: string, imageDimensions?: { width: number; height: number }, tags?: string[]) => {
     const newLayer = await handleCropCompleteBase(croppedImageUrl, imageDimensions, pendingImageData, editedScene.layers.length, tags);

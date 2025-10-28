@@ -108,11 +108,20 @@ export const useScenesActionsWithHistory = () => {
         ...layerToDuplicate,
         id: `${Date.now()}-${Math.random()}`,
         name: `${layerToDuplicate.name} (copie)`,
+        // Offset position slightly to make it visible
+        position: layerToDuplicate.position ? {
+          x: layerToDuplicate.position.x + 20,
+          y: layerToDuplicate.position.y + 20
+        } : undefined
       };
       
       // Insert the duplicated layer right after the original layer
+      // This will handle both history tracking AND store update
       duplicateLayerWithHistory(params.sceneId, newLayer, layerIndex);
-      await standardActions.duplicateLayer(params);
+      
+      // Note: We don't call standardActions.duplicateLayer here because
+      // duplicateLayerWithHistory already handles the store update
+      // Calling both would create duplicate layers
     },
     
     // Property operations with history - calls both history tracking AND API

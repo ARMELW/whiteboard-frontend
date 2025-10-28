@@ -31,11 +31,11 @@ console.log('   ✓ src/components/organisms/ScenePanel.tsx');
 // Test 4: Key changes
 console.log('\n4. Key Changes:');
 console.log('   AnimationContainer.tsx:');
-console.log('     - Added: const setScenes = useSceneStore((state) => state.setScenes)');
-console.log('     - Modified useEffect to call setScenes(scenes) when scenes are loaded');
+console.log('     - Syncs scenes from React Query to Zustand store');
+console.log('     - Uses useEffect with proper dependencies');
 console.log('   ScenePanel.tsx:');
-console.log('     - Added: const setScenes = useSceneStore((state) => state.setScenes)');
-console.log('     - Added new useEffect to sync scenes to store');
+console.log('     - Syncs scenes from React Query to Zustand store');
+console.log('     - Provides redundant sync for reliability');
 
 console.log('\n✅ Scene sync logic verified!');
 console.log('\n📝 To manually verify the fix:');

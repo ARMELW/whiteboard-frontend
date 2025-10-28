@@ -139,6 +139,10 @@ export const LayerImage: React.FC<LayerImageProps> = ({
           const newScaleX = currentScale * currentScaleX * transformScaleX;
           const newScaleY = currentScale * currentScaleY * transformScaleY;
 
+          // Reset node scales BEFORE calling onChange to prevent re-render with stale values
+          node.scaleX(1);
+          node.scaleY(1);
+
           onChange({
             ...layer,
             position: {
@@ -150,9 +154,6 @@ export const LayerImage: React.FC<LayerImageProps> = ({
             scaleY: Math.abs(newScaleX) > Number.EPSILON ? newScaleY / newScaleX : 1.0,
             rotation: node.rotation(),
           });
-          
-          node.scaleX(1);
-          node.scaleY(1);
         }}
       />
       {isSelected && !layer.locked && (

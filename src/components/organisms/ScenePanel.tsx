@@ -303,7 +303,7 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
                         e.stopPropagation();
                         handleMoveScene(index, 'right');
                       }}
-                      disabled={index === scenes.length - 1}
+                      disabled={index === storedScenes.length - 1}
                     >
                       <ArrowRight className="h-3.5 w-3.5" />
                     </Button>

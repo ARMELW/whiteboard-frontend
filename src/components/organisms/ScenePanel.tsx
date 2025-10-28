@@ -21,11 +21,6 @@ interface ScenePanelProps {
 }
 
 const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
-  // Local state for generated thumbnails
-  const [sceneThumbnails, setSceneThumbnails] = useState<{ [sceneId: string]: string }>({});
-
-  // Generate thumbnails for scenes missing sceneImage
-
   // Pour ouvrir asset library et shape toolbar
   // const setShowAssetLibrary = useSceneStore((state) => state.setShowAssetLibrary);
   const { scenes, loading: scenesLoading } = useScenes();
@@ -33,6 +28,7 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   const selectedSceneIndex = useSceneStore((state) => state.selectedSceneIndex);
   const setSelectedSceneIndex = useSceneStore((state) => state.setSelectedSceneIndex);
   const setScenes = useSceneStore((state) => state.setScenes);
+  const storedScenes = useSceneStore((state) => state.scenes);
   const openWizard = useWizardStore((state) => state.openWizard);
   
   const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false);
@@ -48,10 +44,14 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   // Use actions from useScenesActionsWithHistory hook for history tracking
   const { createScene, deleteScene, duplicateScene, reorderScenes } = useScenesActionsWithHistory();
 
-  // Sync scenes from React Query to Zustand store
+  // Sync scenes from React Query to Zustand store and update thumbnails
   useEffect(() => {
     if (!scenesLoading) {
       setScenes(scenes);
+      // Update thumbnails for all scenes after they're loaded
+      scenes.forEach(scene => {
+        useSceneStore.getState().updateSceneThumbnail(scene.id);
+      });
     }
   }, [scenes, scenesLoading, setScenes]);
 
@@ -77,49 +77,6 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
     }
   }, [selectedSceneIndex]);
 
-  // Regenerate thumbnail for every scene when scenes change (layer add, modify, etc)
-  useEffect(() => {
-    const generateThumbnails = async () => {
-      const updates: { [sceneId: string]: string } = {};
-      for (const scene of scenes) {
-        // Always regenerate thumbnail for every scene
-        const { generateSceneThumbnail, THUMBNAIL_CONFIG } = await import('@/utils/sceneThumbnail');
-        const thumb = await generateSceneThumbnail(scene, {
-          thumbnailWidth: THUMBNAIL_CONFIG.WIDTH,
-          thumbnailHeight: THUMBNAIL_CONFIG.HEIGHT,
-        });
-        updates[scene.id] = thumb;
-      }
-      if (Object.keys(updates).length > 0) {
-        setSceneThumbnails((prev) => ({ ...prev, ...updates }));
-      }
-    };
-    if (scenes.length > 0) {
-      generateThumbnails();
-    }
-  }, [scenes]);
-  useEffect(() => {
-    const generateThumbnails = async () => {
-      const updates: { [sceneId: string]: string } = {};
-      for (const scene of scenes) {
-        if (!scene.sceneImage && !sceneThumbnails[scene.id]) {
-          // Dynamically import to avoid SSR issues
-          const { generateSceneThumbnail, THUMBNAIL_CONFIG } = await import('@/utils/sceneThumbnail');
-          const thumb = await generateSceneThumbnail(scene, {
-            thumbnailWidth: THUMBNAIL_CONFIG.WIDTH,
-            thumbnailHeight: THUMBNAIL_CONFIG.HEIGHT,
-          });
-          updates[scene.id] = thumb;
-        }
-      }
-      if (Object.keys(updates).length > 0) {
-        setSceneThumbnails((prev) => ({ ...prev, ...updates }));
-      }
-    };
-    if (scenes.length > 0) {
-      generateThumbnails();
-    }
-  }, [scenes]);
   // Navigate to previous scene
   const handleNavigatePrevious = useCallback(() => {
     if (selectedSceneIndex > 0) {
@@ -272,7 +229,11 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
       >
         <div className="flex gap-4 h-full items-start">
           {/* Render all scenes without chapters */}
-          {scenes.map((scene, index) => (
+          {storedScenes.map((scene, index) => {
+            // Find the matching scene from React Query to get the most up-to-date data
+            const reactQueryScene = scenes.find(s => s.id === scene.id) || scene;
+            
+            return (
             <Card
               key={scene.id}
               ref={(el) => (sceneRefs.current[index] = el)}
@@ -288,13 +249,6 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
                   {scene.sceneImage ? (
                     <img
                       src={scene.sceneImage}
-                      alt={`Scene ${index + 1}`}
-                      className="w-full h-full object-contain"
-                      style={{ backgroundColor: THUMBNAIL_CONFIG.BACKGROUND_COLOR }}
-                    />
-                  ) : sceneThumbnails[scene.id] ? (
-                    <img
-                      src={sceneThumbnails[scene.id]}
                       alt={`Scene ${index + 1}`}
                       className="w-full h-full object-contain"
                       style={{ backgroundColor: THUMBNAIL_CONFIG.BACKGROUND_COLOR }}
@@ -418,7 +372,8 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
                 </div>
               </div>
             </Card>
-          ))}
+          );
+          })}
         
         {/* Add Scene Card */}
         <Card

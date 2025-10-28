@@ -12,7 +12,7 @@ export interface LayerImageProps {
   allLayers?: any[];
 }
 
-export const LayerImage: React.FC<LayerImageProps> = ({ 
+const LayerImageComponent: React.FC<LayerImageProps> = ({ 
   layer, 
   isSelected, 
   onSelect, 
@@ -159,3 +159,20 @@ export const LayerImage: React.FC<LayerImageProps> = ({
     </>
   );
 };
+
+function areEqual(prevProps: LayerImageProps, nextProps: LayerImageProps) {
+  // Compare layer id, position, scale, rotation, isSelected, locked
+  const l1 = prevProps.layer;
+  const l2 = nextProps.layer;
+  return (
+    l1.id === l2.id &&
+    l1.position?.x === l2.position?.x &&
+    l1.position?.y === l2.position?.y &&
+    l1.scale === l2.scale &&
+    l1.rotation === l2.rotation &&
+    l1.locked === l2.locked &&
+    prevProps.isSelected === nextProps.isSelected
+  );
+}
+
+export const LayerImage = React.memo(LayerImageComponent, areEqual);

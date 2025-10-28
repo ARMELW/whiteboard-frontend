@@ -89,7 +89,8 @@ class ScenesService extends BaseService<Scene> {
     }
 
     // Transform for backend if using API
-    if (this.shouldUseBackend()) {
+    const useBackend = await this.shouldUseBackendAsync();
+    if (useBackend) {
       const transformedScene = this.transformSceneForBackend(defaultScene);
       const response = await this.createWithTransform(transformedScene);
       return this.transformSceneFromBackend(response);
@@ -110,9 +111,9 @@ class ScenesService extends BaseService<Scene> {
   /**
    * Check if backend should be used (using parent's protected method)
    */
-  private shouldUseBackend(): boolean {
-    const httpClient = require('../../../services/api/httpClient').default;
-    return this.useBackend && this.mode !== 'localStorage' && httpClient.checkIsOnline();
+  private async shouldUseBackendAsync(): Promise<boolean> {
+    const httpClient = await import('../../../services/api/httpClient');
+    return this.useBackend && this.mode !== 'localStorage' && httpClient.default.checkIsOnline();
   }
 
   async duplicate(id: string): Promise<Scene> {

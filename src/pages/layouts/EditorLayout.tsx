@@ -8,7 +8,7 @@ export function EditorLayout() {
   const setCurrentProjectId = useSceneStore((state) => state.setCurrentProjectId);
   const resetSceneStore = useSceneStore((state) => state.reset);
   const setCurrentProject = useProjectStore((state) => state.setCurrentProject);
-  const previousProjectId = useRef<string | undefined>(projectId);
+  const previousProjectId = useRef<string | undefined>();
 
   // Update project ID when it changes
   useEffect(() => {
@@ -19,8 +19,9 @@ export function EditorLayout() {
         setCurrentProject(null);
       }
       setCurrentProjectId(projectId);
-      previousProjectId.current = projectId;
     }
+    // Update ref after effect runs
+    previousProjectId.current = projectId;
   }, [projectId, setCurrentProjectId, resetSceneStore, setCurrentProject]);
 
   // Cleanup on unmount (navigating away from editor)

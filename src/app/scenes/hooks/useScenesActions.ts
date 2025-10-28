@@ -62,8 +62,9 @@ export const useScenesActions = () => {
     mutationFn: ({ sceneId, layer }: { sceneId: string; layer: Layer }) =>
       scenesService.addLayer(sceneId, layer),
     onSuccess: (scene) => {
+      // Invalidate queries to refetch scenes with the new layer
+      // The ScenePanel will sync the refetched scenes to the store
       queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
-      updateSceneInStore(scene);
     },
   });
 
@@ -71,8 +72,9 @@ export const useScenesActions = () => {
     mutationFn: ({ sceneId, layerId, layerData }: { sceneId: string; layerId: string; layerData: Partial<Layer> }) =>
       scenesService.updateLayer(sceneId, layerId, layerData),
     onSuccess: (scene) => {
+      // Invalidate queries to refetch scenes with the updated layer
+      // The ScenePanel will sync the refetched scenes to the store
       queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
-      updateSceneInStore(scene);
     },
   });
 
@@ -80,8 +82,9 @@ export const useScenesActions = () => {
     mutationFn: ({ sceneId, layerId }: { sceneId: string; layerId: string }) =>
       scenesService.deleteLayer(sceneId, layerId),
     onSuccess: (scene) => {
+      // Invalidate queries to refetch scenes without the deleted layer
+      // The ScenePanel will sync the refetched scenes to the store
       queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
-      updateSceneInStore(scene);
     },
   });
 
@@ -89,8 +92,9 @@ export const useScenesActions = () => {
     mutationFn: ({ sceneId, camera }: { sceneId: string; camera: Camera }) =>
       scenesService.addCamera(sceneId, camera),
     onSuccess: (scene) => {
+      // Invalidate queries to refetch scenes with the new camera
+      // The ScenePanel will sync the refetched scenes to the store
       queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
-      updateSceneInStore(scene);
     },
   });
 
@@ -137,11 +141,13 @@ export const useScenesActions = () => {
       await reorderMutation.mutateAsync(sceneIds);
     },
     addLayer: async (params: { sceneId: string; layer: Layer }) => {
-      addLayerToStore(params.sceneId, params.layer);
+      // Note: Store update is handled by useScenesActionsWithHistory via addLayerWithHistory
+      // The mutation's onSuccess will sync the final state from the API
       await addLayerMutation.mutateAsync(params);
     },
     updateLayer: async (params: { sceneId: string; layer: Layer }) => {
-      updateLayerInStore(params.sceneId, params.layer);
+      // Note: Store update is handled by useScenesActionsWithHistory via updateLayerWithHistory
+      // The mutation's onSuccess will sync the final state from the API
       await updateLayerMutation.mutateAsync({ 
         sceneId: params.sceneId, 
         layerId: params.layer.id, 
@@ -158,11 +164,13 @@ export const useScenesActions = () => {
       });
     },
     deleteLayer: async (params: { sceneId: string; layerId: string }) => {
-      deleteLayerFromStore(params.sceneId, params.layerId);
+      // Note: Store update is handled by useScenesActionsWithHistory via deleteLayerWithHistory
+      // The mutation's onSuccess will sync the final state from the API
       await deleteLayerMutation.mutateAsync(params);
     },
     addCamera: async (params: { sceneId: string; camera: Camera }) => {
-      addCameraToStore(params.sceneId, params.camera);
+      // Note: Store update is handled by useScenesActionsWithHistory via addCameraWithHistory
+      // The mutation's onSuccess will sync the final state from the API
       await addCameraMutation.mutateAsync(params);
     },
     moveLayer: async (params: { sceneId: string; layerId?: string; from?: number; to?: number; direction?: 'up' | 'down' }) => {

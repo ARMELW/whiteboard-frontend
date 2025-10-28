@@ -33,15 +33,16 @@ export const generateSceneThumbnail = async (scene: Scene, options: {
   } = options;
 
   try {
-    // Check if scene has a default camera with required properties
+    // Check if scene has a default camera
     const defaultCamera = scene.sceneCameras?.find((cam: Camera) => (cam as any).isDefault);
     
-    if (!defaultCamera || !(defaultCamera as any).width || !(defaultCamera as any).height) {
-      console.warn('Scene has no default camera with dimensions, cannot generate thumbnail');
+    if (!defaultCamera) {
+      console.warn('Scene has no default camera, cannot generate thumbnail');
       return '';
     }
 
     // Use the exportSceneImage function to generate the thumbnail with higher pixel ratio
+    // Default to 1920x1080 if camera dimensions are not available
     const sceneImage = await exportSceneImage(scene, {
       sceneWidth: 1920,
       sceneHeight: 1080,

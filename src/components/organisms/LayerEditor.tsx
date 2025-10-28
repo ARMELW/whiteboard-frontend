@@ -118,7 +118,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
   const lastSavedStateRef = useRef<string>('');
   const isSavingRef = useRef(false);
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const handleSaveRef = useRef<() => Promise<void>>();
+  const handleSaveRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
   // Fonction pour créer un hash simple de l'état (pour détecter les changements)
   const createStateHash = useCallback((state: any) => {
@@ -185,7 +185,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
 
     // Set new timeout for auto-save (3 seconds after last change)
     autoSaveTimeoutRef.current = setTimeout(() => {
-      handleSaveRef.current?.();
+      handleSaveRef.current();
     }, 3000);
 
     // Cleanup
@@ -201,7 +201,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
     const handleWindowBlur = () => {
       // Save immediately when user defocuses the window
       if (scene?.id && editedScene) {
-        handleSaveRef.current?.();
+        handleSaveRef.current();
       }
     };
 
@@ -216,7 +216,7 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
       const currentStateHash = createStateHash(editedScene);
       if (currentStateHash !== lastSavedStateRef.current) {
         // Trigger save (note: this is best effort, browsers may not wait)
-        handleSaveRef.current?.();
+        handleSaveRef.current();
         
         // Show warning to user
         e.preventDefault();

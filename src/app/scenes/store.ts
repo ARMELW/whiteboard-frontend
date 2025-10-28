@@ -260,7 +260,12 @@ export const useSceneStore = create<SceneState>((set) => ({
   },
   
   // UI Actions
-  setSelectedSceneIndex: (index) => set({ selectedSceneIndex: index }),
+  setSelectedSceneIndex: (index) => set({ 
+    selectedSceneIndex: index,
+    // Clear layer selection when changing scenes to prevent stale selections
+    selectedLayerId: null,
+    selectedLayerIds: []
+  }),
   setSelectedLayerId: (id) => set({ selectedLayerId: id, selectedLayerIds: id ? [id] : [] }),
   setSelectedLayerIds: (ids) => set({ 
     selectedLayerIds: ids,

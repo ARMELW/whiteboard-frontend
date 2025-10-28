@@ -37,34 +37,49 @@ export const useLayerEditor = ({
     }
   }, [externalOnSelectLayer]);
 
+  // Track the current scene ID to detect scene changes
+  const currentSceneIdRef = useRef<string | null>(null);
+  
   useEffect(() => {
-    // Flush any pending layer updates before switching scenes
-    const flushPendingUpdates = async () => {
-      if (updateTimerRef.current) {
-        clearTimeout(updateTimerRef.current);
-        updateTimerRef.current = null;
-      }
-      
-      const updates = Array.from(pendingLayerUpdatesRef.current.values());
-      pendingLayerUpdatesRef.current.clear();
-      
-      // Execute updates sequentially to avoid race conditions
-      for (const update of updates) {
-        try {
-          await updateLayer(update);
-        } catch (error) {
-          console.error('[useLayerEditor] Failed to flush pending update:', error);
-        }
-      }
-    };
+    // Only flush and update when the scene ID actually changes
+    const sceneId = scene?.id;
     
-    flushPendingUpdates().then(() => {
+    if (currentSceneIdRef.current !== sceneId) {
+      currentSceneIdRef.current = sceneId;
+      
+      // Flush any pending layer updates before switching scenes
+      const flushPendingUpdates = async () => {
+        if (updateTimerRef.current) {
+          clearTimeout(updateTimerRef.current);
+          updateTimerRef.current = null;
+        }
+        
+        const updates = Array.from(pendingLayerUpdatesRef.current.values());
+        pendingLayerUpdatesRef.current.clear();
+        
+        // Execute updates sequentially to avoid race conditions
+        for (const update of updates) {
+          try {
+            await updateLayer(update);
+          } catch (error) {
+            console.error('[useLayerEditor] Failed to flush pending update:', error);
+          }
+        }
+      };
+      
+      flushPendingUpdates().then(() => {
+        setEditedScene(scene);
+        // Clear selection when scene changes - it will be handled by the store
+        setSelectedLayerId(null);
+      });
+    } else {
+      // Scene ID hasn't changed, just update the scene data
       setEditedScene(scene);
-      // If the selected layer is no longer in the scene, deselect it.
+      // If the selected layer is no longer in the scene, deselect it
       if (selectedLayerId && !scene?.layers?.some((l: any) => l.id === selectedLayerId)) {
         setSelectedLayerId(null);
       }
-    });
+    }
   }, [scene, selectedLayerId, setSelectedLayerId, updateLayer]);
 
   const handleChange = useCallback((field: string, value: any) => {

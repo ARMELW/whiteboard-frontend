@@ -39,12 +39,16 @@ export const useLayerEditor = ({
 
   // Track the current scene ID to detect scene changes
   const currentSceneIdRef = useRef<string | null>(null);
+  const isMountedRef = useRef<boolean>(true);
   
   useEffect(() => {
+    isMountedRef.current = true;
+    
     // Only flush and update when the scene ID actually changes
     const sceneId = scene?.id;
     
     if (currentSceneIdRef.current !== sceneId) {
+      const previousSceneId = currentSceneIdRef.current;
       currentSceneIdRef.current = sceneId;
       
       // Flush any pending layer updates before switching scenes
@@ -59,6 +63,12 @@ export const useLayerEditor = ({
         
         // Execute updates sequentially to avoid race conditions
         for (const update of updates) {
+          // Check if component is still mounted and scene hasn't changed again
+          if (!isMountedRef.current || currentSceneIdRef.current !== sceneId) {
+            console.log('[useLayerEditor] Cancelling flush - scene changed or component unmounted');
+            break;
+          }
+          
           try {
             await updateLayer(update);
           } catch (error) {
@@ -68,9 +78,12 @@ export const useLayerEditor = ({
       };
       
       flushPendingUpdates().then(() => {
-        setEditedScene(scene);
-        // Clear selection when scene changes - it will be handled by the store
-        setSelectedLayerId(null);
+        // Only update state if still mounted and on the same scene
+        if (isMountedRef.current && currentSceneIdRef.current === sceneId) {
+          setEditedScene(scene);
+          // Clear selection when scene changes - it will be handled by the store
+          setSelectedLayerId(null);
+        }
       });
     } else {
       // Scene ID hasn't changed, just update the scene data
@@ -80,6 +93,11 @@ export const useLayerEditor = ({
         setSelectedLayerId(null);
       }
     }
+    
+    // Cleanup on unmount
+    return () => {
+      isMountedRef.current = false;
+    };
   }, [scene, selectedLayerId, setSelectedLayerId, updateLayer]);
 
   const handleChange = useCallback((field: string, value: any) => {

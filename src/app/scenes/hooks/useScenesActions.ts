@@ -1,52 +1,170 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSceneStore } from '../store';
 import { ScenePayload, Layer, Camera } from '../types';
 import scenesService from '../api/scenesService';
+import { scenesKeys } from '../config';
 
 export const useScenesActions = () => {
-  const addScene = useSceneStore((state) => state.addScene);
-  const updateScene = useSceneStore((state) => state.updateScene);
+  const queryClient = useQueryClient();
+  
+  // UI state from store
+  const addSceneToStore = useSceneStore((state) => state.addScene);
+  const updateSceneInStore = useSceneStore((state) => state.updateScene);
   const updateSceneProperty = useSceneStore((state) => state.updateSceneProperty);
-  const deleteScene = useSceneStore((state) => state.deleteScene);
-  const reorderScenes = useSceneStore((state) => state.reorderScenes);
-  const addLayer = useSceneStore((state) => state.addLayer);
-  const updateLayer = useSceneStore((state) => state.updateLayer);
+  const deleteSceneFromStore = useSceneStore((state) => state.deleteScene);
+  const reorderScenesInStore = useSceneStore((state) => state.reorderScenes);
+  const addLayerToStore = useSceneStore((state) => state.addLayer);
+  const updateLayerInStore = useSceneStore((state) => state.updateLayer);
   const updateLayerProperty = useSceneStore((state) => state.updateLayerProperty);
-  const deleteLayer = useSceneStore((state) => state.deleteLayer);
-  const addCamera = useSceneStore((state) => state.addCamera);
-  const moveLayer = useSceneStore((state) => state.moveLayer);
-  const duplicateLayer = useSceneStore((state) => state.duplicateLayer);
-  const loading = useSceneStore((state) => state.loading);
+  const deleteLayerFromStore = useSceneStore((state) => state.deleteLayer);
+  const addCameraToStore = useSceneStore((state) => state.addCamera);
+  const moveLayerInStore = useSceneStore((state) => state.moveLayer);
+  const duplicateLayerInStore = useSceneStore((state) => state.duplicateLayer);
+
+  const createMutation = useMutation({
+    mutationFn: (payload?: ScenePayload) => scenesService.create(payload),
+    onSuccess: (scene) => {
+      queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
+      addSceneToStore(scene);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<any> }) =>
+      scenesService.update(id, data),
+    onSuccess: (scene) => {
+      queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: scenesKeys.detail(scene.id) });
+      updateSceneInStore(scene);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => scenesService.delete(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
+      queryClient.removeQueries({ queryKey: scenesKeys.detail(id) });
+      deleteSceneFromStore(id);
+    },
+  });
+
+  const duplicateMutation = useMutation({
+    mutationFn: (id: string) => scenesService.duplicate(id),
+    onSuccess: (scene, sceneId) => {
+      queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
+      const scenes = useSceneStore.getState().scenes;
+      const sceneIndex = scenes.findIndex(s => s.id === sceneId);
+      addSceneToStore(scene, sceneIndex);
+    },
+  });
+
+  const addLayerMutation = useMutation({
+    mutationFn: ({ sceneId, layer }: { sceneId: string; layer: Layer }) =>
+      scenesService.addLayer(sceneId, layer),
+    onSuccess: (scene) => {
+      queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
+      updateSceneInStore(scene);
+    },
+  });
+
+  const updateLayerMutation = useMutation({
+    mutationFn: ({ sceneId, layerId, layerData }: { sceneId: string; layerId: string; layerData: Partial<Layer> }) =>
+      scenesService.updateLayer(sceneId, layerId, layerData),
+    onSuccess: (scene) => {
+      queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
+      updateSceneInStore(scene);
+    },
+  });
+
+  const deleteLayerMutation = useMutation({
+    mutationFn: ({ sceneId, layerId }: { sceneId: string; layerId: string }) =>
+      scenesService.deleteLayer(sceneId, layerId),
+    onSuccess: (scene) => {
+      queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
+      updateSceneInStore(scene);
+    },
+  });
+
+  const addCameraMutation = useMutation({
+    mutationFn: ({ sceneId, camera }: { sceneId: string; camera: Camera }) =>
+      scenesService.addCamera(sceneId, camera),
+    onSuccess: (scene) => {
+      queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
+      updateSceneInStore(scene);
+    },
+  });
+
+  const reorderMutation = useMutation({
+    mutationFn: (sceneIds: string[]) => scenesService.reorder(sceneIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
+    },
+  });
+
+  const invalidate = () => {
+    return queryClient.invalidateQueries({
+      queryKey: scenesKeys.lists(),
+      refetchType: 'all',
+    });
+  };
 
   return {
     createScene: async (payload?: ScenePayload) => {
       console.log('[useScenesActions] createScene with payload:', payload);
-      const scene = await scenesService.create(payload);
-      addScene(scene);
-      return scene;
+      return await createMutation.mutateAsync(payload);
     },
     updateScene: async (sceneOrUpdate: any) => {
       // Handle both formats: full scene object or { id, data } partial update
       if (sceneOrUpdate.data && sceneOrUpdate.id) {
         // Partial update format: { id, data: { field: value } }
-        const scenes = useSceneStore.getState().scenes;
-        const currentScene = scenes.find(s => s.id === sceneOrUpdate.id);
-        if (currentScene) {
-          const updatedScene = { ...currentScene, ...sceneOrUpdate.data };
-          updateScene(updatedScene);
-        }
+        return await updateMutation.mutateAsync(sceneOrUpdate);
       } else {
         // Full scene object
-        updateScene(sceneOrUpdate);
+        const { id, ...data } = sceneOrUpdate;
+        return await updateMutation.mutateAsync({ id, data });
       }
     },
-    updateSceneProperty: (sceneId: string, property: string, value: any) => updateSceneProperty(sceneId, property, value),
-    deleteScene,
-    reorderScenes,
-    addLayer: async (params: { sceneId: string; layer: Layer }) => addLayer(params.sceneId, params.layer),
-    updateLayer: async (params: { sceneId: string; layer: Layer }) => updateLayer(params.sceneId, params.layer),
-    updateLayerProperty: (sceneId: string, layerId: string, property: string, value: any) => updateLayerProperty(sceneId, layerId, property, value),
-    deleteLayer: async (params: { sceneId: string; layerId: string }) => deleteLayer(params.sceneId, params.layerId),
-    addCamera: async (params: { sceneId: string; camera: Camera }) => addCamera(params.sceneId, params.camera),
+    updateSceneProperty: (sceneId: string, property: string, value: any) => {
+      updateSceneProperty(sceneId, property, value);
+      // Also update backend
+      updateMutation.mutate({ id: sceneId, data: { [property]: value } });
+    },
+    deleteScene: async (id: string) => {
+      await deleteMutation.mutateAsync(id);
+    },
+    reorderScenes: async (sceneIds: string[]) => {
+      reorderScenesInStore(sceneIds);
+      await reorderMutation.mutateAsync(sceneIds);
+    },
+    addLayer: async (params: { sceneId: string; layer: Layer }) => {
+      addLayerToStore(params.sceneId, params.layer);
+      await addLayerMutation.mutateAsync(params);
+    },
+    updateLayer: async (params: { sceneId: string; layer: Layer }) => {
+      updateLayerInStore(params.sceneId, params.layer);
+      await updateLayerMutation.mutateAsync({ 
+        sceneId: params.sceneId, 
+        layerId: params.layer.id, 
+        layerData: params.layer 
+      });
+    },
+    updateLayerProperty: (sceneId: string, layerId: string, property: string, value: any) => {
+      updateLayerProperty(sceneId, layerId, property, value);
+      // Also update backend
+      updateLayerMutation.mutate({ 
+        sceneId, 
+        layerId, 
+        layerData: { [property]: value } 
+      });
+    },
+    deleteLayer: async (params: { sceneId: string; layerId: string }) => {
+      deleteLayerFromStore(params.sceneId, params.layerId);
+      await deleteLayerMutation.mutateAsync(params);
+    },
+    addCamera: async (params: { sceneId: string; camera: Camera }) => {
+      addCameraToStore(params.sceneId, params.camera);
+      await addCameraMutation.mutateAsync(params);
+    },
     moveLayer: async (params: { sceneId: string; layerId?: string; from?: number; to?: number; direction?: 'up' | 'down' }) => {
       // Support both API styles: {from, to} indices or {layerId, direction}
       if (params.layerId && params.direction) {
@@ -60,9 +178,9 @@ export const useScenesActions = () => {
         const newIndex = params.direction === 'up' ? currentIndex - 1 : currentIndex + 1;
         if (newIndex < 0 || newIndex >= scene.layers.length) return;
         
-        moveLayer(params.sceneId, currentIndex, newIndex);
+        moveLayerInStore(params.sceneId, currentIndex, newIndex);
       } else if (params.from !== undefined && params.to !== undefined) {
-        moveLayer(params.sceneId, params.from, params.to);
+        moveLayerInStore(params.sceneId, params.from, params.to);
       }
     },
     duplicateLayer: async (params: { sceneId: string; layerId?: string; layer?: Layer }) => {
@@ -102,26 +220,18 @@ export const useScenesActions = () => {
       }
       
       // Insert the duplicated layer right after the original layer
-      duplicateLayer(params.sceneId, newLayer, layerIndex);
+      duplicateLayerInStore(params.sceneId, newLayer, layerIndex);
     },
-    isCreating: loading,
-    isUpdating: loading,
-    isDeleting: loading,
-    isDuplicating: loading,
-    isReordering: loading,
-    invalidate: () => Promise.resolve(), // No longer needed with Zustand
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+    isDuplicating: duplicateMutation.isPending,
+    isReordering: reorderMutation.isPending,
+    invalidate,
 
     // Ajout duplication de scène
     duplicateScene: async (sceneId: string) => {
-      const scenes = useSceneStore.getState().scenes;
-      const sceneIndex = scenes.findIndex(s => s.id === sceneId);
-      
-      const duplicated = await scenesService.duplicate(sceneId);
-      console.log('[duplicateScene] duplicated:', duplicated);
-      
-      // Insert the duplicated scene right after the original scene
-      addScene(duplicated, sceneIndex);
-      return duplicated;
+      return await duplicateMutation.mutateAsync(sceneId);
     },
   };
 };

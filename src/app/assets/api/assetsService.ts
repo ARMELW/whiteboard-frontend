@@ -47,37 +47,32 @@ class AssetsService extends BaseService<Asset> {
     // Handle File upload
     if (fileOrData instanceof File) {
       const file = fileOrData;
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        if (options?.name) {
-          formData.append('name', options.name);
-        }
-        
-        if (options?.category) {
-          formData.append('category', options.category);
-        }
-        
-        if (options?.tags) {
-          formData.append('tags', JSON.stringify(options.tags));
-        }
-
-        const response = await httpClient.post<{ success: boolean; data: Asset }>(
-          API_ENDPOINTS.assets.upload,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          }
-        );
-
-        return response.data.data;
-      } catch (error) {
-        console.warn('Failed to upload asset to API, falling back to localStorage', error);
-        return this.createLocalAsset(fileOrData, options);
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      if (options?.name) {
+        formData.append('name', options.name);
       }
+      
+      if (options?.category) {
+        formData.append('category', options.category);
+      }
+      
+      if (options?.tags) {
+        formData.append('tags', JSON.stringify(options.tags));
+      }
+
+      const response = await httpClient.post<{ success: boolean; data: Asset }>(
+        API_ENDPOINTS.assets.upload,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      return response.data.data;
     }
 
     // Handle legacy data object upload (backward compatibility)
@@ -88,45 +83,13 @@ class AssetsService extends BaseService<Asset> {
       type: assetData.type || 'image',
       dataUrl: assetData.dataUrl,
       size: assetData.size || 0,
-  dimensions: assetData.dimensions || null,
+      dimensions: assetData.dimensions || null,
       tags: assetData.tags || [],
       category: assetData.category,
       uploadedAt: new Date().toISOString(),
     };
 
     return super.create(asset);
-  }
-
-  private async createLocalAsset(file: File, options?: UploadAssetData): Promise<Asset> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      
-      reader.onload = async () => {
-        const dataUrl = reader.result as string;
-        
-        const asset: Partial<Asset> = {
-          id: `asset-${Date.now()}`,
-          name: options?.name || file.name,
-          type: file.type,
-          dataUrl,
-          url: dataUrl,
-          size: file.size,
-          tags: options?.tags || [],
-          category: options?.category,
-          uploadedAt: new Date().toISOString(),
-        };
-
-        try {
-          const created = await super.create(asset);
-          resolve(created);
-        } catch (error) {
-          reject(error);
-        }
-      };
-
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsDataURL(file);
-    });
   }
 
   async getByType(type: string): Promise<Asset[]> {
@@ -144,32 +107,10 @@ class AssetsService extends BaseService<Asset> {
   }
 
   async getStats(): Promise<AssetStats> {
-    try {
-      const response = await httpClient.get<{ success: boolean; data: AssetStats }>(
-        API_ENDPOINTS.assets.stats
-      );
-      return response.data.data;
-    } catch (error) {
-      console.warn('Failed to fetch asset stats from API, calculating from localStorage', error);
-      const result = await this.list({ page: 1, limit: 10000 });
-      const assets = result.data;
-
-      const byCategory: Record<string, number> = {};
-      let totalSize = 0;
-
-      assets.forEach((asset) => {
-        if (asset.category) {
-          byCategory[asset.category] = (byCategory[asset.category] || 0) + 1;
-        }
-        totalSize += asset.size || 0;
-      });
-
-      return {
-        totalAssets: assets.length,
-        totalSize,
-        byCategory,
-      };
-    }
+    const response = await httpClient.get<{ success: boolean; data: AssetStats }>(
+      API_ENDPOINTS.assets.stats
+    );
+    return response.data.data;
   }
 }
 

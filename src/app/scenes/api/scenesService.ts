@@ -112,11 +112,11 @@ class ScenesService extends BaseService<Scene> {
   }
 
   /**
-   * Check if backend should be used (using parent's protected method)
+   * Check if backend should be used
    */
   private async shouldUseBackendAsync(): Promise<boolean> {
     const httpClient = await import('../../../services/api/httpClient');
-    return this.useBackend && this.mode !== 'localStorage' && httpClient.default.checkIsOnline();
+    return httpClient.default.checkIsOnline();
   }
 
   async duplicate(id: string): Promise<Scene> {

@@ -1,16 +1,17 @@
 import { create } from 'zustand';
-// scenesService calls removed from store. Consumers must call API and update store via setters.
 import { Scene, Layer, Camera, SceneAudioConfig } from './types';
 import { generateSceneThumbnail } from '../../utils/sceneThumbnail';
 
+/**
+ * UI-only store for scene state
+ * Data is managed by React Query, this store only handles UI state and temporary scene data
+ */
 interface SceneState {
-  // Data state
+  // Temporary scene data (for UI updates before sync)
   scenes: Scene[];
-  loading: boolean;
-  error: Error | null;
-  currentProjectId: string | null;
   
   // UI state
+  currentProjectId: string | null;
   selectedSceneIndex: number;
   selectedLayerId: string | null;
   selectedLayerIds: string[]; // Multi-selection support
@@ -28,7 +29,7 @@ interface SceneState {
   previewLoading: boolean;
   previewStartSceneIndex: number | null;
   
-  // Data Actions
+  // Temporary scene data actions (for optimistic UI updates)
   setScenes: (scenes: Scene[]) => void;
   setCurrentProjectId: (projectId: string | null) => void;
   addScene: (scene: Scene, afterIndex?: number) => void;
@@ -94,8 +95,6 @@ const initialUIState = {
 
 const initialDataState = {
   scenes: [],
-  loading: false,
-  error: null,
   currentProjectId: null,
 };
 

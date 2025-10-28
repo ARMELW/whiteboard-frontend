@@ -1,49 +1,41 @@
-import { useEffect, useCallback } from 'react';
-import { useSceneStore } from '../store';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import scenesService from '../api/scenesService';
+import { scenesKeys } from '../config';
 
 export const useScenes = (projectId?: string) => {
-  const scenes = useSceneStore((state) => state.scenes);
-  const loading = useSceneStore((state) => state.loading);
-  const error = useSceneStore((state) => state.error);
-  const setScenes = useSceneStore((state) => state.setScenes);
-  const setCurrentProjectId = useSceneStore((state) => state.setCurrentProjectId);
+  const queryClient = useQueryClient();
 
-  // Use store.setState directly to avoid new function identity on every render
-  const setLoading = useCallback((v: boolean) => useSceneStore.setState({ loading: v }), []);
-  const setError = useCallback((e: Error | null) => useSceneStore.setState({ error: e }), []);
-
-  // Load scenes on mount if not already loaded
-  const refetch = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
+  const query = useQuery({
+    queryKey: projectId 
+      ? scenesKeys.list({ projectId })
+      : scenesKeys.lists(),
+    queryFn: async () => {
       const result = await scenesService.list({ page: 1, limit: 1000 });
-      setScenes(result.data);
+      const scenes = result.data;
+      
+      // Filter by projectId if provided
       if (projectId) {
-        setCurrentProjectId(projectId);
+        return scenes.filter(s => s.projectId === projectId);
       }
-    } catch (error) {
-      setError(error as Error);
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId, setLoading, setError, setScenes, setCurrentProjectId]);
+      return scenes;
+    },
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
 
-  useEffect(() => {
-    refetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]);
-
-  // Filter scenes by projectId if provided
-  const filteredScenes = projectId
-    ? scenes.filter((s) => s.projectId === projectId)
-    : scenes;
+  const invalidate = () => {
+    return queryClient.invalidateQueries({
+      queryKey: scenesKeys.lists(),
+      refetchType: 'all',
+    });
+  };
 
   return {
-    scenes: filteredScenes,
-    loading,
-    error,
-    refetch,
+    scenes: query.data || [],
+    loading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+    invalidate,
   };
 };

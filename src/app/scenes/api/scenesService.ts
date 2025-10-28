@@ -113,6 +113,39 @@ class ScenesService extends BaseService<Scene> {
   }
 
   /**
+   * Override update to ensure projectId is always included
+   */
+  async update(id: string, payload: Partial<Scene>): Promise<Scene> {
+    // First, get the current scene to retrieve its projectId if not provided
+    let finalPayload = payload;
+    
+    // Ensure projectId is present in the update payload
+    if (!payload.projectId) {
+      try {
+        const currentScene = await this.detail(id);
+        finalPayload = {
+          ...payload,
+          projectId: currentScene.projectId
+        };
+      } catch (error) {
+        console.error('[scenesService.update] Failed to get current scene, using default projectId', error);
+        // Fallback to default projectId if we can't get the current scene
+        finalPayload = {
+          ...payload,
+          projectId: DEFAULT_IDS.PROJECT
+        };
+      }
+    }
+
+    // Transform the payload for backend
+    const transformedPayload = this.transformSceneForBackend(finalPayload);
+
+    // Call the parent update method with transformed payload
+    const response = await super.update(id, transformedPayload);
+    return this.transformSceneFromBackend(response);
+  }
+
+  /**
    * Check if backend should be used
    */
   private async shouldUseBackendAsync(): Promise<boolean> {

@@ -116,8 +116,8 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
 
   // Référence pour tracker l'état précédent et éviter les sauvegardes inutiles
   const lastSavedStateRef = useRef<string>('');
-  // autoSaveTimeoutRef and initialLoadRef removed (no auto-save)
   const isSavingRef = useRef(false);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fonction pour créer un hash simple de l'état (pour détecter les changements)
   const createStateHash = useCallback((state: any) => {
@@ -168,21 +168,59 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
     }
   }, [scene?.id, editedScene, updateScene, createStateHash]);
 
-  // Auto-save removed: user must save manually
+  // Auto-save on scene changes with debounce
+  useEffect(() => {
+    if (!scene?.id || !editedScene) return;
+
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // Set new timeout for auto-save (3 seconds after last change)
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      handleSave();
+    }, 3000);
+
+    // Cleanup
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [editedScene, scene?.id, handleSave]);
+
+  // Auto-save on window blur (when user switches tabs or windows)
+  useEffect(() => {
+    const handleWindowBlur = () => {
+      // Save immediately when user defocuses the window
+      if (scene?.id && editedScene) {
+        handleSave();
+      }
+    };
+
+    window.addEventListener('blur', handleWindowBlur);
+    return () => window.removeEventListener('blur', handleWindowBlur);
+  }, [scene?.id, editedScene, handleSave]);
 
   // Sauvegarder avant de quitter la page
-  /**useEffect(() => {
+  useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (autoSaveTimeoutRef.current) {
-        // Exécuter immédiatement la sauvegarde avant de quitter
+      // Check if there are unsaved changes
+      const currentStateHash = createStateHash(editedScene);
+      if (currentStateHash !== lastSavedStateRef.current) {
+        // Trigger save (note: this is best effort, browsers may not wait)
         handleSave();
+        
+        // Show warning to user
+        e.preventDefault();
+        e.returnValue = '';
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [handleSave]);
-  **/
+  }, [editedScene, handleSave, createStateHash]);
 
   const handleCropComplete = async (croppedImageUrl: string, imageDimensions?: { width: number; height: number }, tags?: string[]) => {
     const newLayer = await handleCropCompleteBase(croppedImageUrl, imageDimensions, pendingImageData, editedScene.layers.length, tags);

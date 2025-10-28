@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { addAsset } from '../../../utils/assetManager';
 import { useLayerCreation, LayerCreationOptions } from './useLayerCreation';
 
 export const useImageHandling = (options: LayerCreationOptions) => {
@@ -13,20 +12,35 @@ export const useImageHandling = (options: LayerCreationOptions) => {
   ) => {
     if (!pendingImageData) return null;
 
+    let imageUrl = croppedImageUrl;
+
     try {
       console.debug('[useImageHandling] handleCropComplete called', { croppedImageUrl, imageDimensions, pendingImageData, layersLength });
-      await addAsset({
+      
+      // Upload to backend instead of localStorage
+      const { dataUrlToFile, getExtensionFromDataUrl } = await import('../../../utils/fileHelpers');
+      const { default: assetsService } = await import('../../../app/assets/api/assetsService');
+      
+      const extension = getExtensionFromDataUrl(croppedImageUrl);
+      const filename = `${pendingImageData.fileName.replace(/\.[^.]+$/, '')}.${extension}`;
+      const file = dataUrlToFile(croppedImageUrl, filename);
+      
+      const uploadedAsset = await assetsService.upload(file, {
         name: pendingImageData.fileName,
-        dataUrl: croppedImageUrl,
-        type: pendingImageData.fileType,
-        tags: []
+        tags: [],
+        dimensions: imageDimensions || null,
       });
+      
+      // Use the backend URL instead of dataURL
+      imageUrl = uploadedAsset.url || croppedImageUrl;
+      console.debug('[useImageHandling] asset uploaded successfully', uploadedAsset);
     } catch (error) {
-      console.error('Error saving asset to library:', error);
+      console.error('Error uploading asset to backend, using dataURL fallback:', error);
+      // Fall back to using the dataURL if upload fails
     }
 
     const layer = createImageLayer(
-      croppedImageUrl,
+      imageUrl,
       pendingImageData.fileName,
       imageDimensions,
       layersLength

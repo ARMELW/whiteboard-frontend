@@ -99,72 +99,144 @@ const EmbeddedAssetLibraryPanel: React.FC = () => {
   }, [scenes, selectedSceneIndex, addLayer]);
 
   // Handler for crop completion - adds the cropped image to the scene
-  const handleCropComplete = useCallback((croppedImageUrl: string, imageDimensions?: { width: number; height: number }, tags?: string[]) => {
+  const handleCropComplete = useCallback(async (croppedImageUrl: string, imageDimensions?: { width: number; height: number }, tags?: string[]) => {
     const scene = scenes[selectedSceneIndex];
     if (!scene) return;
     
-    // Scene dimensions
-    const sceneWidth = 1920;
-    const sceneHeight = 1080;
-    
-    // Find default camera
-    const defaultCamera = (scene.sceneCameras || []).find((c) => c.isDefault) || (scene.cameras || []).find((c) => c.isDefault);
-    
-    // Calculate camera center in pixel coordinates
-    let cameraCenterX = sceneWidth / 2;
-    let cameraCenterY = sceneHeight / 2;
-    
-    if (defaultCamera && defaultCamera.position) {
-      // Camera position is in normalized coordinates (0-1), convert to pixels
-      cameraCenterX = defaultCamera.position.x * sceneWidth;
-      cameraCenterY = defaultCamera.position.y * sceneHeight;
+    try {
+      // Upload cropped image to backend first
+      const { dataUrlToFile, getExtensionFromDataUrl } = await import('../../utils/fileHelpers');
+      const { default: assetsService } = await import('../../app/assets/api/assetsService');
+      
+      const extension = getExtensionFromDataUrl(croppedImageUrl);
+      const filename = pendingImageData?.fileName 
+        ? `${pendingImageData.fileName.replace(/\.[^.]+$/, '')}.${extension}`
+        : `image-${Date.now()}.${extension}`;
+      const file = dataUrlToFile(croppedImageUrl, filename);
+      
+      // Upload to backend and get the URL
+      const uploadedAsset = await assetsService.upload(file, {
+        name: pendingImageData?.fileName || 'Image',
+        tags: tags || [],
+        dimensions: imageDimensions || null,
+      });
+      
+      // Use the backend URL instead of dataURL
+      const imageUrl = uploadedAsset.url || croppedImageUrl;
+      
+      // Scene dimensions
+      const sceneWidth = 1920;
+      const sceneHeight = 1080;
+      
+      // Find default camera
+      const defaultCamera = (scene.sceneCameras || []).find((c) => c.isDefault) || (scene.cameras || []).find((c) => c.isDefault);
+      
+      // Calculate camera center in pixel coordinates
+      let cameraCenterX = sceneWidth / 2;
+      let cameraCenterY = sceneHeight / 2;
+      
+      if (defaultCamera && defaultCamera.position) {
+        // Camera position is in normalized coordinates (0-1), convert to pixels
+        cameraCenterX = defaultCamera.position.x * sceneWidth;
+        cameraCenterY = defaultCamera.position.y * sceneHeight;
+      }
+      
+      // Calculate image scale to fit within camera viewport
+      let scale = 1;
+      let positionX = cameraCenterX;
+      let positionY = cameraCenterY;
+      
+      if (imageDimensions) {
+        const cameraWidth = defaultCamera?.width || 800;
+        const cameraHeight = defaultCamera?.height || 450;
+        const cameraZoom = Math.max(0.1, defaultCamera?.zoom || 1);
+        
+        // Calculate viewport size in scene coordinates
+        const viewportWidth = cameraWidth / cameraZoom;
+        const viewportHeight = cameraHeight / cameraZoom;
+        
+        // Fit image within 80% of the camera's viewport
+        const maxWidth = viewportWidth * 0.8;
+        const maxHeight = viewportHeight * 0.8;
+        
+        const scaleX = maxWidth / imageDimensions.width;
+        const scaleY = maxHeight / imageDimensions.height;
+        scale = Math.min(scaleX, scaleY, 1.0);
+        
+        // Calculate top-left position to center the scaled image in the camera viewport
+        const scaledImageWidth = imageDimensions.width * scale;
+        const scaledImageHeight = imageDimensions.height * scale;
+        
+        positionX = cameraCenterX - (scaledImageWidth / 2);
+        positionY = cameraCenterY - (scaledImageHeight / 2);
+      }
+      
+      const newLayer = {
+        id: uuidv4(),
+        name: pendingImageData?.fileName || 'Image',
+        type: LayerType.IMAGE,
+        mode: LayerMode.STATIC,
+        position: { x: positionX, y: positionY },
+        z_index: (scene.layers?.length || 0) + 1,
+        scale,
+        opacity: 1,
+        image_path: imageUrl,
+      };
+      
+      addLayer({ sceneId: scene.id, layer: newLayer });
+      setShowCropModal(false);
+      setPendingImageData(null);
+    } catch (error) {
+      console.error('Error uploading asset:', error);
+      // Fallback to using dataURL if upload fails
+      const sceneWidth = 1920;
+      const sceneHeight = 1080;
+      const defaultCamera = (scene.sceneCameras || []).find((c) => c.isDefault) || (scene.cameras || []).find((c) => c.isDefault);
+      let cameraCenterX = sceneWidth / 2;
+      let cameraCenterY = sceneHeight / 2;
+      
+      if (defaultCamera && defaultCamera.position) {
+        cameraCenterX = defaultCamera.position.x * sceneWidth;
+        cameraCenterY = defaultCamera.position.y * sceneHeight;
+      }
+      
+      let scale = 1;
+      let positionX = cameraCenterX;
+      let positionY = cameraCenterY;
+      
+      if (imageDimensions) {
+        const cameraWidth = defaultCamera?.width || 800;
+        const cameraHeight = defaultCamera?.height || 450;
+        const cameraZoom = Math.max(0.1, defaultCamera?.zoom || 1);
+        const viewportWidth = cameraWidth / cameraZoom;
+        const viewportHeight = cameraHeight / cameraZoom;
+        const maxWidth = viewportWidth * 0.8;
+        const maxHeight = viewportHeight * 0.8;
+        const scaleX = maxWidth / imageDimensions.width;
+        const scaleY = maxHeight / imageDimensions.height;
+        scale = Math.min(scaleX, scaleY, 1.0);
+        const scaledImageWidth = imageDimensions.width * scale;
+        const scaledImageHeight = imageDimensions.height * scale;
+        positionX = cameraCenterX - (scaledImageWidth / 2);
+        positionY = cameraCenterY - (scaledImageHeight / 2);
+      }
+      
+      const newLayer = {
+        id: uuidv4(),
+        name: pendingImageData?.fileName || 'Image',
+        type: LayerType.IMAGE,
+        mode: LayerMode.STATIC,
+        position: { x: positionX, y: positionY },
+        z_index: (scene.layers?.length || 0) + 1,
+        scale,
+        opacity: 1,
+        image_path: croppedImageUrl,
+      };
+      
+      addLayer({ sceneId: scene.id, layer: newLayer });
+      setShowCropModal(false);
+      setPendingImageData(null);
     }
-    
-    // Calculate image scale to fit within camera viewport
-    let scale = 1;
-    let positionX = cameraCenterX;
-    let positionY = cameraCenterY;
-    
-    if (imageDimensions) {
-      const cameraWidth = defaultCamera?.width || 800;
-      const cameraHeight = defaultCamera?.height || 450;
-      const cameraZoom = Math.max(0.1, defaultCamera?.zoom || 1);
-      
-      // Calculate viewport size in scene coordinates
-      const viewportWidth = cameraWidth / cameraZoom;
-      const viewportHeight = cameraHeight / cameraZoom;
-      
-      // Fit image within 80% of the camera's viewport
-      const maxWidth = viewportWidth * 0.8;
-      const maxHeight = viewportHeight * 0.8;
-      
-      const scaleX = maxWidth / imageDimensions.width;
-      const scaleY = maxHeight / imageDimensions.height;
-      scale = Math.min(scaleX, scaleY, 1.0);
-      
-      // Calculate top-left position to center the scaled image in the camera viewport
-      const scaledImageWidth = imageDimensions.width * scale;
-      const scaledImageHeight = imageDimensions.height * scale;
-      
-      positionX = cameraCenterX - (scaledImageWidth / 2);
-      positionY = cameraCenterY - (scaledImageHeight / 2);
-    }
-    
-    const newLayer = {
-      id: uuidv4(),
-      name: pendingImageData?.fileName || 'Image',
-      type: LayerType.IMAGE,
-      mode: LayerMode.STATIC,
-      position: { x: positionX, y: positionY },
-      z_index: (scene.layers?.length || 0) + 1,
-      scale,
-      opacity: 1,
-      image_path: croppedImageUrl,
-    };
-    
-    addLayer({ sceneId: scene.id, layer: newLayer });
-    setShowCropModal(false);
-    setPendingImageData(null);
   }, [scenes, selectedSceneIndex, pendingImageData, addLayer, setShowCropModal, setPendingImageData]);
 
   // Handler for crop cancellation

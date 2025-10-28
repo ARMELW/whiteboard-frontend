@@ -37,6 +37,7 @@ const AnimationContainer: React.FC = () => {
   // Load scenes dynamically from API
   const { scenes, loading: scenesLoading, refetch: refetchScenes } = useScenes();
   const scenesActions = useScenesActions();
+  const setScenes = useSceneStore((state) => state.setScenes);
   
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false);
@@ -68,10 +69,11 @@ const AnimationContainer: React.FC = () => {
   }, [fonts, fontsLoading]);
 
   useEffect(() => {
-    if (!scenesLoading && scenes.length > 0) {
+    if (!scenesLoading) {
       console.log('[AnimationContainer] Scenes loaded:', scenes.length);
+      setScenes(scenes);
     }
-  }, [scenes, scenesLoading]);
+  }, [scenes, scenesLoading, setScenes]);
 
   return (
     <div className="animation-container flex flex-col h-screen">

@@ -23,10 +23,11 @@ interface ScenePanelProps {
 const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   // Pour ouvrir asset library et shape toolbar
   // const setShowAssetLibrary = useSceneStore((state) => state.setShowAssetLibrary);
-  const { scenes } = useScenes();
+  const { scenes, loading: scenesLoading } = useScenes();
   const {projectId} = useParams();
   const selectedSceneIndex = useSceneStore((state) => state.selectedSceneIndex);
   const setSelectedSceneIndex = useSceneStore((state) => state.setSelectedSceneIndex);
+  const setScenes = useSceneStore((state) => state.setScenes);
   const openWizard = useWizardStore((state) => state.openWizard);
   
   const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false);
@@ -41,6 +42,13 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   
   // Use actions from useScenesActionsWithHistory hook for history tracking
   const { createScene, deleteScene, duplicateScene, reorderScenes } = useScenesActionsWithHistory();
+
+  // Sync scenes from React Query to Zustand store
+  useEffect(() => {
+    if (!scenesLoading) {
+      setScenes(scenes);
+    }
+  }, [scenes, scenesLoading, setScenes]);
 
   // Auto-center on scene change
   useEffect(() => {

@@ -2,6 +2,10 @@ import { useHistoryActions } from '../history/hooks/useHistoryActions';
 import { useScenesActions } from '../scenes/hooks/useScenesActions';
 import { Scene, Layer, Camera } from '../scenes/types';
 import { useSceneStore } from '../scenes/store';
+import { v4 as uuidv4 } from 'uuid';
+
+// Constants for layer duplication
+const DUPLICATE_LAYER_OFFSET = { x: 20, y: 20 };
 
 /**
  * Enhanced scenes actions that automatically record history
@@ -106,13 +110,22 @@ export const useScenesActionsWithHistory = () => {
       // Create a duplicate with a new ID
       const newLayer = {
         ...layerToDuplicate,
-        id: `${Date.now()}-${Math.random()}`,
+        id: uuidv4(),
         name: `${layerToDuplicate.name} (copie)`,
+        // Offset position slightly to make it visible
+        position: layerToDuplicate.position ? {
+          x: layerToDuplicate.position.x + DUPLICATE_LAYER_OFFSET.x,
+          y: layerToDuplicate.position.y + DUPLICATE_LAYER_OFFSET.y
+        } : undefined
       };
       
       // Insert the duplicated layer right after the original layer
+      // This will handle both history tracking AND store update
       duplicateLayerWithHistory(params.sceneId, newLayer, layerIndex);
-      await standardActions.duplicateLayer(params);
+      
+      // Note: We don't call standardActions.duplicateLayer here because
+      // duplicateLayerWithHistory already handles the store update
+      // Calling both would create duplicate layers
     },
     
     // Property operations with history - calls both history tracking AND API

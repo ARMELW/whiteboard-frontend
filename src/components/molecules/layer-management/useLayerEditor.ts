@@ -1,6 +1,6 @@
 import { useSceneStore } from '@/app/scenes';
 import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 export interface LayerEditorState {
   editedScene: any;
@@ -22,6 +22,10 @@ export const useLayerEditor = ({
   const [internalSelectedLayerId, setInternalSelectedLayerId] = useState<string | null>(null);
   const [showThumbnailMaker, setShowThumbnailMaker] = useState(false);
   const { updateSceneProperty, updateLayer, addLayer } = useScenesActionsWithHistory();
+  
+  // Track pending layer updates to debounce API calls
+  const pendingLayerUpdatesRef = useRef<Map<string, any>>(new Map());
+  const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const selectedLayerId = externalSelectedLayerId !== undefined ? externalSelectedLayerId : internalSelectedLayerId;
   
@@ -65,12 +69,43 @@ export const useLayerEditor = ({
       );
       const newScene = { ...prev, layers: newLayers };
       
+      // Debounce layer updates to avoid excessive API calls during drag/transform
       if (prev.id) {
-        updateLayer({ sceneId: prev.id, layer: updatedLayer });
+        // Store the pending update
+        pendingLayerUpdatesRef.current.set(updatedLayer.id, { sceneId: prev.id, layer: updatedLayer });
+        
+        // Clear existing timer
+        if (updateTimerRef.current) {
+          clearTimeout(updateTimerRef.current);
+        }
+        
+        // Set new timer to batch updates
+        updateTimerRef.current = setTimeout(() => {
+          // Process all pending updates
+          pendingLayerUpdatesRef.current.forEach((update) => {
+            updateLayer(update);
+          });
+          pendingLayerUpdatesRef.current.clear();
+          updateTimerRef.current = null;
+        }, 100); // 100ms debounce
       }
       
       return newScene;
     });
+  }, [updateLayer]);
+  
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+        // Flush any pending updates
+        pendingLayerUpdatesRef.current.forEach((update) => {
+          updateLayer(update);
+        });
+        pendingLayerUpdatesRef.current.clear();
+      }
+    };
   }, [updateLayer]);
 
   const handleAddLayer = useCallback((newLayer: any) => {
@@ -151,10 +186,27 @@ export const useLayerEditor = ({
       );
       const newScene = { ...prev, layers: newLayers };
 
+      // Debounce property updates similar to layer updates
       if (prev.id) {
         const updatedLayer = newLayers.find((l: any) => l.id === layerId);
         if (updatedLayer) {
-          updateLayer({ sceneId: prev.id, layer: updatedLayer });
+          // Store the pending update
+          pendingLayerUpdatesRef.current.set(layerId, { sceneId: prev.id, layer: updatedLayer });
+          
+          // Clear existing timer
+          if (updateTimerRef.current) {
+            clearTimeout(updateTimerRef.current);
+          }
+          
+          // Set new timer to batch updates
+          updateTimerRef.current = setTimeout(() => {
+            // Process all pending updates
+            pendingLayerUpdatesRef.current.forEach((update) => {
+              updateLayer(update);
+            });
+            pendingLayerUpdatesRef.current.clear();
+            updateTimerRef.current = null;
+          }, 100); // 100ms debounce
         }
       }
       

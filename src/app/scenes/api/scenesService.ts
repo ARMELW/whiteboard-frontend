@@ -1,6 +1,6 @@
 import BaseService from '../../../services/api/baseService';
 import API_ENDPOINTS from '../../../config/api';
-import { STORAGE_KEYS, DEFAULT_IDS } from '../../../config/constants';
+import { DEFAULT_IDS } from '../../../config/constants';
 import { createMultiTimeline } from '../../../utils/multiTimelineSystem';
 import { createSceneAudioConfig } from '../../../utils/audioManager';
 import { createCamera } from '../../../utils/cameraAnimator';
@@ -27,7 +27,7 @@ function createDefaultCamera(): Camera {
 
 class ScenesService extends BaseService<Scene> {
   constructor() {
-    super(STORAGE_KEYS.SCENES, API_ENDPOINTS.scenes);
+    super(API_ENDPOINTS.scenes);
   }
 
   /**
@@ -112,11 +112,11 @@ class ScenesService extends BaseService<Scene> {
   }
 
   /**
-   * Check if backend should be used (using parent's protected method)
+   * Check if backend should be used
    */
   private async shouldUseBackendAsync(): Promise<boolean> {
     const httpClient = await import('../../../services/api/httpClient');
-    return this.useBackend && this.mode !== 'localStorage' && httpClient.default.checkIsOnline();
+    return httpClient.default.checkIsOnline();
   }
 
   async duplicate(id: string): Promise<Scene> {

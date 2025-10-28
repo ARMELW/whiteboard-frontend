@@ -1,10 +1,12 @@
+// Storage keys are deprecated - data is now managed by React Query
+// These constants are kept for backward compatibility only
 export const STORAGE_KEYS = {
-  SCENES: 'whiteboard-scenes',
-  PROJECTS: 'whiteboard-projects',
-  ASSETS: 'whiteboard-assets',
-  ASSET_CACHE: 'whiteboard-asset-cache',
-  SETTINGS: 'whiteboard-settings',
-  TEMPLATES: 'whiteboard-templates',
+  SCENES: 'whiteboard-scenes',        // Deprecated: Use React Query
+  PROJECTS: 'whiteboard-projects',    // Deprecated: Use React Query
+  ASSETS: 'whiteboard-assets',        // Deprecated: Use React Query
+  ASSET_CACHE: 'whiteboard-asset-cache', // Deprecated
+  SETTINGS: 'whiteboard-settings',    // Still used for UI preferences
+  TEMPLATES: 'whiteboard-templates',  // Still used for templates
 } as const;
 
 export const DEFAULT_IDS = {

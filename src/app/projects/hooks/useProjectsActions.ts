@@ -1,91 +1,99 @@
-import { useProjectStore } from '../store';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectService } from '../api/projectService';
 import { ProjectPayload, Project } from '../types';
 import { toast } from 'sonner';
+import { projectsKeys } from '../config';
 
 export const useProjectsActions = () => {
-  const addProject = useProjectStore((state) => state.addProject);
-  const updateProject = useProjectStore((state) => state.updateProject);
-  const deleteProject = useProjectStore((state) => state.deleteProject);
-  const loading = useProjectStore((state) => state.loading);
+  const queryClient = useQueryClient();
+
+  const createMutation = useMutation({
+    mutationFn: ({ channelId, payload }: { channelId: string; payload: ProjectPayload }) =>
+      projectService.create(channelId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: projectsKeys.lists() });
+      toast.success('Projet créé avec succès');
+    },
+    onError: () => {
+      toast.error('Erreur lors de la création du projet');
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: Partial<ProjectPayload> & { status?: Project['status'] } }) =>
+      projectService.update(id, payload),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: projectsKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: projectsKeys.detail(data.data.id) });
+      toast.success('Projet mis à jour avec succès');
+    },
+    onError: () => {
+      toast.error('Erreur lors de la mise à jour du projet');
+    },
+  });
+
+  const duplicateMutation = useMutation({
+    mutationFn: ({ id, newTitle, channelId }: { id: string; newTitle: string; channelId?: string }) =>
+      projectService.duplicate(id, { new_title: newTitle, channel_id: channelId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: projectsKeys.lists() });
+      toast.success('Projet dupliqué avec succès');
+    },
+    onError: () => {
+      toast.error('Erreur lors de la duplication du projet');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => projectService.delete(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: projectsKeys.lists() });
+      queryClient.removeQueries({ queryKey: projectsKeys.detail(id) });
+      toast.success('Projet supprimé avec succès');
+    },
+    onError: () => {
+      toast.error('Erreur lors de la suppression du projet');
+    },
+  });
+
+  const autosaveMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { scenes: any[]; audio_tracks: any[] } }) =>
+      projectService.autosave(id, data),
+    onError: (error) => {
+      console.error('Autosave error:', error);
+    },
+  });
+
+  const invalidate = () => {
+    return queryClient.invalidateQueries({
+      queryKey: projectsKeys.lists(),
+      refetchType: 'all',
+    });
+  };
 
   return {
     createProject: async (channelId: string, payload: ProjectPayload) => {
-      useProjectStore.setState({ loading: true });
-      try {
-        const result = await projectService.create(channelId, payload);
-        addProject(result.data);
-        toast.success('Projet créé avec succès');
-        return result.data;
-      } catch (error) {
-        toast.error('Erreur lors de la création du projet');
-        throw error;
-      } finally {
-        useProjectStore.setState({ loading: false });
-      }
+      const result = await createMutation.mutateAsync({ channelId, payload });
+      return result.data;
     },
-
-    updateProject: async (
-      id: string,
-      payload: Partial<ProjectPayload> & { status?: Project['status'] }
-    ) => {
-      useProjectStore.setState({ loading: true });
-      try {
-        const result = await projectService.update(id, payload);
-        updateProject(result.data);
-        toast.success('Projet mis à jour avec succès');
-        return result.data;
-      } catch (error) {
-        toast.error('Erreur lors de la mise à jour du projet');
-        throw error;
-      } finally {
-        useProjectStore.setState({ loading: false });
-      }
+    updateProject: async (id: string, payload: Partial<ProjectPayload> & { status?: Project['status'] }) => {
+      const result = await updateMutation.mutateAsync({ id, payload });
+      return result.data;
     },
-
     duplicateProject: async (id: string, newTitle: string, channelId?: string) => {
-      useProjectStore.setState({ loading: true });
-      try {
-        const result = await projectService.duplicate(id, {
-          new_title: newTitle,
-          channel_id: channelId,
-        });
-        addProject(result.data);
-        toast.success('Projet dupliqué avec succès');
-        return result.data;
-      } catch (error) {
-        toast.error('Erreur lors de la duplication du projet');
-        throw error;
-      } finally {
-        useProjectStore.setState({ loading: false });
-      }
+      const result = await duplicateMutation.mutateAsync({ id, newTitle, channelId });
+      return result.data;
     },
-
     deleteProject: async (id: string) => {
-      useProjectStore.setState({ loading: true });
-      try {
-        await projectService.delete(id);
-        deleteProject(id);
-        toast.success('Projet supprimé avec succès');
-      } catch (error) {
-        toast.error('Erreur lors de la suppression du projet');
-        throw error;
-      } finally {
-        useProjectStore.setState({ loading: false });
-      }
+      await deleteMutation.mutateAsync(id);
     },
-
     autosave: async (id: string, data: { scenes: any[]; audio_tracks: any[] }) => {
-      try {
-        await projectService.autosave(id, data);
-      } catch (error) {
-        console.error('Autosave error:', error);
-      }
+      await autosaveMutation.mutateAsync({ id, data });
     },
-
-    isCreating: loading,
-    isUpdating: loading,
-    isDuplicating: loading,
-    isDeleting: loading,
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDuplicating: duplicateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+    invalidate,
   };
 };

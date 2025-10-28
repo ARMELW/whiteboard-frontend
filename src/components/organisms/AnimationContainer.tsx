@@ -21,6 +21,7 @@ import type { Camera } from '@/app/scenes/types';
 
 const AnimationContainer: React.FC = () => {
   const currentScene = useCurrentScene();
+
   const showShapeToolbar = useSceneStore((state: any) => state.showShapeToolbar);
   const showAssetLibrary = useSceneStore((state: any) => state.showAssetLibrary);
   const showHistoryPanel = useSceneStore((state: any) => state.showHistoryPanel);

@@ -12,9 +12,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { THUMBNAIL_CONFIG } from '@/utils/sceneThumbnail';
-import EmbeddedAssetLibraryPanel from './EmbeddedAssetLibraryPanel';
 import SaveAsTemplateDialog from './SaveAsTemplateDialog';
 import { NewSceneDialog } from './NewSceneDialog';
+import { useParams } from 'react-router-dom';
 
 interface ScenePanelProps {
   onOpenTemplateLibrary?: () => void;
@@ -23,10 +23,8 @@ interface ScenePanelProps {
 const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   // Pour ouvrir asset library et shape toolbar
   // const setShowAssetLibrary = useSceneStore((state) => state.setShowAssetLibrary);
-  const setShowCropModal = useSceneStore((state) => state.setShowCropModal);
-  const setPendingImageData = useSceneStore((state) => state.setPendingImageData);
-  const setShowShapeToolbar = useSceneStore((state) => state.setShowShapeToolbar);
   const { scenes } = useScenes();
+  const {projectId} = useParams();
   const selectedSceneIndex = useSceneStore((state) => state.selectedSceneIndex);
   const setSelectedSceneIndex = useSceneStore((state) => state.setSelectedSceneIndex);
   const openWizard = useWizardStore((state) => state.openWizard);
@@ -87,7 +85,9 @@ const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
 
   const handleCreateBlankScene = useCallback(async () => {
     const currentLength = scenes.length;
-    await createScene({});
+    await createScene({
+
+    });
     // After creation, the new scene will be at the end of the array
     // React Query will refetch and scenes array will have +1 length
     // So we set to currentLength which will be the new scene's index

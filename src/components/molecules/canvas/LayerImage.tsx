@@ -147,7 +147,7 @@ export const LayerImage: React.FC<LayerImageProps> = ({
             },
             scale: newScaleX,
             scaleX: 1.0,
-            scaleY: newScaleY / newScaleX,
+            scaleY: Math.abs(newScaleX) > Number.EPSILON ? newScaleY / newScaleX : 1.0,
             rotation: node.rotation(),
           });
           

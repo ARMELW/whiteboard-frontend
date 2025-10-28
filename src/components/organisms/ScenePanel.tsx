@@ -23,8 +23,10 @@ interface ScenePanelProps {
 const ScenePanel: React.FC<ScenePanelProps> = ({ onOpenTemplateLibrary }) => {
   // Pour ouvrir asset library et shape toolbar
   // const setShowAssetLibrary = useSceneStore((state) => state.setShowAssetLibrary);
-  const { scenes, loading: scenesLoading } = useScenes();
   const {projectId} = useParams();
+  const currentProjectId = useSceneStore((state) => state.currentProjectId);
+  // Use projectId from params or store, filtered by current project
+  const { scenes, loading: scenesLoading } = useScenes(projectId || currentProjectId || undefined);
   const selectedSceneIndex = useSceneStore((state) => state.selectedSceneIndex);
   const setSelectedSceneIndex = useSceneStore((state) => state.setSelectedSceneIndex);
   const setScenes = useSceneStore((state) => state.setScenes);

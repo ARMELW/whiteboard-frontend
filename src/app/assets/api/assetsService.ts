@@ -1,6 +1,7 @@
 import BaseService from '@/services/api/baseService';
 import httpClient from '@/services/api/httpClient';
 import API_ENDPOINTS from '@/config/api';
+import authService from '@/app/auth/api/authService';
 
 export interface Asset {
   id: string;
@@ -105,11 +106,40 @@ class AssetsService extends BaseService<Asset> {
     );
   }
 
-  async getStats(): Promise<AssetStats> {
-    const response = await httpClient.get<{ success: boolean; data: AssetStats }>(
-      API_ENDPOINTS.assets.stats
-    );
-    return response.data.data;
+  async getStats(userId?: string): Promise<AssetStats> {
+    try {
+      // Build URL with optional userId query parameter
+      let url = API_ENDPOINTS.assets.stats;
+      
+      // If userId is provided, add it as a query parameter
+      // The backend expects this as 'id' parameter based on validation error
+      if (userId) {
+        url = `${url}?id=${userId}`;
+      } else {
+        // Try to get user ID from stored auth session
+        const session = authService.getStoredSession();
+        if (session?.user?.id) {
+          url = `${url}?id=${session.user.id}`;
+        }
+      }
+      
+      const response = await httpClient.get<{ success: boolean; data: AssetStats }>(url);
+      return response.data.data;
+    } catch (error: any) {
+      // If backend validation fails due to missing/invalid id, return empty stats
+      if (error.response?.data?.error?.issues?.some((issue: any) => 
+        issue.path?.includes('id') && (issue.code === 'invalid_string' || issue.validation === 'uuid')
+      )) {
+        console.warn('[AssetsService] Backend requires valid user UUID for stats:', error.response?.data?.error);
+        // Return default/empty stats rather than failing
+        return {
+          totalAssets: 0,
+          totalSize: 0,
+          byCategory: {}
+        };
+      }
+      throw error;
+    }
   }
 }
 

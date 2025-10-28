@@ -128,10 +128,34 @@ export const LayerText: React.FC<LayerTextProps> = ({
           };
         }}
         onDragMove={(e) => {
+          // Update drag start position during drag for multi-layer support
+          // but don't call onChange during drag to avoid excessive updates
           if (selectedLayerIds.length > 1 && dragStartPosRef.current) {
-            const deltaX = e.target.x() - dragStartPosRef.current.x;
-            const deltaY = e.target.y() - dragStartPosRef.current.y;
+            dragStartPosRef.current = {
+              x: e.target.x(),
+              y: e.target.y()
+            };
+          }
+        }}
+        onDragEnd={(e) => {
+          const finalX = e.target.x();
+          const finalY = e.target.y();
+          
+          // Update main layer position
+          onChange({
+            ...layer,
+            position: {
+              x: finalX,
+              y: finalY,
+            }
+          });
+          
+          // If multiple layers were selected, update their positions as well
+          if (selectedLayerIds.length > 1 && dragStartPosRef.current) {
+            const deltaX = finalX - dragStartPosRef.current.x;
+            const deltaY = finalY - dragStartPosRef.current.y;
             
+            // Update all other selected layers
             selectedLayerIds.forEach((layerId) => {
               if (layerId !== layer.id) {
                 const targetLayer = allLayers.find(l => l.id === layerId);
@@ -146,21 +170,8 @@ export const LayerText: React.FC<LayerTextProps> = ({
                 }
               }
             });
-            
-            dragStartPosRef.current = {
-              x: e.target.x(),
-              y: e.target.y()
-            };
           }
-        }}
-        onDragEnd={(e) => {
-          onChange({
-            ...layer,
-            position: {
-              x: e.target.x(),
-              y: e.target.y(),
-            }
-          });
+          
           dragStartPosRef.current = null;
         }}
         onTransformEnd={() => {

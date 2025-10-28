@@ -39,7 +39,7 @@ export const useLayerEditor = ({
 
   // Track the current scene ID to detect scene changes
   const currentSceneIdRef = useRef<string | null>(null);
-  const isMountedRef = useRef<boolean>(true);
+  const isMountedRef = useRef<boolean>(false);
   
   useEffect(() => {
     isMountedRef.current = true;
@@ -48,7 +48,6 @@ export const useLayerEditor = ({
     const sceneId = scene?.id;
     
     if (currentSceneIdRef.current !== sceneId) {
-      const previousSceneId = currentSceneIdRef.current;
       currentSceneIdRef.current = sceneId;
       
       // Flush any pending layer updates before switching scenes

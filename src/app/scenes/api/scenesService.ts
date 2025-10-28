@@ -156,7 +156,22 @@ class ScenesService extends BaseService<Scene> {
   async duplicate(id: string, projectId?: string | null): Promise<Scene> {
     await this.delay();
     const scene = await this.detail(id);
-    console.log('[scenesService.duplicate] original scene:', scene);
+
+    // Use the dedicated duplicate endpoint with projectId in the body
+    const useBackend = await this.shouldUseBackendAsync();
+    if (useBackend) {
+      console.log('[scenesService.duplicate] Duplicating scene via API', { id, projectId: scene.projectId });
+      const httpClient = await import('../../../services/api/httpClient');
+      const response = await httpClient.default.post<Scene>(
+        API_ENDPOINTS.scenes.duplicate(id),
+        { projectId: scene.projectId }
+      );
+      return this.transformSceneFromBackend(response.data);
+    }
+
+    // Fallback to local storage implementation
+    console.log('[scenesService.duplicate] Duplicating scene in local storage', { id, projectId: scene.projectId });
+
     // Ensure sceneCameras has at least a default camera
     let sceneCameras = scene.sceneCameras || [];
     if (sceneCameras.length === 0) {

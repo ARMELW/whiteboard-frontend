@@ -25,9 +25,7 @@ export const useAssets = () => {
     }
   }, []);
 
-  const uploadAsset = useCallback(async (file: File, options?: UploadAssetData): Promise<Asset>;
-  async function uploadAsset(assetData: UploadAssetData): Promise<Asset>;
-  async function uploadAsset(fileOrData: File | UploadAssetData, options?: UploadAssetData): Promise<Asset> {
+  const uploadAsset = useCallback(async (fileOrData: File | UploadAssetData, options?: UploadAssetData): Promise<Asset> => {
     setLoading(true);
     setError(null);
     

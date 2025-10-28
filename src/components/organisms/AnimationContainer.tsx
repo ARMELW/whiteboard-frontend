@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AnimationHeader from './AnimationHeader';
 import { LayersList } from '../molecules';
 import LayerEditor from './LayerEditor';
@@ -14,7 +14,9 @@ import CameraManagerModal from './CameraManagerModal';
 import ExportModal from './ExportModal';
 import ThumbnailMaker from './ThumbnailMaker';
 import { AiWizardDialog } from './wizard';
-import { useScenes, useSceneStore, useCurrentScene } from '@/app/scenes';
+import { useScenes, useSceneStore, useCurrentScene, useScenesActions } from '@/app/scenes';
+import { useAssets, useAssetsActions } from '@/app/assets';
+import { useFonts } from '@/app/text';
 import type { Camera } from '@/app/scenes/types';
 
 const AnimationContainer: React.FC = () => {
@@ -23,6 +25,17 @@ const AnimationContainer: React.FC = () => {
   const showAssetLibrary = useSceneStore((state: any) => state.showAssetLibrary);
   const showHistoryPanel = useSceneStore((state: any) => state.showHistoryPanel);
   const setShowHistoryPanel = useSceneStore((state: any) => state.setShowHistoryPanel);
+  
+  // Load assets dynamically from API
+  const { assets, loading: assetsLoading, loadAssets } = useAssets();
+  const assetsActions = useAssetsActions();
+  
+  // Load fonts dynamically from API
+  const { fonts, loading: fontsLoading } = useFonts();
+  
+  // Load scenes dynamically from API
+  const { scenes, loading: scenesLoading, refetch: refetchScenes } = useScenes();
+  const scenesActions = useScenesActions();
   
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false);
@@ -39,6 +52,25 @@ const AnimationContainer: React.FC = () => {
     onToggleLock?: (cameraId: string) => void;
     onSaveCameras?: (cameras: Camera[]) => Promise<void>;
   }>({});
+
+  // Log loaded resources for debugging
+  useEffect(() => {
+    if (!assetsLoading && assets.length > 0) {
+      console.log('[AnimationContainer] Assets loaded:', assets.length);
+    }
+  }, [assets, assetsLoading]);
+
+  useEffect(() => {
+    if (!fontsLoading && fonts.length > 0) {
+      console.log('[AnimationContainer] Fonts loaded:', fonts.length);
+    }
+  }, [fonts, fontsLoading]);
+
+  useEffect(() => {
+    if (!scenesLoading && scenes.length > 0) {
+      console.log('[AnimationContainer] Scenes loaded:', scenes.length);
+    }
+  }, [scenes, scenesLoading]);
 
   return (
     <div className="animation-container flex flex-col h-screen">

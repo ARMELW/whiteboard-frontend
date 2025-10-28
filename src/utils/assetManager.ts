@@ -1,20 +1,11 @@
 /**
- * Asset Manager - Centralized system for managing uploaded images and resources
- * Provides asset storage, tagging, search, and caching capabilities
+ * Asset Manager - Compatibility layer for React Query-based asset management
+ * This file provides backward compatibility for components still using the old assetManager API
  */
 
-const ASSETS_STORAGE_KEY = 'whiteboard-assets';
-const ASSET_CACHE_KEY = 'whiteboard-asset-cache';
-const MAX_CACHE_SIZE = 50;
+import assetsService, { Asset as ServiceAsset } from '@/app/assets/api/assetsService';
 
-// Aggressive cleanup constants
-const AGGRESSIVE_CLEANUP_MAX_ASSETS = 10;
-const AGGRESSIVE_CLEANUP_RECENT_DAYS = 7;
-const AGGRESSIVE_CLEANUP_USAGE_WEIGHT = 2;
-const AGGRESSIVE_CLEANUP_RECENT_BONUS = 10;
-
-import assetDB from './assetDB';
-
+// Legacy Asset interface for backward compatibility
 export interface Asset {
   id: string;
   name: string;
@@ -51,21 +42,32 @@ export interface AssetStats {
   mostUsed: Asset | null;
 }
 
-export interface AssetCache {
-  [key: string]: number;
+/**
+ * Convert new Asset format to legacy format
+ */
+function convertToLegacyAsset(serviceAsset: ServiceAsset): Asset {
+  return {
+    id: serviceAsset.id,
+    name: serviceAsset.name,
+    dataUrl: serviceAsset.dataUrl || serviceAsset.url || '',
+    type: serviceAsset.type,
+    size: serviceAsset.size,
+    width: serviceAsset.width || serviceAsset.dimensions?.width || 0,
+    height: serviceAsset.height || serviceAsset.dimensions?.height || 0,
+    tags: serviceAsset.tags || [],
+    uploadDate: serviceAsset.uploadedAt ? new Date(serviceAsset.uploadedAt).getTime() : Date.now(),
+    lastUsed: Date.now(),
+    usageCount: 0,
+  };
 }
 
 /**
- * Get all assets from storage
- * @returns {Array} Array of asset objects
+ * Get all assets from backend (async)
  */
-export function getAllAssets(): Asset[] {
+export async function getAllAssetsAsync(): Promise<Asset[]> {
   try {
-    const stored = localStorage.getItem(ASSETS_STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
-    // If localStorage empty, try IndexedDB (async) - but keep sync API: return [] for now
-    // Consumers that need IDB can call assetDB.getAllAssetsFromIDB() directly if needed
-    return [];
+    const result = await assetsService.list({ page: 1, limit: 1000 });
+    return result.data.map(convertToLegacyAsset);
   } catch (error) {
     console.error('Error loading assets:', error);
     return [];
@@ -73,467 +75,158 @@ export function getAllAssets(): Asset[] {
 }
 
 /**
- * Save assets to storage
- * @param {Array} assets - Array of asset objects
+ * Search assets with criteria (async)
  */
-function saveAssets(assets: Asset[]): void {
+export async function searchAssetsAsync(criteria: SearchCriteria): Promise<Asset[]> {
   try {
-    localStorage.setItem(ASSETS_STORAGE_KEY, JSON.stringify(assets));
-    console.debug('[assetManager] saved assets to localStorage', assets.length);
-  } catch (error) {
-    console.error('Error saving assets:', error);
-    if ((error as any).name === 'QuotaExceededError') {
-      // Aggressive cleanup: keep only the most recent 10 or most frequently used assets
-      const cleanedAssets = aggressiveCleanup(assets);
-      try {
-        localStorage.setItem(ASSETS_STORAGE_KEY, JSON.stringify(cleanedAssets));
-        console.log(`[assetManager] Aggressive cleanup: reduced from ${assets.length} to ${cleanedAssets.length} assets`);
-      } catch (retryError) {
-        console.error('Failed to save assets after aggressive cleanup:', retryError);
-        // Fallback to IndexedDB
-        assetDB.saveAllAssetsToIDB(assets).then(() => {
-          console.debug('[assetManager] saved assets to IndexedDB after quota exceeded');
-        }).catch((idbErr) => {
-          console.error('[assetManager] failed to save assets to IndexedDB:', idbErr);
-        });
-      }
+    const result = await assetsService.list({ page: 1, limit: 1000 });
+    let assets = result.data.map(convertToLegacyAsset);
+
+    // Filter by query
+    if (criteria.query) {
+      const query = criteria.query.toLowerCase();
+      assets = assets.filter(asset => 
+        asset.name.toLowerCase().includes(query) ||
+        asset.tags.some(tag => tag.toLowerCase().includes(query))
+      );
     }
-  }
-}
 
-/**
- * Get asset cache (frequently used assets)
- * @returns {Object} Cache object with asset IDs as keys
- */
-function getAssetCache(): AssetCache {
-  try {
-    const stored = localStorage.getItem(ASSET_CACHE_KEY);
-    return stored ? JSON.parse(stored) : {};
+    // Filter by tags
+    if (criteria.tags && criteria.tags.length > 0) {
+      assets = assets.filter(asset =>
+        criteria.tags!.every(tag => asset.tags.includes(tag))
+      );
+    }
+
+    // Sort
+    if (criteria.sortBy) {
+      assets.sort((a, b) => {
+        const aVal = a[criteria.sortBy!];
+        const bVal = b[criteria.sortBy!];
+        const order = criteria.sortOrder === 'desc' ? -1 : 1;
+        return aVal > bVal ? order : -order;
+      });
+    }
+
+    return assets;
   } catch (error) {
-    console.error('Error loading asset cache:', error);
-    return {};
-  }
-}
-
-/**
- * Update asset cache
- * @param {Object} cache - Cache object
- */
-function saveAssetCache(cache: AssetCache): void {
-  try {
-    localStorage.setItem(ASSET_CACHE_KEY, JSON.stringify(cache));
-  } catch (error) {
-    console.error('Error saving asset cache:', error);
-  }
-}
-
-/**
- * Get image dimensions from data URL
- * @param {string} dataUrl - Base64 data URL
- * @returns {Promise<{width: number, height: number}>}
- */
-function getImageDimensions(dataUrl: string): Promise<{ width: number; height: number }> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      resolve({ width: img.width, height: img.height });
-    };
-    img.onerror = reject;
-    img.src = dataUrl;
-  });
-}
-
-/**
- * Add a new asset to the library
- * @param {Object} assetData - Asset data (name, dataUrl, type, tags)
- * @returns {Promise<Object>} The created asset object
- */
-export async function addAsset(assetData: AssetData): Promise<Asset> {
-  const { name, dataUrl, type, tags = [] } = assetData;
-  
-  const dimensions = await getImageDimensions(dataUrl);
-  
-  const size = Math.round((dataUrl.length * 3) / 4);
-  
-  const asset: Asset = {
-    id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    name,
-    dataUrl,
-    type,
-    size,
-    width: dimensions.width,
-    height: dimensions.height,
-    tags: tags.map(tag => tag.toLowerCase().trim()),
-    uploadDate: Date.now(),
-    lastUsed: Date.now(),
-    usageCount: 0
-  };
-  
-  const assets = getAllAssets();
-  assets.push(asset);
-  saveAssets(assets);
-  
-  updateAssetCache(asset.id);
-  
-  return asset;
-}
-
-/**
- * Get asset by ID
- * @param {string} assetId - Asset ID
- * @returns {Object|null} Asset object or null if not found
- */
-export function getAssetById(assetId: string): Asset | null {
-  const assets = getAllAssets();
-  const asset = assets.find(a => a.id === assetId);
-  
-  if (asset) {
-    updateAssetUsage(assetId);
-  }
-  
-  return asset || null;
-}
-
-/**
- * Update asset usage statistics
- * @param {string} assetId - Asset ID
- */
-function updateAssetUsage(assetId: string): void {
-  const assets = getAllAssets();
-  const assetIndex = assets.findIndex(a => a.id === assetId);
-  
-  if (assetIndex !== -1) {
-    assets[assetIndex].lastUsed = Date.now();
-    assets[assetIndex].usageCount = (assets[assetIndex].usageCount || 0) + 1;
-    saveAssets(assets);
-    updateAssetCache(assetId);
-  }
-}
-
-/**
- * Update asset cache with frequently used assets
- * @param {string} assetId - Asset ID to add to cache
- */
-function updateAssetCache(assetId: string): void {
-  const cache = getAssetCache();
-  cache[assetId] = Date.now();
-  
-  const cacheEntries = Object.entries(cache)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, MAX_CACHE_SIZE);
-  
-  const newCache = Object.fromEntries(cacheEntries);
-  saveAssetCache(newCache);
-}
-
-/**
- * Get frequently used assets (from cache)
- * @returns {Array} Array of cached asset objects
- */
-export function getCachedAssets(): Asset[] {
-  const cache = getAssetCache();
-  const cachedIds = Object.keys(cache);
-  const assets = getAllAssets();
-  
-  return assets
-    .filter(asset => cachedIds.includes(asset.id))
-    .sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
-}
-
-// Async: get all assets, preferring localStorage but falling back to IndexedDB
-export async function getAllAssetsAsync(): Promise<Asset[]> {
-  try {
-    const stored = localStorage.getItem(ASSETS_STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
-    // fallback to IndexedDB
-    const idbAssets = await assetDB.getAllAssetsFromIDB();
-    return idbAssets;
-  } catch (err) {
-    console.error('[assetManager] getAllAssetsAsync failed', err);
+    console.error('Error searching assets:', error);
     return [];
   }
-}
-
-export async function getCachedAssetsAsync(): Promise<Asset[]> {
-  try {
-    const cache = getAssetCache();
-    const cachedIds = Object.keys(cache);
-    const assets = await getAllAssetsAsync();
-    return assets
-      .filter(asset => cachedIds.includes(asset.id))
-      .sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
-  } catch (err) {
-    console.error('[assetManager] getCachedAssetsAsync failed', err);
-    return [];
-  }
-}
-
-export async function searchAssetsAsync(criteria: SearchCriteria = {}): Promise<Asset[]> {
-  try {
-    const { query = '', tags = [], sortBy = 'uploadDate', sortOrder = 'desc' } = criteria;
-    const assets = await getAllAssetsAsync();
-    let results = assets;
-
-    if (query.trim()) {
-      const searchTerm = query.toLowerCase().trim();
-      results = results.filter(asset => asset.name.toLowerCase().includes(searchTerm));
-    }
-
-    if (tags.length > 0) {
-      const searchTags = tags.map(tag => tag.toLowerCase().trim());
-      results = results.filter(asset => searchTags.some(tag => asset.tags.includes(tag)));
-    }
-
-    results.sort((a, b) => {
-      let comparison = 0;
-      switch (sortBy) {
-        case 'name': comparison = a.name.localeCompare(b.name); break;
-        case 'uploadDate': comparison = a.uploadDate - b.uploadDate; break;
-        case 'lastUsed': comparison = (a.lastUsed || 0) - (b.lastUsed || 0); break;
-        case 'usageCount': comparison = (a.usageCount || 0) - (b.usageCount || 0); break;
-        case 'size': comparison = a.size - b.size; break;
-        default: comparison = a.uploadDate - b.uploadDate;
-      }
-      return sortOrder === 'desc' ? -comparison : comparison;
-    });
-
-    return results;
-  } catch (err) {
-    console.error('[assetManager] searchAssetsAsync failed', err);
-    return [];
-  }
-}
-
-/**
- * Search assets by name, tags, or other criteria
- * @param {Object} criteria - Search criteria
- * @returns {Array} Filtered array of assets
- */
-export function searchAssets(criteria: SearchCriteria = {}): Asset[] {
-  const { query = '', tags = [], sortBy = 'uploadDate', sortOrder = 'desc' } = criteria;
-  let assets = getAllAssets();
-  
-  if (query.trim()) {
-    const searchTerm = query.toLowerCase().trim();
-    assets = assets.filter(asset => 
-      asset.name.toLowerCase().includes(searchTerm)
-    );
-  }
-  
-  if (tags.length > 0) {
-    const searchTags = tags.map(tag => tag.toLowerCase().trim());
-    assets = assets.filter(asset => 
-      searchTags.some(tag => asset.tags.includes(tag))
-    );
-  }
-  
-  assets.sort((a, b) => {
-    let comparison = 0;
-    
-    switch (sortBy) {
-      case 'name':
-        comparison = a.name.localeCompare(b.name);
-        break;
-      case 'uploadDate':
-        comparison = a.uploadDate - b.uploadDate;
-        break;
-      case 'lastUsed':
-        comparison = (a.lastUsed || 0) - (b.lastUsed || 0);
-        break;
-      case 'usageCount':
-        comparison = (a.usageCount || 0) - (b.usageCount || 0);
-        break;
-      case 'size':
-        comparison = a.size - b.size;
-        break;
-      default:
-        comparison = a.uploadDate - b.uploadDate;
-    }
-    
-    return sortOrder === 'desc' ? -comparison : comparison;
-  });
-  
-  return assets;
-}
-
-/**
- * Update asset metadata (name, tags)
- * @param {string} assetId - Asset ID
- * @param {Object} updates - Object with fields to update
- * @returns {Object|null} Updated asset or null if not found
- */
-export function updateAsset(assetId: string, updates: Partial<Pick<Asset, 'name' | 'tags'>>): Asset | null {
-  const assets = getAllAssets();
-  const assetIndex = assets.findIndex(a => a.id === assetId);
-  
-  if (assetIndex === -1) return null;
-  
-  const allowedFields = ['name', 'tags'] as const;
-  const safeUpdates: Partial<Asset> = {};
-  for (const field of allowedFields) {
-    if (updates[field] !== undefined) {
-      if (field === 'tags') {
-        // Ensure tags is always an array of strings
-        const tagsValue = updates[field];
-        if (Array.isArray(tagsValue)) {
-          safeUpdates.tags = tagsValue.map(tag => tag.toLowerCase().trim());
-        }
-      } else if (field === 'name') {
-        if (typeof updates[field] === 'string') {
-          safeUpdates.name = updates[field] as string;
-        }
-      }
-    }
-  }
-  
-  assets[assetIndex] = { ...assets[assetIndex], ...safeUpdates };
-  saveAssets(assets);
-  
-  return assets[assetIndex];
-}
-
-/**
- * Delete asset by ID
- * @param {string} assetId - Asset ID
- * @returns {boolean} True if deleted, false if not found
- */
-export function deleteAsset(assetId: string): boolean {
-  const assets = getAllAssets();
-  const filteredAssets = assets.filter(a => a.id !== assetId);
-  
-  if (filteredAssets.length === assets.length) {
-    return false;
-  }
-  
-  saveAssets(filteredAssets);
-  
-  const cache = getAssetCache();
-  delete cache[assetId];
-  saveAssetCache(cache);
-  
-  return true;
 }
 
 /**
  * Get all unique tags from assets
- * @returns {Array} Array of unique tag strings
  */
-export function getAllTags(): string[] {
-  const assets = getAllAssets();
-  const tagSet = new Set<string>();
-  
-  assets.forEach(asset => {
-    asset.tags.forEach(tag => tagSet.add(tag));
-  });
-  
-  return Array.from(tagSet).sort();
+export async function getAllTags(): Promise<string[]> {
+  try {
+    const result = await assetsService.list({ page: 1, limit: 1000 });
+    const tagsSet = new Set<string>();
+    result.data.forEach(asset => {
+      asset.tags?.forEach(tag => tagsSet.add(tag));
+    });
+    return Array.from(tagsSet).sort();
+  } catch (error) {
+    console.error('Error loading tags:', error);
+    return [];
+  }
+}
+
+/**
+ * Add a new asset
+ */
+export async function addAsset(assetData: AssetData): Promise<Asset> {
+  try {
+    // Create asset through service
+    const created = await assetsService.create({
+      name: assetData.name,
+      type: assetData.type,
+      dataUrl: assetData.dataUrl,
+      tags: assetData.tags || [],
+      size: 0, // Will be calculated by backend
+    });
+    
+    return convertToLegacyAsset(created);
+  } catch (error) {
+    console.error('Error adding asset:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete an asset
+ */
+export async function deleteAsset(id: string): Promise<void> {
+  try {
+    await assetsService.delete(id);
+  } catch (error) {
+    console.error('Error deleting asset:', error);
+    throw error;
+  }
 }
 
 /**
  * Get asset statistics
- * @returns {Object} Statistics object
  */
-export function getAssetStats(): AssetStats {
-  const assets = getAllAssets();
-  
-  const totalSize = assets.reduce((sum, asset) => sum + asset.size, 0);
-  const totalCount = assets.length;
-  const uniqueTags = getAllTags().length;
-  
-  return {
-    totalCount,
-    totalSize,
-    totalSizeMB: (totalSize / (1024 * 1024)).toFixed(2),
-    uniqueTags,
-    mostUsed: assets.sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0))[0] || null
-  };
-}
-
-/**
- * Clean up old unused assets (for storage management)
- * Removes assets that haven't been used in 90 days and have low usage count
- */
-function cleanupOldAssets(): void {
-  const assets = getAllAssets();
-  const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
-  
-  const filteredAssets = assets.filter(asset => {
-    const isRecent = asset.lastUsed > ninetyDaysAgo;
-    const isFrequentlyUsed = (asset.usageCount || 0) >= 3;
-    return isRecent || isFrequentlyUsed;
-  });
-  
-  saveAssets(filteredAssets);
-  
-  console.log(`Cleaned up ${assets.length - filteredAssets.length} old assets`);
-}
-
-/**
- * Aggressive cleanup when quota is exceeded
- * Keeps only the most recent or most frequently used assets (default: top 10)
- * @param {Array} assets - Array of asset objects
- * @returns {Array} Filtered assets array
- */
-function aggressiveCleanup(assets: Asset[]): Asset[] {
-  // Sort by combined score: recent usage and usage count
-  const recentThreshold = Date.now() - (AGGRESSIVE_CLEANUP_RECENT_DAYS * 24 * 60 * 60 * 1000);
-  
-  const scoredAssets = assets.map(asset => ({
-    asset,
-    score: (asset.usageCount || 0) * AGGRESSIVE_CLEANUP_USAGE_WEIGHT + 
-           (asset.lastUsed > recentThreshold ? AGGRESSIVE_CLEANUP_RECENT_BONUS : 0)
-  }));
-  
-  // Sort by score descending and keep top N assets
-  scoredAssets.sort((a, b) => b.score - a.score);
-  const kept = scoredAssets.slice(0, AGGRESSIVE_CLEANUP_MAX_ASSETS).map(s => s.asset);
-  
-  return kept;
-}
-
-/**
- * Clear all assets (use with caution)
- */
-export function clearAllAssets(): void {
-  localStorage.removeItem(ASSETS_STORAGE_KEY);
-  localStorage.removeItem(ASSET_CACHE_KEY);
-}
-
-/**
- * Export assets as JSON
- * @returns {string} JSON string of all assets
- */
-export function exportAssets(): string {
-  const assets = getAllAssets();
-  return JSON.stringify(assets, null, 2);
-}
-
-/**
- * Import assets from JSON
- * @param {string} jsonData - JSON string of assets
- * @param {boolean} merge - If true, merge with existing assets; if false, replace
- * @returns {number} Number of assets imported
- */
-export function importAssets(jsonData: string, merge: boolean = true): number {
+export async function getAssetStats(): Promise<AssetStats> {
   try {
-    const importedAssets = JSON.parse(jsonData);
+    const stats = await assetsService.getStats();
     
-    if (!Array.isArray(importedAssets)) {
-      throw new Error('Invalid assets data format');
-    }
-    
-    const existingAssets = merge ? getAllAssets() : [];
-    
-    const existingIds = new Set(existingAssets.map(a => a.id));
-    const newAssets = importedAssets.filter((asset: Asset) => !existingIds.has(asset.id));
-    
-    const finalAssets = [...existingAssets, ...newAssets];
-    saveAssets(finalAssets);
-    
-    return newAssets.length;
+    return {
+      totalCount: stats.totalAssets,
+      totalSize: stats.totalSize,
+      totalSizeMB: (stats.totalSize / (1024 * 1024)).toFixed(2),
+      uniqueTags: Object.keys(stats.byCategory).length,
+      mostUsed: null, // Not tracked anymore
+    };
   } catch (error) {
-    console.error('Error importing assets:', error);
-    return 0;
+    console.error('Error getting asset stats:', error);
+    return {
+      totalCount: 0,
+      totalSize: 0,
+      totalSizeMB: '0.00',
+      uniqueTags: 0,
+      mostUsed: null,
+    };
   }
 }
 
+// Legacy sync functions (deprecated, return empty data)
+export function getAllAssets(): Asset[] {
+  console.warn('getAllAssets is deprecated, use getAllAssetsAsync instead');
+  return [];
+}
+
+export default {
+  getAllAssets,
+  getAllAssetsAsync,
+  searchAssetsAsync,
+  getAllTags,
+  addAsset,
+  deleteAsset,
+  getAssetStats,
+};
+
+/**
+ * Update an existing asset
+ */
+export async function updateAsset(id: string, updates: Partial<AssetData>): Promise<Asset> {
+  try {
+    const updated = await assetsService.update(id, {
+      name: updates.name,
+      type: updates.type,
+      tags: updates.tags,
+    });
+    return convertToLegacyAsset(updated);
+  } catch (error) {
+    console.error('Error updating asset:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get cached assets (async) - now just fetches from backend
+ */
+export async function getCachedAssetsAsync(): Promise<Asset[]> {
+  return getAllAssetsAsync();
+}

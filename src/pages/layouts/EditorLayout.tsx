@@ -1,5 +1,5 @@
 import { Outlet, useParams } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSceneStore } from '@/app/scenes';
 import { useProjectStore } from '@/app/projects/store';
 
@@ -8,19 +8,28 @@ export function EditorLayout() {
   const setCurrentProjectId = useSceneStore((state) => state.setCurrentProjectId);
   const resetSceneStore = useSceneStore((state) => state.reset);
   const setCurrentProject = useProjectStore((state) => state.setCurrentProject);
+  const previousProjectId = useRef<string | undefined>(projectId);
 
+  // Update project ID when it changes
   useEffect(() => {
-    if (projectId) {
+    if (projectId && projectId !== previousProjectId.current) {
+      // Reset stores before loading new project to avoid showing stale data
+      if (previousProjectId.current) {
+        resetSceneStore();
+        setCurrentProject(null);
+      }
       setCurrentProjectId(projectId);
+      previousProjectId.current = projectId;
     }
+  }, [projectId, setCurrentProjectId, resetSceneStore, setCurrentProject]);
 
-    // Cleanup function: reset stores when leaving the editor or switching projects
+  // Cleanup on unmount (navigating away from editor)
+  useEffect(() => {
     return () => {
       resetSceneStore();
       setCurrentProject(null);
     };
-  }, [projectId, setCurrentProjectId, resetSceneStore, setCurrentProject]);
-
+  }, [resetSceneStore, setCurrentProject]);
 
   return (
     <div className="min-h-screen">

@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { DashboardApp } from './DashboardApp';
 import { AnimationContainer } from '@/components/organisms';
 import { Project } from '@/app/projects/types';
 import { useSceneStore } from '@/app/scenes';
-import { useProjectStore } from '@/app/projects/store';
+import { useProjectStore, useProjectCleanup } from '@/app/projects';
 
 type View = 'dashboard' | 'editor';
 
@@ -11,8 +11,10 @@ export function MainApp() {
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const setCurrentProjectId = useSceneStore((state) => state.setCurrentProjectId);
-  const resetSceneStore = useSceneStore((state) => state.reset);
   const setCurrentProject = useProjectStore((state) => state.setCurrentProject);
+
+  // Reset stores when switching back to dashboard
+  useProjectCleanup(currentView === 'dashboard');
 
   const handleOpenEditor = (project: Project) => {
     setSelectedProject(project);
@@ -20,14 +22,6 @@ export function MainApp() {
     setCurrentProjectId(project.id);
     setCurrentView('editor');
   };
-
-  // Reset stores when switching back to dashboard
-  useEffect(() => {
-    if (currentView === 'dashboard') {
-      resetSceneStore();
-      setCurrentProject(null);
-    }
-  }, [currentView, resetSceneStore, setCurrentProject]);
 
   return (
     <div className="min-h-screen">

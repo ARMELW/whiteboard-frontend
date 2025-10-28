@@ -8,10 +8,10 @@ import { useSceneStore } from '../scenes/store';
  * This is a drop-in replacement for useScenesActions that adds history tracking
  */
 export const useScenesActionsWithHistory = () => {
-  // Get standard actions for non-history operations (like loading data)
+  // Get standard actions for API operations
   const standardActions = useScenesActions();
   
-  // Get history-aware actions
+  // Get history-aware actions for local store updates
   const {
     addSceneWithHistory,
     updateSceneWithHistory,
@@ -28,20 +28,38 @@ export const useScenesActionsWithHistory = () => {
   } = useHistoryActions();
   
   return {
-    // Scene operations with history
-    addScene: (scene: Scene) => addSceneWithHistory(scene),
-    updateScene: (scene: Scene) => updateSceneWithHistory(scene),
-    deleteScene: (sceneId: string) => deleteSceneWithHistory(sceneId),
-    reorderScenes: (sceneIds: string[]) => reorderScenesWithHistory(sceneIds),
+    // Scene operations with history - calls both history tracking AND API
+    addScene: async (scene: Scene) => {
+      addSceneWithHistory(scene);
+      // Note: createScene is handled by standardActions.createScene
+    },
+    updateScene: async (scene: Scene) => {
+      updateSceneWithHistory(scene);
+      await standardActions.updateScene(scene);
+    },
+    deleteScene: async (sceneId: string) => {
+      deleteSceneWithHistory(sceneId);
+      await standardActions.deleteScene(sceneId);
+    },
+    reorderScenes: async (sceneIds: string[]) => {
+      reorderScenesWithHistory(sceneIds);
+      await standardActions.reorderScenes(sceneIds);
+    },
     
-    // Layer operations with history
-    addLayer: (params: { sceneId: string; layer: Layer }) => 
-      addLayerWithHistory(params.sceneId, params.layer),
-    updateLayer: (params: { sceneId: string; layer: Layer }) => 
-      updateLayerWithHistory(params.sceneId, params.layer),
-    deleteLayer: (params: { sceneId: string; layerId: string }) => 
-      deleteLayerWithHistory(params.sceneId, params.layerId),
-    moveLayer: (params: { sceneId: string; layerId?: string; from?: number; to?: number; direction?: 'up' | 'down' }) => {
+    // Layer operations with history - calls both history tracking AND API
+    addLayer: async (params: { sceneId: string; layer: Layer }) => {
+      addLayerWithHistory(params.sceneId, params.layer);
+      await standardActions.addLayer(params);
+    },
+    updateLayer: async (params: { sceneId: string; layer: Layer }) => {
+      updateLayerWithHistory(params.sceneId, params.layer);
+      await standardActions.updateLayer(params);
+    },
+    deleteLayer: async (params: { sceneId: string; layerId: string }) => {
+      deleteLayerWithHistory(params.sceneId, params.layerId);
+      await standardActions.deleteLayer(params);
+    },
+    moveLayer: async (params: { sceneId: string; layerId?: string; from?: number; to?: number; direction?: 'up' | 'down' }) => {
       // Support both API styles: {from, to} indices or {layerId, direction}
       if (params.layerId && params.direction) {
         const scenes = useSceneStore.getState().scenes;
@@ -55,11 +73,13 @@ export const useScenesActionsWithHistory = () => {
         if (newIndex < 0 || newIndex >= scene.layers.length) return;
         
         moveLayerWithHistory(params.sceneId, currentIndex, newIndex);
+        await standardActions.moveLayer(params);
       } else if (params.from !== undefined && params.to !== undefined) {
         moveLayerWithHistory(params.sceneId, params.from, params.to);
+        await standardActions.moveLayer(params);
       }
     },
-    duplicateLayer: (params: { sceneId: string; layerId?: string; layer?: Layer }) => {
+    duplicateLayer: async (params: { sceneId: string; layerId?: string; layer?: Layer }) => {
       // Support both API styles: {layerId} or {layer}
       let layerToDuplicate: Layer | undefined;
       let layerIndex: number = -1;
@@ -92,20 +112,24 @@ export const useScenesActionsWithHistory = () => {
       
       // Insert the duplicated layer right after the original layer
       duplicateLayerWithHistory(params.sceneId, newLayer, layerIndex);
+      await standardActions.duplicateLayer(params);
     },
     
-    // Property operations with history
-    // Note: Using 'any' for value type to support the flexible property system
-    // where layers can have dynamic properties. Consider using a more specific
-    // union type if the set of possible properties becomes well-defined.
-    updateSceneProperty: (sceneId: string, property: string, value: any) => 
-      updateScenePropertyWithHistory(sceneId, property, value),
-    updateLayerProperty: (sceneId: string, layerId: string, property: string, value: any) => 
-      updateLayerPropertyWithHistory(sceneId, layerId, property, value),
+    // Property operations with history - calls both history tracking AND API
+    updateSceneProperty: (sceneId: string, property: string, value: any) => {
+      updateScenePropertyWithHistory(sceneId, property, value);
+      standardActions.updateSceneProperty(sceneId, property, value);
+    },
+    updateLayerProperty: (sceneId: string, layerId: string, property: string, value: any) => {
+      updateLayerPropertyWithHistory(sceneId, layerId, property, value);
+      standardActions.updateLayerProperty(sceneId, layerId, property, value);
+    },
     
-    // Camera operations with history
-    addCamera: (params: { sceneId: string; camera: Camera }) => 
-      addCameraWithHistory(params.sceneId, params.camera),
+    // Camera operations with history - calls both history tracking AND API
+    addCamera: async (params: { sceneId: string; camera: Camera }) => {
+      addCameraWithHistory(params.sceneId, params.camera);
+      await standardActions.addCamera(params);
+    },
     
     // Re-export other actions from standard hook that don't need history
     createScene: standardActions.createScene,

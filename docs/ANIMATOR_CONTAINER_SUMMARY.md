@@ -55,7 +55,7 @@ Dynamiser complètement l'`AnimatorContainer` avec l'intégration de l'API backe
   - `uploadAsset()`, `updateAsset()`, `deleteAsset()`
   - `getAssetStats()` pour statistiques
 
-### 3. Intégration AnimatorContainer
+### 3. Intégration AnimationContainer
 
 - **Fichier**: `src/components/organisms/AnimationContainer.tsx`
 - **Modifications**:
@@ -129,7 +129,7 @@ Dynamiser complètement l'`AnimatorContainer` avec l'intégration de l'API backe
 ## 🎨 Architecture
 
 ```
-AnimatorContainer
+AnimationContainer
 ├── useAssets()
 │   ├── assets: Asset[]
 │   ├── loading: boolean

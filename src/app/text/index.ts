@@ -5,6 +5,7 @@
 // Hooks
 export { useTextLibrary } from './hooks/useTextLibrary';
 export { useTextActions } from './hooks/useTextActions';
+export { useFonts } from './hooks/useFonts';
 
 // Store
 export { useTextLibraryStore } from './store';
@@ -34,3 +35,5 @@ export {
 
 // Service (for advanced use)
 export { textMockService } from './api/textMockService';
+export { default as fontsService } from './api/fontsService';
+export type { Font } from './api/fontsService';

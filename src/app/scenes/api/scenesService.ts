@@ -201,7 +201,7 @@ class ScenesService extends BaseService<Scene> {
     const scene = await this.detail(sceneId);
     const updatedLayers = [...(scene.layers || []), layer];
     
-    return super.update(sceneId, {
+    return this.update(sceneId, {
       ...scene,
       layers: updatedLayers,
     });
@@ -218,7 +218,7 @@ class ScenesService extends BaseService<Scene> {
     
     layers[layerIndex] = { ...layers[layerIndex], ...layerData };
     
-    return super.update(sceneId, {
+    return this.update(sceneId, {
       ...scene,
       layers,
     });
@@ -228,7 +228,7 @@ class ScenesService extends BaseService<Scene> {
     const scene = await this.detail(sceneId);
     const layers = (scene.layers || []).filter(l => l.id !== layerId);
     
-    return super.update(sceneId, {
+    return this.update(sceneId, {
       ...scene,
       layers,
     });
@@ -238,7 +238,7 @@ class ScenesService extends BaseService<Scene> {
     const scene = await this.detail(sceneId);
     const updatedCameras = [...(scene.sceneCameras || []), camera];
     
-    return super.update(sceneId, {
+    return this.update(sceneId, {
       ...scene,
       sceneCameras: updatedCameras,
     });

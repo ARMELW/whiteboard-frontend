@@ -1,6 +1,7 @@
 import BaseService from '@/services/api/baseService';
 import httpClient from '@/services/api/httpClient';
 import API_ENDPOINTS from '@/config/api';
+import authService from '@/app/auth/api/authService';
 
 export interface Asset {
   id: string;
@@ -116,14 +117,9 @@ class AssetsService extends BaseService<Asset> {
         url = `${url}?id=${userId}`;
       } else {
         // Try to get user ID from stored auth session
-        try {
-          const authServiceModule = await import('../../auth/api/authService');
-          const session = authServiceModule.default.getStoredSession();
-          if (session?.user?.id) {
-            url = `${url}?id=${session.user.id}`;
-          }
-        } catch (err) {
-          console.warn('[AssetsService] Could not retrieve user session for stats', err);
+        const session = authService.getStoredSession();
+        if (session?.user?.id) {
+          url = `${url}?id=${session.user.id}`;
         }
       }
       

@@ -1,14 +1,18 @@
 import { useRef, useEffect } from 'react';
 import Konva from 'konva';
 import { ShapeType, ShapeLayer } from '../../../utils/shapeUtils';
+import { applyMultiLayerDrag } from '../../../utils/multiLayerDrag';
 
 export const useShapeTransform = (
   isSelected: boolean,
   layer: ShapeLayer,
-  onChange: (layer: ShapeLayer) => void
+  onChange: (layer: ShapeLayer) => void,
+  selectedLayerIds: string[] = [],
+  allLayers: any[] = []
 ) => {
   const shapeRef = useRef<any>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
+  const dragStartPosRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (isSelected && transformerRef.current && shapeRef.current) {
@@ -17,17 +21,38 @@ export const useShapeTransform = (
     }
   }, [isSelected]);
 
+  const handleDragStart = (e: any) => {
+    dragStartPosRef.current = {
+      x: e.target.x(),
+      y: e.target.y()
+    };
+  };
+
   const handleDragEnd = (e: any) => {
+    const finalX = e.target.x();
+    const finalY = e.target.y();
     const shapeConfig = layer.shape_config;
+    
+    // Update main layer position
     const newConfig = {
       ...shapeConfig,
-      x: e.target.x(),
-      y: e.target.y(),
+      x: finalX,
+      y: finalY,
     };
     onChange({
       ...layer,
       shape_config: newConfig,
     });
+    
+    // If multiple layers were selected, update their positions as well
+    if (selectedLayerIds.length > 1 && dragStartPosRef.current) {
+      const deltaX = finalX - dragStartPosRef.current.x;
+      const deltaY = finalY - dragStartPosRef.current.y;
+      
+      applyMultiLayerDrag(selectedLayerIds, layer.id, allLayers, deltaX, deltaY, onChange);
+    }
+    
+    dragStartPosRef.current = null;
   };
 
   const handleTransformEnd = () => {
@@ -110,6 +135,7 @@ export const useShapeTransform = (
   return {
     shapeRef,
     transformerRef,
+    handleDragStart,
     handleDragEnd,
     handleTransformEnd,
   };

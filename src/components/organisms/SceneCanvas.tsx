@@ -448,6 +448,8 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                           isSelected={isLayerSelected}
                           onSelect={handleLayerSelect}
                           onChange={onUpdateLayer as (layer: any) => void}
+                          selectedLayerIds={selectedLayerIds}
+                          allLayers={sortedLayers}
                         />
                       );
                     } else {

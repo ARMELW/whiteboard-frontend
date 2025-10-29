@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { Image as KonvaImage, Transformer } from 'react-konva';
 import useImage from 'use-image';
 import Konva from 'konva';
+import { applyMultiLayerDrag } from '@/utils/multiLayerDrag';
 
 export interface LayerImageProps {
   layer: any;
@@ -75,46 +76,40 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
           // Store initial position for multi-layer drag
           dragStartPosRef.current = {
             x: e.target.x(),
-            y: e.target.y()
+            y: e.target.y(),
+            currentX: e.target.x(),
+            currentY: e.target.y()
           };
         }}
         onDragMove={(e) => {
-          // If multiple layers are selected, move them all together
+          // Just track position, don't update other layers yet (will do it in onDragEnd)
           if (selectedLayerIds.length > 1 && dragStartPosRef.current) {
-            const deltaX = e.target.x() - dragStartPosRef.current.x;
-            const deltaY = e.target.y() - dragStartPosRef.current.y;
-            
-            // Move all other selected layers
-            selectedLayerIds.forEach((layerId) => {
-              if (layerId !== layer.id) {
-                const targetLayer = allLayers.find(l => l.id === layerId);
-                if (targetLayer) {
-                  onChange({
-                    ...targetLayer,
-                    position: {
-                      x: (targetLayer.position?.x || 0) + deltaX,
-                      y: (targetLayer.position?.y || 0) + deltaY
-                    }
-                  });
-                }
-              }
-            });
-            
-            // Update drag start position for next move
-            dragStartPosRef.current = {
-              x: e.target.x(),
-              y: e.target.y()
-            };
+            // Track current position for the final update
+            dragStartPosRef.current.currentX = e.target.x();
+            dragStartPosRef.current.currentY = e.target.y();
           }
         }}
         onDragEnd={(e) => {
+          const finalX = e.target.x();
+          const finalY = e.target.y();
+          
+          // Update main layer position
           onChange({
             ...layer,
             position: {
-              x: e.target.x(),
-              y: e.target.y(),
+              x: finalX,
+              y: finalY,
             }
           });
+          
+          // If multiple layers were selected, update their positions as well
+          if (selectedLayerIds.length > 1 && dragStartPosRef.current) {
+            const deltaX = finalX - dragStartPosRef.current.x;
+            const deltaY = finalY - dragStartPosRef.current.y;
+            
+            applyMultiLayerDrag(selectedLayerIds, layer.id, allLayers, deltaX, deltaY, onChange);
+          }
+          
           dragStartPosRef.current = null;
         }}
         onTransformEnd={() => {

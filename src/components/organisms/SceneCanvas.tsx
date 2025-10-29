@@ -133,8 +133,8 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   const scrollContainerRef = useRef(null);
 
   // Support for configurable scene dimensions (for immense scenes)
-  const sceneWidth = scene.sceneWidth || 1920;
-  const sceneHeight = scene.sceneHeight || 1080;
+  const sceneWidth = scene.sceneWidth || 10000;
+  const sceneHeight = scene.sceneHeight || 10000;
 
   // Calculate zoom to fit scene in viewport
   const calculateFitZoom = useCallback(() => {
@@ -288,14 +288,36 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
     setHasInitialCentered(false);
   }, [scene.id]);
 
-  // Auto-scroll to selected camera - disabled since canvas is now centered with flexbox
-  // The canvas is always centered in the viewport, so scrolling is not needed
+  // Auto-scroll to center on selected camera
   React.useEffect(() => {
-    // Mark as centered immediately since we don't need to scroll
+    if (!scrollContainerRef.current || !selectedCameraId) return;
+    
+    const selectedCamera = sceneCameras.find((cam: Camera) => cam.id === selectedCameraId);
+    if (!selectedCamera) return;
+    
+    const container = scrollContainerRef.current as HTMLDivElement;
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+    
+    // Calculate the pixel position of the camera center
+    const cameraCenterX = selectedCamera.position.x * sceneWidth;
+    const cameraCenterY = selectedCamera.position.y * sceneHeight;
+    
+    // Calculate scroll position to center the camera in the viewport
+    const scrollLeft = (cameraCenterX * effectiveSceneZoom) - (containerWidth / 2);
+    const scrollTop = (cameraCenterY * effectiveSceneZoom) - (containerHeight / 2);
+    
+    // Scroll to the camera position
+    container.scrollTo({
+      left: Math.max(0, scrollLeft),
+      top: Math.max(0, scrollTop),
+      behavior: hasInitialCentered ? 'smooth' : 'auto'
+    });
+    
     if (!hasInitialCentered) {
       setHasInitialCentered(true);
     }
-  }, [selectedCameraId, hasInitialCentered]);
+  }, [selectedCameraId, sceneCameras, sceneWidth, sceneHeight, effectiveSceneZoom, hasInitialCentered]);
   
   // Handle keyboard shortcuts for multi-selection deletion
   React.useEffect(() => {
@@ -342,7 +364,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
         {/* Canvas Area - Centered viewport */}
         <div
           ref={scrollContainerRef}
-          className="flex-1 bg-white relative flex items-center justify-center overflow-hidden"
+          className="flex-1 bg-white relative overflow-auto"
           style={{
             width: '100%',
             height: '100%',
@@ -358,7 +380,8 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
             style={{
               width: `${scaledSceneWidth}px`,
               height: `${scaledSceneHeight}px`,
-              position: 'relative'
+              position: 'relative',
+              margin: '0'
             }}
           >
             {/* Konva Stage for layers and cameras */}
@@ -391,22 +414,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                   }
                 }}
               >
-                {/* Cameras Layer - En dessous */}
-                <KonvaLayer>
-                  {sceneCameras.map((camera: Camera) => (
-                    <KonvaCamera
-                      key={camera.id}
-                      camera={camera}
-                      isSelected={selectedCameraId === camera.id}
-                      onSelect={() => setSelectedCameraId(camera.id ?? 'default-camera')}
-                      onUpdate={handleUpdateCamera}
-                      sceneWidth={sceneWidth}
-                      sceneHeight={sceneHeight}
-                    />
-                  ))}
-                </KonvaLayer>
-
-                {/* Layers - Au dessus */}
+                {/* Layers - En dessous */}
                 <KonvaLayer>
                   {sortedLayers.map((layer: Layer) => {
                     const isLayerSelected = selectedLayerIds.includes(layer.id);
@@ -464,6 +472,21 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                       );
                     }
                   })}
+                </KonvaLayer>
+
+                {/* Cameras Layer - Au dessus de tout */}
+                <KonvaLayer>
+                  {sceneCameras.map((camera: Camera) => (
+                    <KonvaCamera
+                      key={camera.id}
+                      camera={camera}
+                      isSelected={selectedCameraId === camera.id}
+                      onSelect={() => setSelectedCameraId(camera.id ?? 'default-camera')}
+                      onUpdate={handleUpdateCamera}
+                      sceneWidth={sceneWidth}
+                      sceneHeight={sceneHeight}
+                    />
+                  ))}
                 </KonvaLayer>
               </Stage>
             </div>

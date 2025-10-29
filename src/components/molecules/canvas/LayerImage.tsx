@@ -111,13 +111,26 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
               if (layerId !== layer.id) {
                 const targetLayer = allLayers.find(l => l.id === layerId);
                 if (targetLayer) {
-                  onChange({
-                    ...targetLayer,
-                    position: {
-                      x: (targetLayer.position?.x || 0) + deltaX,
-                      y: (targetLayer.position?.y || 0) + deltaY
-                    }
-                  });
+                  if (targetLayer.type === 'shape' && targetLayer.shape_config) {
+                    // For shape layers
+                    onChange({
+                      ...targetLayer,
+                      shape_config: {
+                        ...targetLayer.shape_config,
+                        x: (targetLayer.shape_config.x || 0) + deltaX,
+                        y: (targetLayer.shape_config.y || 0) + deltaY
+                      }
+                    });
+                  } else {
+                    // For image/text layers
+                    onChange({
+                      ...targetLayer,
+                      position: {
+                        x: (targetLayer.position?.x || 0) + deltaX,
+                        y: (targetLayer.position?.y || 0) + deltaY
+                      }
+                    });
+                  }
                 }
               }
             });

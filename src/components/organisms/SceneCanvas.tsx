@@ -49,6 +49,10 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   const [editingTextValue, setEditingTextValue] = useState('');
   const [editingLayerId, setEditingLayerId] = useState<string | null>(null);
   
+  // Camera navigation panel state
+  const [showCameraNav, setShowCameraNav] = useState(true);
+  const [isCameraNavMinimized, setIsCameraNavMinimized] = useState(false);
+  
   // Multi-selection support
   const selectedLayerIds = useSceneStore((state) => state.selectedLayerIds);
   const toggleLayerSelection = useSceneStore((state) => state.toggleLayerSelection);
@@ -133,8 +137,13 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   const scrollContainerRef = useRef(null);
 
   // Support for configurable scene dimensions (for immense scenes)
-  const sceneWidth = scene.sceneWidth || 1920;
-  const sceneHeight = scene.sceneHeight || 1080;
+  const sceneWidth = scene.sceneWidth || 10000;
+  const sceneHeight = scene.sceneHeight || 10000;
+
+  // Constants for zoom and spacing
+  const ZOOM_THRESHOLD_FOR_LARGE_SCENES = 0.5;
+  const INITIAL_ZOOM_FOR_LARGE_SCENES = 0.2;
+  const CANVAS_MARGIN = 100; // pixels of space around canvas for comfortable scrolling
 
   // Calculate zoom to fit scene in viewport
   const calculateFitZoom = useCallback(() => {
@@ -151,7 +160,10 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   React.useEffect(() => {
     if (!hasCalculatedInitialZoom && scrollContainerRef.current) {
       const fitZoom = calculateFitZoom();
-      handleSceneZoomChange(Math.max(fitZoom, 1.0));
+      // Allow zoom to be less than 1.0 for immense scenes
+      // Use a smaller zoom for very large scenes to enable scrolling
+      const initialZoom = fitZoom < ZOOM_THRESHOLD_FOR_LARGE_SCENES ? INITIAL_ZOOM_FOR_LARGE_SCENES : fitZoom;
+      handleSceneZoomChange(initialZoom);
       setHasCalculatedInitialZoom(true);
     }
   }, [hasCalculatedInitialZoom, calculateFitZoom, handleSceneZoomChange]);
@@ -288,14 +300,36 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
     setHasInitialCentered(false);
   }, [scene.id]);
 
-  // Auto-scroll to selected camera - disabled since canvas is now centered with flexbox
-  // The canvas is always centered in the viewport, so scrolling is not needed
+  // Auto-scroll to center on selected camera
   React.useEffect(() => {
-    // Mark as centered immediately since we don't need to scroll
+    if (!scrollContainerRef.current || !selectedCameraId) return;
+    
+    const selectedCamera = sceneCameras.find((cam: Camera) => cam.id === selectedCameraId);
+    if (!selectedCamera) return;
+    
+    const container = scrollContainerRef.current as HTMLDivElement;
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+    
+    // Calculate the pixel position of the camera center
+    const cameraCenterX = selectedCamera.position.x * sceneWidth;
+    const cameraCenterY = selectedCamera.position.y * sceneHeight;
+    
+    // Calculate scroll position to center the camera in the viewport
+    const scrollLeft = (cameraCenterX * effectiveSceneZoom) - (containerWidth / 2);
+    const scrollTop = (cameraCenterY * effectiveSceneZoom) - (containerHeight / 2);
+    
+    // Scroll to the camera position
+    container.scrollTo({
+      left: Math.max(0, scrollLeft),
+      top: Math.max(0, scrollTop),
+      behavior: hasInitialCentered ? 'smooth' : 'auto'
+    });
+    
     if (!hasInitialCentered) {
       setHasInitialCentered(true);
     }
-  }, [selectedCameraId, hasInitialCentered]);
+  }, [selectedCameraId, sceneCameras, sceneWidth, sceneHeight, effectiveSceneZoom, hasInitialCentered]);
   
   // Handle keyboard shortcuts for multi-selection deletion
   React.useEffect(() => {
@@ -342,7 +376,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
         {/* Canvas Area - Centered viewport */}
         <div
           ref={scrollContainerRef}
-          className="flex-1 bg-white relative flex items-center justify-center overflow-hidden"
+          className="flex-1 bg-white relative overflow-auto"
           style={{
             width: '100%',
             height: '100%',
@@ -358,7 +392,8 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
             style={{
               width: `${scaledSceneWidth}px`,
               height: `${scaledSceneHeight}px`,
-              position: 'relative'
+              position: 'relative',
+              margin: `${CANVAS_MARGIN}px` // Add margin so scene has space to scroll
             }}
           >
             {/* Konva Stage for layers and cameras */}
@@ -391,22 +426,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                   }
                 }}
               >
-                {/* Cameras Layer - En dessous */}
-                <KonvaLayer>
-                  {sceneCameras.map((camera: Camera) => (
-                    <KonvaCamera
-                      key={camera.id}
-                      camera={camera}
-                      isSelected={selectedCameraId === camera.id}
-                      onSelect={() => setSelectedCameraId(camera.id ?? 'default-camera')}
-                      onUpdate={handleUpdateCamera}
-                      sceneWidth={sceneWidth}
-                      sceneHeight={sceneHeight}
-                    />
-                  ))}
-                </KonvaLayer>
-
-                {/* Layers - Au dessus */}
+                {/* Layers - En dessous */}
                 <KonvaLayer>
                   {sortedLayers.map((layer: Layer) => {
                     const isLayerSelected = selectedLayerIds.includes(layer.id);
@@ -465,8 +485,196 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                     }
                   })}
                 </KonvaLayer>
+
+                {/* Cameras Layer - Au dessus de tout */}
+                <KonvaLayer>
+                  {sceneCameras.map((camera: Camera) => (
+                    <KonvaCamera
+                      key={camera.id}
+                      camera={camera}
+                      isSelected={selectedCameraId === camera.id}
+                      onSelect={() => setSelectedCameraId(camera.id ?? 'default-camera')}
+                      onUpdate={handleUpdateCamera}
+                      sceneWidth={sceneWidth}
+                      sceneHeight={sceneHeight}
+                    />
+                  ))}
+                </KonvaLayer>
               </Stage>
             </div>
+
+            {/* Camera Navigation Panel - Floating on canvas */}
+            {showCameraNav && (
+              <div 
+                className={`absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 z-50 transition-all duration-300 ${
+                  isCameraNavMinimized ? 'p-2' : 'p-3'
+                }`}
+                style={{ maxWidth: isCameraNavMinimized ? '50px' : '280px' }}
+              >
+                {isCameraNavMinimized ? (
+                  // Minimized view - just a button
+                  <button
+                    onClick={() => setIsCameraNavMinimized(false)}
+                    className="flex items-center justify-center w-10 h-10 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                    title="Afficher la navigation caméras"
+                    aria-label={`Afficher la navigation des ${sceneCameras.length} caméras`}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold" aria-label={`${sceneCameras.length} caméras`}>
+                      {sceneCameras.length}
+                    </span>
+                  </button>
+                ) : (
+                  // Expanded view
+                  <>
+                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      <h3 className="text-sm font-semibold text-gray-800 flex-1">Navigation Caméras</h3>
+                      <span className="text-xs text-gray-500">{sceneCameras.length}</span>
+                      <button
+                        onClick={() => setIsCameraNavMinimized(true)}
+                        className="p-1 hover:bg-gray-100 rounded transition-colors"
+                        title="Réduire"
+                      >
+                        <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setShowCameraNav(false)}
+                        className="p-1 hover:bg-gray-100 rounded transition-colors"
+                        title="Fermer"
+                      >
+                        <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+              
+              <div className="space-y-2 max-h-96 overflow-y-auto" role="list" aria-label="Liste des caméras">
+                {sceneCameras.map((camera: Camera, index: number) => {
+                  const isSelected = selectedCameraId === camera.id;
+                  const isDefault = camera.isDefault;
+                  const nextCamera = index < sceneCameras.length - 1 ? sceneCameras[index + 1] : null;
+                  
+                  return (
+                    <div key={camera.id}>
+                      <button
+                        onClick={() => {
+                          setSelectedCameraId(camera.id);
+                          // Auto-center will be triggered by useEffect
+                        }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200 ${
+                          isSelected
+                            ? 'bg-blue-600 text-white shadow-md'
+                            : isDefault
+                            ? 'bg-blue-50 hover:bg-blue-100 text-blue-800'
+                            : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
+                        }`}
+                        role="listitem"
+                        aria-label={`Caméra ${index + 1}: ${camera.name || `Camera ${index + 1}`}, Zoom ${camera.zoom?.toFixed(1)}x${isDefault ? ', caméra par défaut' : ''}${camera.locked ? ', verrouillée' : ''}${isSelected ? ', actuellement sélectionnée' : ''}`}
+                        aria-current={isSelected ? 'true' : 'false'}
+                      >
+                        {/* Camera icon */}
+                        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                          isSelected
+                            ? 'bg-blue-500'
+                            : isDefault
+                            ? 'bg-blue-200'
+                            : 'bg-gray-200'
+                        }`}>
+                          <span className={`text-xs font-bold ${
+                            isSelected ? 'text-white' : isDefault ? 'text-blue-700' : 'text-gray-600'
+                          }`}>
+                            {index + 1}
+                          </span>
+                        </div>
+                        
+                        {/* Camera info */}
+                        <div className="flex-1 text-left min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium truncate">
+                              {camera.name || `Camera ${index + 1}`}
+                            </span>
+                            {isDefault && (
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-blue-200 text-blue-700">
+                                Défaut
+                              </span>
+                            )}
+                            {camera.locked && (
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="text-xs opacity-75 mt-0.5">
+                            Zoom: {camera.zoom?.toFixed(1)}x
+                          </div>
+                        </div>
+                        
+                        {/* Location indicator */}
+                        <div className="flex-shrink-0">
+                          <svg className={`w-4 h-4 ${isSelected ? 'text-white' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </button>
+                      
+                      {/* Flow arrow to next camera */}
+                      {nextCamera && (
+                        <div className="flex items-center justify-center py-1">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                          </svg>
+                          <div className="flex-1 border-t border-dashed border-gray-300 mx-2"></div>
+                          <span className="text-xs text-gray-400 font-medium">PUIS</span>
+                          <div className="flex-1 border-t border-dashed border-gray-300 mx-2"></div>
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Quick stats */}
+              <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500">
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                  <span>{sceneCameras.filter(c => !c.isDefault).length} personnalisée(s)</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>{sceneCameras.filter(c => c.locked).length} verrouillée(s)</span>
+                </div>
+              </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Toggle button when panel is hidden */}
+            {!showCameraNav && (
+              <button
+                onClick={() => setShowCameraNav(true)}
+                className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg z-50 transition-colors"
+                title="Afficher la navigation caméras"
+                aria-label={`Afficher la navigation des ${sceneCameras.length} caméras`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <span className="text-sm font-medium">Caméras ({sceneCameras.length})</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

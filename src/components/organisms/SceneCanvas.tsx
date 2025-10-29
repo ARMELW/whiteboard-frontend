@@ -145,6 +145,10 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   const ZOOM_THRESHOLD_FOR_LARGE_SCENES = 0.5;
   const INITIAL_ZOOM_FOR_LARGE_SCENES = 0.2;
   const CANVAS_MARGIN = 100; // pixels of space around canvas for comfortable scrolling
+  const DEFAULT_CAMERA_WIDTH = 800;
+  const DEFAULT_CAMERA_HEIGHT = 450;
+  const CAMERA_PADDING_RATIO = 0.9; // 90% of viewport for padding around camera
+  const MAX_AUTO_FIT_ZOOM = 1.5; // Maximum zoom level for auto-fit
 
   // Calculate zoom to fit scene in viewport
   const calculateFitZoom = useCallback(() => {
@@ -181,13 +185,13 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
     const container = scrollContainerRef.current as HTMLDivElement;
     const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight;
-    const cameraWidth = defaultCamera.width || 800;
-    const cameraHeight = defaultCamera.height || 450;
+    const cameraWidth = defaultCamera.width || DEFAULT_CAMERA_WIDTH;
+    const cameraHeight = defaultCamera.height || DEFAULT_CAMERA_HEIGHT;
     
     // Calculate zoom to fit camera with some padding
-    const zoomX = (containerWidth * 0.9) / cameraWidth;
-    const zoomY = (containerHeight * 0.9) / cameraHeight;
-    const optimalZoom = Math.min(zoomX, zoomY, 1.5);
+    const zoomX = (containerWidth * CAMERA_PADDING_RATIO) / cameraWidth;
+    const zoomY = (containerHeight * CAMERA_PADDING_RATIO) / cameraHeight;
+    const optimalZoom = Math.min(zoomX, zoomY, MAX_AUTO_FIT_ZOOM);
     
     // Apply the zoom
     handleSceneZoomChange(optimalZoom);

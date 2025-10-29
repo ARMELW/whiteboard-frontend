@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Scene, Layer, Camera, SceneAudioConfig } from './types';
+import { Scene, Layer, Camera, SceneAudioConfig, MiniScene } from './types';
 import { generateSceneThumbnail } from '../../utils/sceneThumbnail';
 
 /**
@@ -15,10 +15,12 @@ interface SceneState {
   selectedSceneIndex: number;
   selectedLayerId: string | null;
   selectedLayerIds: string[]; // Multi-selection support
+  selectedMiniSceneId: string | null; // Selected mini-scene
   showAssetLibrary: boolean;
   showShapeToolbar: boolean;
   showCropModal: boolean;
   showHistoryPanel: boolean;
+  showMiniScenePanel: boolean; // Show/hide mini-scene management panel
   pendingImageData: any | null;
   activeTab: string; // Ajout onglet actif pour PropertiesPanel
   
@@ -50,6 +52,13 @@ interface SceneState {
   setSceneAudio: (sceneId: string, audio: SceneAudioConfig | null) => void;
   updateSceneAudioVolume: (sceneId: string, volume: number) => void;
   
+  // Mini-Scene Actions
+  addMiniScene: (sceneId: string, miniScene: MiniScene) => void;
+  updateMiniScene: (sceneId: string, miniScene: MiniScene) => void;
+  deleteMiniScene: (sceneId: string, miniSceneId: string) => void;
+  reorderMiniScenes: (sceneId: string, miniSceneIds: string[]) => void;
+  setSelectedMiniSceneId: (id: string | null) => void;
+  
   // UI Actions
   setSelectedSceneIndex: (index: number) => void;
   setSelectedLayerId: (id: string | null) => void;
@@ -60,6 +69,7 @@ interface SceneState {
   setShowShapeToolbar: (show: boolean) => void;
   setShowCropModal: (show: boolean) => void;
   setShowHistoryPanel: (show: boolean) => void;
+  setShowMiniScenePanel: (show: boolean) => void;
   setPendingImageData: (data: any | null) => void;
   setActiveTab: (tab: string) => void; // Ajout setter onglet actif
   
@@ -80,10 +90,12 @@ const initialUIState = {
   selectedSceneIndex: 0,
   selectedLayerId: null,
   selectedLayerIds: [],
+  selectedMiniSceneId: null,
   showAssetLibrary: false,
   showShapeToolbar: false,
   showCropModal: false,
   showHistoryPanel: false,
+  showMiniScenePanel: false,
   pendingImageData: null,
   activeTab: 'properties',
   previewMode: false,
@@ -285,6 +297,62 @@ export const useSceneStore = create<SceneState>((set) => ({
     }));
   },
   
+  // Mini-Scene Actions
+  addMiniScene: (sceneId: string, miniScene: MiniScene) => {
+    set(state => ({
+      scenes: state.scenes.map(s => {
+        if (s.id === sceneId) {
+          const miniScenes = [...(s.miniScenes || []), miniScene];
+          return { ...s, miniScenes };
+        }
+        return s;
+      })
+    }));
+  },
+  
+  updateMiniScene: (sceneId: string, miniScene: MiniScene) => {
+    set(state => ({
+      scenes: state.scenes.map(s => {
+        if (s.id === sceneId) {
+          const miniScenes = (s.miniScenes || []).map(ms => 
+            ms.id === miniScene.id ? miniScene : ms
+          );
+          return { ...s, miniScenes };
+        }
+        return s;
+      })
+    }));
+  },
+  
+  deleteMiniScene: (sceneId: string, miniSceneId: string) => {
+    set(state => ({
+      scenes: state.scenes.map(s => {
+        if (s.id === sceneId) {
+          const miniScenes = (s.miniScenes || []).filter(ms => ms.id !== miniSceneId);
+          return { ...s, miniScenes };
+        }
+        return s;
+      }),
+      selectedMiniSceneId: state.selectedMiniSceneId === miniSceneId ? null : state.selectedMiniSceneId
+    }));
+  },
+  
+  reorderMiniScenes: (sceneId: string, miniSceneIds: string[]) => {
+    set(state => ({
+      scenes: state.scenes.map(s => {
+        if (s.id === sceneId) {
+          const miniScenes = miniSceneIds
+            .map(id => (s.miniScenes || []).find(ms => ms.id === id))
+            .filter(Boolean) as MiniScene[];
+          return { ...s, miniScenes };
+        }
+        return s;
+      })
+    }));
+  },
+  
+  setSelectedMiniSceneId: (id: string | null) => set({ selectedMiniSceneId: id }),
+  
   // UI Actions
   setSelectedSceneIndex: (index) => set({ 
     selectedSceneIndex: index,
@@ -313,6 +381,7 @@ export const useSceneStore = create<SceneState>((set) => ({
   setShowShapeToolbar: (show) => set({ showShapeToolbar: show }),
   setShowCropModal: (show) => set({ showCropModal: show }),
   setShowHistoryPanel: (show) => set({ showHistoryPanel: show }),
+  setShowMiniScenePanel: (show) => set({ showMiniScenePanel: show }),
   setPendingImageData: (data) => set({ pendingImageData: data }),
   
   // Preview Actions

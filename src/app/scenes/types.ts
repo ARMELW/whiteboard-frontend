@@ -41,30 +41,6 @@ export enum CameraEasing {
   ELASTIC = 'elastic',
 }
 
-export enum TransitionType {
-  NONE = 'none',
-  FADE = 'fade',
-  WIPE_LEFT = 'wipe_left',
-  WIPE_RIGHT = 'wipe_right',
-  WIPE_UP = 'wipe_up',
-  WIPE_DOWN = 'wipe_down',
-  ZOOM_IN = 'zoom_in',
-  ZOOM_OUT = 'zoom_out',
-  FADE_BLACK = 'fade_black',
-  FADE_WHITE = 'fade_white',
-  SLIDE_LEFT = 'slide_left',
-  SLIDE_RIGHT = 'slide_right',
-  SLIDE_UP = 'slide_up',
-  SLIDE_DOWN = 'slide_down',
-}
-
-export enum TransitionEasing {
-  LINEAR = 'linear',
-  EASE_IN = 'ease_in',
-  EASE_OUT = 'ease_out',
-  EASE_IN_OUT = 'ease_in_out',
-}
-
 export interface Position {
   x: number;
   y: number;
@@ -151,26 +127,6 @@ export interface AudioConfig {
   [key: string]: any;
 }
 
-export interface MiniSceneTransition {
-  type: TransitionType;
-  duration: number;
-  easing: TransitionEasing;
-  direction?: 'left' | 'right' | 'up' | 'down';
-}
-
-export interface MiniScene {
-  id: string;
-  name: string;
-  duration: number;
-  camera: Camera;
-  visibleLayerIds: string[];
-  transitionIn: MiniSceneTransition;
-  transitionOut: MiniSceneTransition;
-  order: number;
-  startTime?: number;
-  endTime?: number;
-}
-
 export interface Scene {
   id: string;
   projectId: string;
@@ -187,7 +143,6 @@ export interface Scene {
   multiTimeline: MultiTimeline;
   audio: AudioConfig;
   sceneAudio?: SceneAudioConfig | null;
-  miniScenes?: MiniScene[];
   createdAt: string;
   updatedAt: string;
   transition_type?: string;
@@ -212,7 +167,6 @@ export interface ScenePayload {
   multiTimeline?: MultiTimeline;
   audio?: AudioConfig;
   sceneAudio?: SceneAudioConfig | null;
-  miniScenes?: MiniScene[];
   transition_type?: string;
   dragging_speed?: number;
   slide_duration?: number;

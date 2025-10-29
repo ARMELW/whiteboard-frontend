@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
-import { Save, Download, Undo, Redo, FileVideo, Play, Clock, Library, BookmarkPlus, Camera, Plus, ZoomIn, ZoomOut, Lock, Unlock, Sparkles, Loader2, ImageIcon, Check, Film } from 'lucide-react';
+import { Save, Download, Undo, Redo, FileVideo, Play, Clock, Library, BookmarkPlus, Camera, Plus, ZoomIn, ZoomOut, Lock, Unlock, Sparkles, Loader2, ImageIcon, Check } from 'lucide-react';
 import { useSceneStore, useSaveScene } from '@/app/scenes';
 import { useWizardStore } from '@/app/wizard';
 import { useHistory } from '@/app/history';
@@ -47,8 +47,6 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
 }) => {
   const showHistoryPanel = useSceneStore((state) => state.showHistoryPanel);
   const setShowHistoryPanel = useSceneStore((state) => state.setShowHistoryPanel);
-  const showMiniScenePanel = useSceneStore((state) => state.showMiniScenePanel);
-  const setShowMiniScenePanel = useSceneStore((state) => state.setShowMiniScenePanel);
   const openWizard = useWizardStore((state) => state.openWizard);
   const { generatePreview, isGenerating } = useQuickPreview();
   const { saveAllScenes, isSaving, lastSaved } = useSaveScene();
@@ -253,20 +251,6 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
           title="Afficher l'historique"
         >
           <Clock className="w-5 h-5" />
-        </button>
-        <button
-          onClick={() => setShowMiniScenePanel(!showMiniScenePanel)}
-          disabled={!hasCurrentScene}
-          className={`p-2 rounded transition-colors ${
-            !hasCurrentScene
-              ? 'text-gray-500 cursor-not-allowed'
-              : showMiniScenePanel
-              ? 'bg-purple-600 text-white'
-              : 'hover:bg-gray-800 text-gray-300'
-            }`}
-          title="Mini-scènes"
-        >
-          <Film className="w-5 h-5" />
         </button>
         <div className="h-6 w-px  mx-2" />
 

@@ -6,8 +6,6 @@ import PropertiesPanel from './PropertiesPanel';
 import AssetLibrary from './AssetLibrary';
 import ShapeToolbar from './ShapeToolbar';
 import ScenePanel from './ScenePanel';
-import MiniScenePanel from './MiniScenePanel';
-import MiniSceneEditor from './MiniSceneEditor';
 import ContextTabs from './ContextTabs';
 import HistoryPanel from './HistoryPanel';
 import TemplateLibrary from './TemplateLibrary';
@@ -28,8 +26,6 @@ const AnimationContainer: React.FC = () => {
   const showAssetLibrary = useSceneStore((state: any) => state.showAssetLibrary);
   const showHistoryPanel = useSceneStore((state: any) => state.showHistoryPanel);
   const setShowHistoryPanel = useSceneStore((state: any) => state.setShowHistoryPanel);
-  const showMiniScenePanel = useSceneStore((state: any) => state.showMiniScenePanel);
-  const selectedMiniSceneId = useSceneStore((state: any) => state.selectedMiniSceneId);
   
   // Load assets dynamically from API
   const { assets, loading: assetsLoading, loadAssets } = useAssets();
@@ -170,33 +166,21 @@ const AnimationContainer: React.FC = () => {
             )}
           </div>
           
-          {/* Right: Properties Panel, History Panel, or Mini-Scene Editor */}
+          {/* Right: Properties Panel or History Panel */}
           <div className="w-80 flex-shrink-0 border-l border-gray-700 bg-gray-50">
             {showHistoryPanel ? (
               <HistoryPanel onClose={() => setShowHistoryPanel(false)} />
-            ) : showMiniScenePanel && selectedMiniSceneId && currentScene ? (
-              <MiniSceneEditor sceneId={currentScene.id} miniSceneId={selectedMiniSceneId} />
             ) : (
               currentScene && <PropertiesPanel />
             )}
           </div>
         </div>
         
-        {/* Bottom: Scenes Panel with optional Mini-Scenes Panel */}
-        <div className="flex h-48 border-t border-gray-700 overflow-hidden flex-shrink-0 bg-gray-100">
-          {/* Main Scenes Panel */}
-          <div className={showMiniScenePanel ? 'flex-1' : 'w-full'}>
-            <ScenePanel 
-              onOpenTemplateLibrary={() => setShowTemplateLibrary(true)}
-            />
-          </div>
-          
-          {/* Mini-Scenes Panel (slides in from right when enabled) */}
-          {showMiniScenePanel && currentScene && (
-            <div className="w-96 border-l border-gray-700">
-              <MiniScenePanel sceneId={currentScene.id} />
-            </div>
-          )}
+        {/* Bottom: Scenes Panel */}
+        <div className="h-48 border-t border-gray-700 overflow-y-auto flex-shrink-0 bg-gray-100">
+          <ScenePanel 
+            onOpenTemplateLibrary={() => setShowTemplateLibrary(true)}
+          />
         </div>
       </div>
     </div>

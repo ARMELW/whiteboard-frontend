@@ -33,23 +33,25 @@ export const useShapeTransform = (
     const finalY = e.target.y();
     const shapeConfig = layer.shape_config;
     
-    // Update main layer position
     const newConfig = {
       ...shapeConfig,
       x: finalX,
       y: finalY,
     };
-    onChange({
+    const updatedLayer = {
       ...layer,
       shape_config: newConfig,
-    });
+    };
     
-    // If multiple layers were selected, update their positions as well
+    // If multiple layers were selected, batch all updates together
     if (selectedLayerIds.length > 1 && dragStartPosRef.current) {
       const deltaX = finalX - dragStartPosRef.current.x;
       const deltaY = finalY - dragStartPosRef.current.y;
       
-      applyMultiLayerDrag(selectedLayerIds, layer.id, allLayers, deltaX, deltaY, onChange);
+      applyMultiLayerDrag(selectedLayerIds, layer.id, updatedLayer, allLayers, deltaX, deltaY, onChange);
+    } else {
+      // Single layer drag
+      onChange(updatedLayer);
     }
     
     dragStartPosRef.current = null;

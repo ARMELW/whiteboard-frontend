@@ -60,7 +60,7 @@ export const applyMultiLayerDrag = (
   onChange: (layer: Layer) => void
 ) => {
   // Batch all layer updates to ensure simultaneous movement
-  const updatedLayers: Layer[] = [currentLayer]; // Include the dragged layer first
+  const updatedLayers: Layer[] = [currentLayer]; // Include the dragged layer
   
   selectedLayerIds.forEach((layerId) => {
     if (layerId !== currentLayerId) {
@@ -72,7 +72,7 @@ export const applyMultiLayerDrag = (
     }
   });
   
-  // Apply all updates synchronously but in quick succession
-  // React 18+ will automatically batch these updates
+  // Apply all updates in quick succession within the same event handler
+  // React will automatically batch these updates into a single render cycle
   updatedLayers.forEach(layer => onChange(layer));
 };

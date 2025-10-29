@@ -151,7 +151,10 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   React.useEffect(() => {
     if (!hasCalculatedInitialZoom && scrollContainerRef.current) {
       const fitZoom = calculateFitZoom();
-      handleSceneZoomChange(Math.max(fitZoom, 1.0));
+      // Allow zoom to be less than 1.0 for immense scenes
+      // Use a smaller zoom for very large scenes to enable scrolling
+      const initialZoom = fitZoom < 0.5 ? 0.2 : fitZoom;
+      handleSceneZoomChange(initialZoom);
       setHasCalculatedInitialZoom(true);
     }
   }, [hasCalculatedInitialZoom, calculateFitZoom, handleSceneZoomChange]);
@@ -381,7 +384,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
               width: `${scaledSceneWidth}px`,
               height: `${scaledSceneHeight}px`,
               position: 'relative',
-              margin: '0'
+              margin: '100px' // Add margin so scene has space to scroll
             }}
           >
             {/* Konva Stage for layers and cameras */}

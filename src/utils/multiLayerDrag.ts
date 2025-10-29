@@ -2,6 +2,8 @@
  * Utility functions for multi-layer drag operations
  */
 
+import type { Layer } from '@/app/scenes/types';
+
 /**
  * Updates the position of a layer based on a delta, handling different layer types
  * @param targetLayer - The layer to update
@@ -10,10 +12,10 @@
  * @param onChange - Callback to apply the changes
  */
 export const updateLayerPosition = (
-  targetLayer: any,
+  targetLayer: Layer,
   deltaX: number,
   deltaY: number,
-  onChange: (layer: any) => void
+  onChange: (layer: Layer) => void
 ) => {
   if (targetLayer.type === 'shape' && targetLayer.shape_config) {
     // For shape layers
@@ -49,10 +51,10 @@ export const updateLayerPosition = (
 export const applyMultiLayerDrag = (
   selectedLayerIds: string[],
   currentLayerId: string,
-  allLayers: any[],
+  allLayers: Layer[],
   deltaX: number,
   deltaY: number,
-  onChange: (layer: any) => void
+  onChange: (layer: Layer) => void
 ) => {
   selectedLayerIds.forEach((layerId) => {
     if (layerId !== currentLayerId) {

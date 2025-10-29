@@ -517,11 +517,12 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                     onClick={() => setIsCameraNavMinimized(false)}
                     className="flex items-center justify-center w-10 h-10 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors"
                     title="Afficher la navigation caméras"
+                    aria-label={`Afficher la navigation des ${sceneCameras.length} caméras`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
-                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold" aria-label={`${sceneCameras.length} caméras`}>
                       {sceneCameras.length}
                     </span>
                   </button>
@@ -554,7 +555,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                       </button>
                     </div>
               
-              <div className="space-y-2 max-h-96 overflow-y-auto">
+              <div className="space-y-2 max-h-96 overflow-y-auto" role="list" aria-label="Liste des caméras">
                 {sceneCameras.map((camera: Camera, index: number) => {
                   const isSelected = selectedCameraId === camera.id;
                   const isDefault = camera.isDefault;
@@ -574,6 +575,9 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                             ? 'bg-blue-50 hover:bg-blue-100 text-blue-800'
                             : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
                         }`}
+                        role="listitem"
+                        aria-label={`Caméra ${index + 1}: ${camera.name || `Camera ${index + 1}`}, Zoom ${camera.zoom?.toFixed(1)}x${isDefault ? ', caméra par défaut' : ''}${camera.locked ? ', verrouillée' : ''}${isSelected ? ', actuellement sélectionnée' : ''}`}
+                        aria-current={isSelected ? 'true' : 'false'}
                       >
                         {/* Camera icon */}
                         <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
@@ -663,6 +667,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                 onClick={() => setShowCameraNav(true)}
                 className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg z-50 transition-colors"
                 title="Afficher la navigation caméras"
+                aria-label={`Afficher la navigation des ${sceneCameras.length} caméras`}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />

@@ -1,6 +1,7 @@
 import React, { useRef, useCallback, useEffect } from 'react';
 import { useSceneStore } from '../../app/scenes';
 import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
+import { useCompletePreview } from '@/hooks/useCompletePreview';
 import {
   useLayerEditor,
   useLayerCreationHandlers
@@ -9,6 +10,7 @@ import { useLayerCreation } from '../molecules/layer-management/useLayerCreation
 import LayerEditorModals from './LayerEditorModals';
 import LayerEditorCanvas from './LayerEditorCanvas';
 import VideoPreviewPlayer from './VideoPreviewPlayer';
+import PreviewGeneratingOverlay from './PreviewGeneratingOverlay';
 import { useCurrentScene } from '@/app/scenes';
 import { createDefaultCamera } from '@/utils/cameraAnimator';
 import type { Camera } from '@/app/scenes/types';
@@ -51,6 +53,9 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
   const previewType = useSceneStore((state) => state.previewType);
   const previewLoading = useSceneStore((state) => state.previewLoading);
   const stopPreview = useSceneStore((state) => state.stopPreview);
+
+  // Preview generation state
+  const { progress, cancelPreview } = useCompletePreview();
 
   // Use actions from useScenesActionsWithHistory hook for history tracking
   const { updateScene } = useScenesActionsWithHistory();
@@ -263,6 +268,13 @@ const LayerEditor: React.FC<LayerEditorProps> = ({
 
   return (
     <div className="flex items-center justify-center w-full h-full">
+      {/* Preview Generating Overlay */}
+      <PreviewGeneratingOverlay
+        isVisible={previewLoading}
+        progress={progress}
+        onCancel={cancelPreview}
+      />
+
       {/* Show Video Preview or Normal Editor */}
       {previewMode && previewVideoUrl ? (
         <VideoPreviewPlayer

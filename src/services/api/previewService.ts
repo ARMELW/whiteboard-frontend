@@ -63,6 +63,7 @@ export interface PreviewStatusResponse {
     previewId: string;
     status: 'pending' | 'processing' | 'completed' | 'error';
     videoUrl?: string;
+    previewUrl?: string;
     progress: number;
     error?: string;
   };
@@ -209,8 +210,8 @@ class PreviewService {
             onProgress(status.progress);
           }
 
-          if (status.status === 'completed' && status.videoUrl) {
-            resolve(status.videoUrl);
+          if (status.status === 'completed' && (status.videoUrl || status.previewUrl)) {
+            resolve(status.videoUrl || status.previewUrl!);
           } else if (status.status === 'error') {
             reject(new Error(status.error || 'Preview generation failed'));
           } else {

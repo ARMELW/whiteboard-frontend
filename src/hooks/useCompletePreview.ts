@@ -21,6 +21,7 @@ export const useCompletePreview = (options?: UseCompletePreviewOptions) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   const { startPreview, setPreviewLoading } = useSceneStore();
 
@@ -41,7 +42,10 @@ export const useCompletePreview = (options?: UseCompletePreviewOptions) => {
         height: options?.height,
         fps: options?.fps,
       });
+      // keep the previewId available so UI can reference it while generation is ongoing
       setPreviewId(id);
+      // reset any previous url while we generate
+      setVideoUrl(null);
 
       // Poll for completion
       const videoUrl = await previewService.pollPreviewStatus(
@@ -52,7 +56,9 @@ export const useCompletePreview = (options?: UseCompletePreviewOptions) => {
         }
       );
 
-      // Success - start preview player
+      // Success - store video url and start preview player
+      setVideoUrl(videoUrl);
+      setProgress(100);
       startPreview(videoUrl, 'full');
       options?.onSuccess?.(videoUrl);
       toast.success('Prévisualisation complète générée avec succès');
@@ -63,7 +69,8 @@ export const useCompletePreview = (options?: UseCompletePreviewOptions) => {
     } finally {
       setIsGenerating(false);
       setPreviewLoading(false);
-      setPreviewId(null);
+      // Do not clear previewId/videoUrl here so UI can show result or let user cancel explicitly.
+      // previewId and videoUrl will be cleared by cancelPreview or by next generation.
     }
   }, [startPreview, setPreviewLoading, options]);
 
@@ -74,6 +81,7 @@ export const useCompletePreview = (options?: UseCompletePreviewOptions) => {
         setIsGenerating(false);
         setPreviewLoading(false);
         setPreviewId(null);
+        setVideoUrl(null);
         toast.info('Prévisualisation annulée');
       } catch (error) {
         console.error('Error canceling preview:', error);
@@ -86,5 +94,8 @@ export const useCompletePreview = (options?: UseCompletePreviewOptions) => {
     cancelPreview,
     isGenerating,
     progress,
+    previewId,
+    videoUrl,
+    isReady: Boolean(videoUrl),
   };
 };

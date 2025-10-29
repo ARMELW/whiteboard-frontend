@@ -57,6 +57,9 @@ export const KonvaCamera: React.FC<KonvaCameraProps> = ({
         y: Math.max(0, Math.min(1, centerY / sceneHeight)),
       },
     });
+    
+    // Re-select camera after drag to ensure it stays selected
+    onSelect();
   };
 
   const handleTransformEnd = () => {
@@ -86,6 +89,9 @@ export const KonvaCamera: React.FC<KonvaCameraProps> = ({
     
     node.scaleX(1);
     node.scaleY(1);
+    
+    // Re-select camera after transform to ensure it stays selected
+    onSelect();
   };
 
   return (
@@ -95,8 +101,14 @@ export const KonvaCamera: React.FC<KonvaCameraProps> = ({
         y={pixelPos.y}
         ref={groupRef}
         draggable={!camera.locked}
-        onClick={() => onSelect()}
-        onTap={() => onSelect()}
+        onClick={(e) => {
+          e.cancelBubble = true;
+          onSelect();
+        }}
+        onTap={(e) => {
+          e.cancelBubble = true;
+          onSelect();
+        }}
         onDragEnd={handleDragEnd}
         onTransformEnd={handleTransformEnd}
       >

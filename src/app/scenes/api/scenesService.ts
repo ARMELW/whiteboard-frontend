@@ -203,14 +203,22 @@ class ScenesService extends BaseService<Scene> {
 
   async reorder(sceneIds: string[]): Promise<Scene[]> {
     await this.delay();
+    
+    // Get the projectId from the first scene
     const allScenes = await this.list({ page: 1, limit: 1000 });
     const scenes = allScenes.data;
     
-    const reordered = sceneIds
-      .map(id => scenes.find(scene => scene.id === id))
-      .filter((scene): scene is Scene => scene !== undefined);
-
-    return super.bulkUpdate(reordered);
+    // Get projectId from the first scene (they should all have the same projectId)
+    const projectId = scenes.length > 0 ? scenes[0].projectId : DEFAULT_IDS.PROJECT;
+    
+    // Use the dedicated reorder endpoint with proper payload
+    const httpClient = await import('../../../services/api/httpClient');
+    const response = await httpClient.default.post<{ success: boolean; scenes: Scene[] }>(
+      API_ENDPOINTS.scenes.reorder,
+      { projectId, sceneIds }
+    );
+    
+    return response.data.scenes;
   }
 
   async addLayer(sceneId: string, layer: Layer): Promise<Scene> {

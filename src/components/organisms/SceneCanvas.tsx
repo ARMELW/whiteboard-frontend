@@ -136,14 +136,19 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   const stageRef = useRef(null);
   const scrollContainerRef = useRef(null);
 
-  // Support for configurable scene dimensions (for immense scenes)
-  const sceneWidth = scene.sceneWidth || 10000;
-  const sceneHeight = scene.sceneHeight || 10000;
+  // Use reasonable scene dimensions based on default camera size
+  // 2x camera dimensions to allow for camera movement and panning
+  const sceneWidth = scene.sceneWidth || 1600;
+  const sceneHeight = scene.sceneHeight || 900;
 
   // Constants for zoom and spacing
   const ZOOM_THRESHOLD_FOR_LARGE_SCENES = 0.5;
   const INITIAL_ZOOM_FOR_LARGE_SCENES = 0.2;
   const CANVAS_MARGIN = 100; // pixels of space around canvas for comfortable scrolling
+  const DEFAULT_CAMERA_WIDTH = 800;
+  const DEFAULT_CAMERA_HEIGHT = 450;
+  const CAMERA_PADDING_RATIO = 0.9; // 90% of viewport for padding around camera
+  const MAX_AUTO_FIT_ZOOM = 1.5; // Maximum zoom level for auto-fit
 
   // Calculate zoom to fit scene in viewport
   const calculateFitZoom = useCallback(() => {
@@ -167,6 +172,30 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
       setHasCalculatedInitialZoom(true);
     }
   }, [hasCalculatedInitialZoom, calculateFitZoom, handleSceneZoomChange]);
+
+  // Auto-fit view to default camera
+  const handleAutoFitCamera = useCallback(() => {
+    const defaultCamera = sceneCameras.find((cam: Camera) => cam.isDefault);
+    if (!defaultCamera || !scrollContainerRef.current) return;
+    
+    // Switch to default camera
+    setSelectedCameraId(defaultCamera.id);
+    
+    // Calculate zoom to fit the default camera in viewport
+    const container = scrollContainerRef.current as HTMLDivElement;
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+    const cameraWidth = defaultCamera.width || DEFAULT_CAMERA_WIDTH;
+    const cameraHeight = defaultCamera.height || DEFAULT_CAMERA_HEIGHT;
+    
+    // Calculate zoom to fit camera with some padding
+    const zoomX = (containerWidth * CAMERA_PADDING_RATIO) / cameraWidth;
+    const zoomY = (containerHeight * CAMERA_PADDING_RATIO) / cameraHeight;
+    const optimalZoom = Math.min(zoomX, zoomY, MAX_AUTO_FIT_ZOOM);
+    
+    // Apply the zoom
+    handleSceneZoomChange(optimalZoom);
+  }, [sceneCameras, handleSceneZoomChange]);
 
   // Create a new camera
   const handleAddCamera = useCallback(() => {
@@ -555,6 +584,18 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                       </button>
                     </div>
               
+              {/* Auto-fit button */}
+              <button
+                onClick={handleAutoFitCamera}
+                className="w-full mb-3 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                title="Ajuster la vue sur la caméra par défaut"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+                Ajuster la vue
+              </button>
+
               <div className="space-y-2 max-h-96 overflow-y-auto" role="list" aria-label="Liste des caméras">
                 {sceneCameras.map((camera: Camera, index: number) => {
                   const isSelected = selectedCameraId === camera.id;

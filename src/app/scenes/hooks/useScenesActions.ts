@@ -61,11 +61,29 @@ export const useScenesActions = () => {
 
   const duplicateMutation = useMutation({
     mutationFn: ({ sceneId, projectId }: { sceneId: string; projectId?: string | null }) => scenesService.duplicate(sceneId, projectId),
-    onSuccess: (scene, variables) => {
-      queryClient.invalidateQueries({ queryKey: scenesKeys.lists() });
+    onSuccess: async (scene, variables) => {
       const scenes = useSceneStore.getState().scenes;
       const sceneIndex = scenes.findIndex(s => s.id === variables.sceneId);
+      
+      // Add the duplicated scene right after the original in the store
       addSceneToStore(scene, sceneIndex);
+      
+      // Get the updated scenes list with the new scene inserted
+      const updatedScenes = useSceneStore.getState().scenes;
+      const sceneIds = updatedScenes.map(s => s.id);
+      
+      // Call reorder to update the backend with the correct order
+      try {
+        await scenesService.reorder(sceneIds);
+      } catch (error) {
+        console.error('Failed to reorder scenes after duplication:', error);
+      }
+      
+      // Invalidate queries but don't auto-refetch to preserve our local order
+      queryClient.invalidateQueries({ 
+        queryKey: scenesKeys.lists(),
+        refetchType: 'none'
+      });
     },
   });
 

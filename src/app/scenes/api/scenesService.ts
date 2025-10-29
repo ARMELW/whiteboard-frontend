@@ -5,6 +5,7 @@ import { createMultiTimeline } from '../../../utils/multiTimelineSystem';
 import { createSceneAudioConfig } from '../../../utils/audioManager';
 import { createCamera } from '../../../utils/cameraAnimator';
 import { Scene, ScenePayload, Layer, Camera } from '../types';
+import { v4 as uuidv4 } from 'uuid';
 
 const DEFAULT_CAMERA_NAME = 'Vue par défaut';
 
@@ -13,7 +14,7 @@ const DEFAULT_CAMERA_NAME = 'Vue par défaut';
  */
 function createDefaultCamera(): Camera {
   return createCamera({
-    id: `camera-${Date.now()}`,
+    id: uuidv4(),
     name: DEFAULT_CAMERA_NAME,
     isDefault: true,
     width: 800,
@@ -22,7 +23,7 @@ function createDefaultCamera(): Camera {
     zoom: 0.8,
     locked: true, // Camera par défaut non redimensionnable
     scale: 1,
-  });
+  }) as Camera;
 }
 
 class ScenesService extends BaseService<Scene> {
@@ -71,7 +72,7 @@ class ScenesService extends BaseService<Scene> {
     const projectId = payload.projectId || DEFAULT_IDS.PROJECT;
 
     const defaultScene: Partial<Scene> = {
-      id: `scene-${Date.now()}`,
+      id: uuidv4(),
       projectId,
       title: 'Nouvelle Scène',
       content: 'Ajoutez votre contenu ici...',
@@ -181,14 +182,14 @@ class ScenesService extends BaseService<Scene> {
     // Deep copy layers with new IDs
     const duplicatedLayers = (scene.layers || []).map(layer => ({
       ...layer,
-      id: `layer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: uuidv4(),
     }));
 
     const duplicatedScene: Partial<Scene> = {
       ...scene,
-      id: `scene-${Date.now()}`,
+      id: uuidv4(),
       title: `${scene.title} (Copie)`,
-      projectId: scene.id,
+      projectId: projectId || scene.projectId,
       sceneCameras,
       multiTimeline: scene.multiTimeline || createMultiTimeline(scene.duration),
       createdAt: new Date().toISOString(),

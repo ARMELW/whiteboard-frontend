@@ -42,8 +42,16 @@ const PropertiesPanel: React.FC = () => {
 
   const handleLayerPropertyChange = useCallback((layerId: string, property: string, value: any) => {
     if (!scene.id) return;
-    updateLayerProperty(scene.id, layerId, property, value);
-  }, [scene.id, updateLayerProperty]);
+    
+    // If multiple layers are selected, apply changes to all of them
+    if (selectedLayerIds.length > 1) {
+      selectedLayerIds.forEach((selectedId) => {
+        updateLayerProperty(scene.id, selectedId, property, value);
+      });
+    } else {
+      updateLayerProperty(scene.id, layerId, property, value);
+    }
+  }, [scene.id, updateLayerProperty, selectedLayerIds]);
 
   return (
     <div className="bg-white flex flex-col border-l border-border overflow-hidden h-full">
@@ -76,25 +84,29 @@ const PropertiesPanel: React.FC = () => {
                 </p>
                 <div className="text-xs text-muted-foreground mt-2 space-y-1">
                   <p>• Drag any layer to move all together</p>
+                  <p>• Property changes apply to all selected</p>
                   <p>• Press Delete to remove all selected</p>
                 </div>
               </div>
             )}
             
             {/* Show Scene Properties when no layer is selected */}
-            {!selectedLayer && selectedLayerIds.length <= 1 && (
+            {!selectedLayer && selectedLayerIds.length === 0 && (
               <ScenePropertiesPanel scene={scene} handleSceneChange={handleSceneChange} />
             )}
 
-            {/* Show Selected Layer Properties */}
-            {selectedLayer && selectedLayerIds.length === 1 && (
+            {/* Show Selected Layer Properties (works for single or multiple selection) */}
+            {selectedLayer && (
               <div>
                 <div className="mb-3">
-                  <h3 className="text-sm font-semibold text-foreground mb-1">Layer Properties</h3>
+                  <h3 className="text-sm font-semibold text-foreground mb-1">
+                    {selectedLayerIds.length > 1 ? 'Common Properties' : 'Layer Properties'}
+                  </h3>
                   <p className="text-xs text-muted-foreground">
                     {selectedLayer.type === 'text' ? '📝 Text Layer' : 
                      selectedLayer.type === 'image' ? '🖼️ Image Layer' : 
                      selectedLayer.type === 'shape' ? '⬛ Shape Layer' : 'Layer'}
+                    {selectedLayerIds.length > 1 && ' (editing all selected)'}
                   </p>
                 </div>
                 <LayerPropertiesForm

@@ -5,10 +5,13 @@ import { ShapeType, ShapeLayer } from '../../../utils/shapeUtils';
 export const useShapeTransform = (
   isSelected: boolean,
   layer: ShapeLayer,
-  onChange: (layer: ShapeLayer) => void
+  onChange: (layer: ShapeLayer) => void,
+  selectedLayerIds: string[] = [],
+  allLayers: any[] = []
 ) => {
   const shapeRef = useRef<any>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
+  const dragStartPosRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     if (isSelected && transformerRef.current && shapeRef.current) {
@@ -17,17 +20,65 @@ export const useShapeTransform = (
     }
   }, [isSelected]);
 
+  const handleDragStart = (e: any) => {
+    dragStartPosRef.current = {
+      x: e.target.x(),
+      y: e.target.y()
+    };
+  };
+
   const handleDragEnd = (e: any) => {
+    const finalX = e.target.x();
+    const finalY = e.target.y();
     const shapeConfig = layer.shape_config;
+    
+    // Update main layer position
     const newConfig = {
       ...shapeConfig,
-      x: e.target.x(),
-      y: e.target.y(),
+      x: finalX,
+      y: finalY,
     };
     onChange({
       ...layer,
       shape_config: newConfig,
     });
+    
+    // If multiple layers were selected, update their positions as well
+    if (selectedLayerIds.length > 1 && dragStartPosRef.current) {
+      const deltaX = finalX - dragStartPosRef.current.x;
+      const deltaY = finalY - dragStartPosRef.current.y;
+      
+      // Update all other selected layers
+      selectedLayerIds.forEach((layerId) => {
+        if (layerId !== layer.id) {
+          const targetLayer = allLayers.find(l => l.id === layerId);
+          if (targetLayer) {
+            if (targetLayer.type === 'shape' && targetLayer.shape_config) {
+              // For shape layers
+              onChange({
+                ...targetLayer,
+                shape_config: {
+                  ...targetLayer.shape_config,
+                  x: (targetLayer.shape_config.x || 0) + deltaX,
+                  y: (targetLayer.shape_config.y || 0) + deltaY
+                }
+              });
+            } else {
+              // For image/text layers
+              onChange({
+                ...targetLayer,
+                position: {
+                  x: (targetLayer.position?.x || 0) + deltaX,
+                  y: (targetLayer.position?.y || 0) + deltaY
+                }
+              });
+            }
+          }
+        }
+      });
+    }
+    
+    dragStartPosRef.current = null;
   };
 
   const handleTransformEnd = () => {
@@ -110,6 +161,7 @@ export const useShapeTransform = (
   return {
     shapeRef,
     transformerRef,
+    handleDragStart,
     handleDragEnd,
     handleTransformEnd,
   };

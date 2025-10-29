@@ -124,17 +124,16 @@ export const LayerText: React.FC<LayerTextProps> = ({
         onDragStart={(e) => {
           dragStartPosRef.current = {
             x: e.target.x(),
-            y: e.target.y()
+            y: e.target.y(),
+            currentX: e.target.x(),
+            currentY: e.target.y()
           };
         }}
         onDragMove={(e) => {
-          // Update drag start position during drag for multi-layer support
-          // but don't call onChange during drag to avoid excessive updates
+          // Just track position for the final update
           if (selectedLayerIds.length > 1 && dragStartPosRef.current) {
-            dragStartPosRef.current = {
-              x: e.target.x(),
-              y: e.target.y()
-            };
+            dragStartPosRef.current.currentX = e.target.x();
+            dragStartPosRef.current.currentY = e.target.y();
           }
         }}
         onDragEnd={(e) => {

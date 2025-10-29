@@ -53,13 +53,17 @@ interface LayerShapeProps {
   isSelected: boolean;
   onSelect: (e?: any) => void;
   onChange: (layer: ShapeLayer) => void;
+  selectedLayerIds?: string[];
+  allLayers?: any[];
 }
 
-const LayerShape: React.FC<LayerShapeProps> = ({ layer, isSelected, onSelect, onChange }) => {
-  const { shapeRef, transformerRef, handleDragEnd, handleTransformEnd } = useShapeTransform(
+const LayerShape: React.FC<LayerShapeProps> = ({ layer, isSelected, onSelect, onChange, selectedLayerIds = [], allLayers = [] }) => {
+  const { shapeRef, transformerRef, handleDragStart, handleDragEnd, handleTransformEnd } = useShapeTransform(
     isSelected,
     layer,
-    onChange
+    onChange,
+    selectedLayerIds,
+    allLayers
   );
 
   if (!layer.shape_config) {
@@ -75,6 +79,7 @@ const LayerShape: React.FC<LayerShapeProps> = ({ layer, isSelected, onSelect, on
     onClick: (e: any) => onSelect(e),
     onTap: (e: any) => onSelect(e),
     opacity: layer.opacity || 1.0,
+    onDragStart: handleDragStart,
     onDragEnd: handleDragEnd,
     onTransformEnd: handleTransformEnd,
   };

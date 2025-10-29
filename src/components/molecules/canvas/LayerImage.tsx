@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { Image as KonvaImage, Transformer } from 'react-konva';
 import useImage from 'use-image';
 import Konva from 'konva';
+import { applyMultiLayerDrag } from '@/utils/multiLayerDrag';
 
 export interface LayerImageProps {
   layer: any;
@@ -106,34 +107,7 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
             const deltaX = finalX - dragStartPosRef.current.x;
             const deltaY = finalY - dragStartPosRef.current.y;
             
-            // Update all other selected layers
-            selectedLayerIds.forEach((layerId) => {
-              if (layerId !== layer.id) {
-                const targetLayer = allLayers.find(l => l.id === layerId);
-                if (targetLayer) {
-                  if (targetLayer.type === 'shape' && targetLayer.shape_config) {
-                    // For shape layers
-                    onChange({
-                      ...targetLayer,
-                      shape_config: {
-                        ...targetLayer.shape_config,
-                        x: (targetLayer.shape_config.x || 0) + deltaX,
-                        y: (targetLayer.shape_config.y || 0) + deltaY
-                      }
-                    });
-                  } else {
-                    // For image/text layers
-                    onChange({
-                      ...targetLayer,
-                      position: {
-                        x: (targetLayer.position?.x || 0) + deltaX,
-                        y: (targetLayer.position?.y || 0) + deltaY
-                      }
-                    });
-                  }
-                }
-              }
-            });
+            applyMultiLayerDrag(selectedLayerIds, layer.id, allLayers, deltaX, deltaY, onChange);
           }
           
           dragStartPosRef.current = null;

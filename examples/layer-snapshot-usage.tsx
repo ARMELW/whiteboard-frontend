@@ -78,10 +78,13 @@ export const ExportLayerButton: React.FC<{ layer: Layer }> = ({ layer }) => {
       return;
     }
 
+    // Create a readable timestamp for the filename
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    
     // Create a download link
     const link = document.createElement('a');
     link.href = layer.cachedImage;
-    link.download = `${layer.name}-snapshot-${Date.now()}.png`;
+    link.download = `${layer.name}-snapshot-${timestamp}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

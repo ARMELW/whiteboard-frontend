@@ -160,9 +160,9 @@ const snapshot = await generateLayerSnapshot(layer, {
 
 Each snapshot is a full scene image (1920x1080 by default, 3840x2160 at 2x pixel ratio):
 
-- **File size**: ~400-800KB per snapshot (PNG)
-- **Memory impact**: Consider this when displaying many snapshots
-- **Solution**: Use CSS to scale images down for thumbnails
+- **File size**: ~400-800KB per snapshot (PNG format, 1920x1080 full scene with background and layer)
+- **Memory impact**: Consider this when displaying many snapshots simultaneously
+- **Solution**: Use CSS to scale images down for thumbnails while keeping original resolution
 
 ```tsx
 <img 
@@ -173,13 +173,13 @@ Each snapshot is a full scene image (1920x1080 by default, 3840x2160 at 2x pixel
 
 ### 2. Generation Time
 
-Snapshots are generated in the background:
+Snapshots are generated in the background (times may vary based on hardware, browser, and image complexity):
 
-- **Image layers**: ~100-200ms
-- **Text layers**: ~50-80ms
-- **Shape layers**: ~40-70ms
+- **Image layers**: ~100-200ms (tested on Intel i5, Chrome, medium complexity images)
+- **Text layers**: ~50-80ms (tested on Intel i5, Chrome, standard fonts)
+- **Shape layers**: ~40-70ms (tested on Intel i5, Chrome, basic shapes)
 
-Always check if `layer.cachedImage` exists before using it.
+Always check if `layer.cachedImage` exists before using it, as generation is asynchronous.
 
 ### 3. Scene Context Required
 

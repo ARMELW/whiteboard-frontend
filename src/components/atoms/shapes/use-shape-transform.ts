@@ -73,7 +73,10 @@ export const useShapeTransform = (
         shapeType === ShapeType.TEXT_BOX || shapeType === ShapeType.HIGHLIGHT ||
         shapeType === ShapeType.CLOUD || shapeType === ShapeType.BUBBLE ||
         shapeType === ShapeType.THOUGHT_BUBBLE || shapeType === ShapeType.ORG_NODE ||
-        shapeType === ShapeType.FRAME_DOODLE) {
+        shapeType === ShapeType.FRAME_DOODLE || shapeType === ShapeType.FRAME_RECT_DOODLE ||
+        shapeType === ShapeType.FRAME_CLOUD_DOODLE || shapeType === ShapeType.HIGHLIGHT_DOODLE ||
+        shapeType === ShapeType.BUBBLE_DOODLE || shapeType === ShapeType.CLOUD_DOODLE ||
+        shapeType === ShapeType.RECTANGLE_DOODLE) {
       newConfig.width = Math.max(5, (shapeConfig.width || 100) * scaleX);
       newConfig.height = Math.max(5, (shapeConfig.height || 100) * scaleY);
       newConfig.x = node.x();
@@ -82,7 +85,8 @@ export const useShapeTransform = (
       // Update layer dimensions
       newLayerWidth = newConfig.width;
       newLayerHeight = newConfig.height;
-    } else if (shapeType === ShapeType.CIRCLE || shapeType === ShapeType.CIRCLE_CONCENTRIC) {
+    } else if (shapeType === ShapeType.CIRCLE || shapeType === ShapeType.CIRCLE_CONCENTRIC ||
+               shapeType === ShapeType.FRAME_CIRCLE_DOODLE || shapeType === ShapeType.CIRCLE_SKETCH) {
       newConfig.radius = Math.max(5, shapeConfig.radius * scaleX);
       if (shapeType === ShapeType.CIRCLE_CONCENTRIC && shapeConfig.radiuses) {
         newConfig.radiuses = shapeConfig.radiuses.map((r: number) => Math.max(5, r * scaleX));
@@ -102,7 +106,7 @@ export const useShapeTransform = (
       newLayerWidth = newConfig.radiusX * 2;
       newLayerHeight = newConfig.radiusY * 2;
     } else if (shapeType === ShapeType.TRIANGLE || shapeType === ShapeType.POLYGON || 
-               shapeType === ShapeType.HEXAGON) {
+               shapeType === ShapeType.HEXAGON || shapeType === ShapeType.TRIANGLE_DOODLE) {
       newConfig.radius = Math.max(5, shapeConfig.radius * scaleX);
       newConfig.x = node.x();
       newConfig.y = node.y();
@@ -138,7 +142,9 @@ export const useShapeTransform = (
       newLayerHeight = newConfig.size;
     } else if (shapeType === ShapeType.LINE || shapeType === ShapeType.ARROW || 
                shapeType === ShapeType.ARROW_DOUBLE || shapeType === ShapeType.ARROW_CURVE ||
-               shapeType === ShapeType.CONNECTOR || shapeType === ShapeType.UNDERLINE_ANIMATED) {
+               shapeType === ShapeType.CONNECTOR || shapeType === ShapeType.UNDERLINE_ANIMATED ||
+               shapeType === ShapeType.ARROW_DOODLE || shapeType === ShapeType.ARROW_CURVE_DOODLE ||
+               shapeType === ShapeType.LINE_WAVE_DOODLE) {
       const points = shapeConfig.points || [0, 0, 100, 100];
       newConfig.points = points.map((val: number, idx: number) => 
         idx % 2 === 0 ? val * scaleX : val * scaleY

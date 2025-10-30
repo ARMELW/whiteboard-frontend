@@ -55,6 +55,7 @@ export interface Layer {
   z_index: number;
   scale: number;
   opacity: number;
+  rotation?: number;
   skip_rate?: number;
   image_path?: string;
   text?: string;
@@ -66,6 +67,7 @@ export interface Layer {
   animation_speed?: number;
   end_delay?: number;
   hand_type?: string;
+  cachedImage?: string | null;
   [key: string]: any;
 }
 

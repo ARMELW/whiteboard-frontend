@@ -119,6 +119,18 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
           if (!node) return;
           
           const scaleX = node.scaleX();
+          const scaleY = node.scaleY();
+          
+          // Calculate new dimensions based on current scale
+          // The node's scaleX/scaleY are relative to the current layer.scale
+          const currentScale = layer.scale || 1.0;
+          const newScale = currentScale * scaleX;
+          
+          // Update base width and height proportionally
+          const currentWidth = layer.width || img.width;
+          const currentHeight = layer.height || img.height;
+          const newWidth = currentWidth * scaleX;
+          const newHeight = currentHeight * scaleY;
 
           onChange({
             ...layer,
@@ -126,7 +138,9 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
               x: node.x(),
               y: node.y(),
             },
-            scale: scaleX,
+            width: newWidth,
+            height: newHeight,
+            scale: newScale,
             rotation: node.rotation(),
           });
           

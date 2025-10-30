@@ -241,7 +241,49 @@ export const useSceneStore = create<SceneState>((set) => ({
     set(state => ({
       scenes: state.scenes.map(s => s.id === sceneId ? {
         ...s,
-        layers: (s.layers || []).map(l => l.id === layerId ? { ...l, [property]: value } : l)
+        layers: (s.layers || []).map(l => {
+          if (l.id !== layerId) return l;
+          
+          const updatedLayer = { ...l, [property]: value };
+          
+          // If scale properties are being changed, also update width/height
+          if (property === 'scaleX' || property === 'scaleY') {
+            const currentWidth = l.width || 100;
+            const currentHeight = l.height || 100;
+            const currentScaleX = l.scaleX || 1.0;
+            const currentScaleY = l.scaleY || 1.0;
+            
+            if (property === 'scaleX') {
+              // Calculate new width based on scale change
+              const scaleFactor = value / currentScaleX;
+              updatedLayer.width = currentWidth * scaleFactor;
+            } else if (property === 'scaleY') {
+              // Calculate new height based on scale change
+              const scaleFactor = value / currentScaleY;
+              updatedLayer.height = currentHeight * scaleFactor;
+            }
+          }
+          
+          // If text_config is being updated and layer is text, recalculate dimensions
+          if (property === 'text_config' && l.type === 'text') {
+            const textConfig = value;
+            const text = textConfig.text || 'Votre texte ici';
+            const fontSize = textConfig.size || 48;
+            const lineHeight = textConfig.line_height || 1.2;
+            
+            // Estimate text dimensions
+            const avgCharWidth = fontSize * 0.6;
+            const lines = text.split('\n');
+            const maxLineLength = Math.max(...lines.map((line: string) => line.length));
+            const estimatedWidth = maxLineLength * avgCharWidth;
+            const estimatedHeight = lines.length * fontSize * lineHeight;
+            
+            updatedLayer.width = estimatedWidth;
+            updatedLayer.height = estimatedHeight;
+          }
+          
+          return updatedLayer;
+        })
       } : s)
     }));
     
@@ -268,7 +310,7 @@ export const useSceneStore = create<SceneState>((set) => ({
     }
     
     // Only update thumbnail if property affects visual appearance
-    const visualProperties = ['position', 'scale', 'opacity', 'image_path', 'text', 'locked'];
+    const visualProperties = ['position', 'scale', 'opacity', 'image_path', 'text', 'locked', 'scaleX', 'scaleY', 'width', 'height'];
     if (visualProperties.includes(property)) {
       debouncedUpdateThumbnail(sceneId);
     }

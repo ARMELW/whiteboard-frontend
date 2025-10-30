@@ -166,13 +166,30 @@ export const LayerText: React.FC<LayerTextProps> = ({
           const node = textRef.current;
           if (!node) return;
           const scaleX = node.scaleX();
+          const scaleY = node.scaleY();
+          
+          // Calculate new dimensions based on current scale
+          const currentScale = layer.scale || 1.0;
+          const newScale = currentScale * scaleX;
+          
+          // Get current text dimensions from the node
+          const currentWidth = node.width();
+          const currentHeight = node.height();
+          
+          // Update base width and height (unscaled dimensions)
+          // New base dimensions = current rendered dimensions / new total scale
+          const newWidth = (currentWidth * scaleX) / newScale;
+          const newHeight = (currentHeight * scaleY) / newScale;
+          
           onChange({
             ...layer,
             position: {
               x: node.x(),
               y: node.y(),
             },
-            scale: scaleX,
+            width: newWidth * newScale,
+            height: newHeight * newScale,
+            scale: newScale,
             rotation: node.rotation(),
           });
           node.scaleX(1);

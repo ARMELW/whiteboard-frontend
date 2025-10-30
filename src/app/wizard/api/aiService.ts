@@ -278,6 +278,8 @@ class AIService {
         type: 'IMAGE' as any,
         mode: 'DRAW' as any,
         position: doodle.position || { x: 100 + idx * 150, y: 100 },
+        width: doodle.size?.width || 1920,
+        height: doodle.size?.height || 1080,
         z_index: idx,
         scale: 1,
         opacity: 1,

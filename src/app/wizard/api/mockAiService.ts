@@ -337,6 +337,8 @@ export const generateScenesFromWizard = async (
         x: 100 + (idx * 150),
         y: 100 + (Math.random() * 200),
       },
+      width: doodle.size?.width || 1920,
+      height: doodle.size?.height || 1080,
       z_index: idx,
       scale: 1,
       opacity: 1,

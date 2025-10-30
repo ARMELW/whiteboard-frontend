@@ -51,7 +51,7 @@ const AnimationContainer: React.FC = () => {
   // Camera state lifted from SceneCanvas
   const [cameras, setCameras] = useState<Camera[]>([]);
   const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
-  const [sceneZoom, setSceneZoom] = useState<number>(0.8);
+  const [sceneZoom, setSceneZoom] = useState<number>(1);
   const [cameraCallbacks, setCameraCallbacks] = useState<{
     onAddCamera?: () => void;
     onToggleLock?: (cameraId: string) => void;

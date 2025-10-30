@@ -162,8 +162,8 @@ const MediaLibrary: React.FC = () => {
     const viewportWidth = cameraWidth / cameraZoom;
     const viewportHeight = cameraHeight / cameraZoom;
     
-    const maxWidth = viewportWidth * 0.8;
-    const maxHeight = viewportHeight * 0.8;
+    const maxWidth = viewportWidth * 1;
+    const maxHeight = viewportHeight * 1;
     
     const scaleX = maxWidth / width;
     const scaleY = maxHeight / height;

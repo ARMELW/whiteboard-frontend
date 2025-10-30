@@ -40,7 +40,7 @@ export const useLayerCreation = ({
     let cameraCenterY = sceneHeight / 2;
     let cameraWidth = 800;
     let cameraHeight = 450;
-    let cameraZoom = 0.8;
+    let cameraZoom = 1;
     
     if (selectedCamera && selectedCamera.position) {
       cameraCenterX = selectedCamera.position.x * sceneWidth;
@@ -48,7 +48,7 @@ export const useLayerCreation = ({
       cameraWidth = selectedCamera.width || 800;
       cameraHeight = selectedCamera.height || 450;
       // Ensure zoom is never zero or too small to prevent division issues
-      cameraZoom = Math.max(MIN_CAMERA_ZOOM, selectedCamera.zoom || 0.8);
+      cameraZoom = Math.max(MIN_CAMERA_ZOOM, selectedCamera.zoom || 1);
     }
     
     return { cameraCenterX, cameraCenterY, cameraWidth, cameraHeight, cameraZoom };
@@ -118,10 +118,10 @@ export const useLayerCreation = ({
       // Account for camera zoom when calculating the viewport size in scene coordinates
       const viewportWidth = cameraWidth / cameraZoom;
       const viewportHeight = cameraHeight / cameraZoom;
-      
-      // Fit image within 80% of the camera's actual viewport
-      const maxWidth = viewportWidth * 0.8;
-      const maxHeight = viewportHeight * 0.8;
+
+      // Fit image within 100% of the camera's actual viewport
+      const maxWidth = viewportWidth * 1;
+      const maxHeight = viewportHeight * 1;
       
       const scaleX = maxWidth / imageDimensions.width;
       const scaleY = maxHeight / imageDimensions.height;

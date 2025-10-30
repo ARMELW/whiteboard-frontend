@@ -20,7 +20,7 @@ function createDefaultCamera(): Camera {
     width: 800,
     height: 450,
     position: { x: 0.5, y: 0.5 },
-    zoom: 0.8,
+    zoom: 1,
     locked: true, // Camera par défaut non redimensionnable
     scale: 1,
   }) as Camera;

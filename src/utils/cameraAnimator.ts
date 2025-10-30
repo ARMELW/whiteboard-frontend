@@ -49,7 +49,7 @@ export interface ValidationResult {
  * Default camera configuration
  */
 export const DEFAULT_CAMERA: Camera = {
-  zoom: 0.8,
+  zoom: 1,
   position: { x: 0.5, y: 0.5 },
   duration: 2.0,
   transition_duration: 0,
@@ -102,7 +102,7 @@ export const createDefaultCamera = (aspectRatio: string = '16:9'): Camera => {
   return {
     id: 'default-camera',
     name: 'Caméra Par Défaut',
-    zoom: 0.8,
+    zoom: 1,
     position: { x: 0.5, y: 0.5 },
     duration: 2.0,
     transition_duration: 0,

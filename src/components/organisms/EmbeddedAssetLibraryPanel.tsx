@@ -69,8 +69,8 @@ const EmbeddedAssetLibraryPanel: React.FC = () => {
     const viewportHeight = cameraHeight / cameraZoom;
     
     // Fit image within 80% of the camera's viewport
-    const maxWidth = viewportWidth * 0.8;
-    const maxHeight = viewportHeight * 0.8;
+    const maxWidth = viewportWidth * 1;
+    const maxHeight = viewportHeight * 1;
     
     const scaleX = maxWidth / asset.width;
     const scaleY = maxHeight / asset.height;
@@ -125,8 +125,8 @@ const EmbeddedAssetLibraryPanel: React.FC = () => {
       const cameraZoom = Math.max(0.1, defaultCamera?.zoom || 1);
       const viewportWidth = cameraWidth / cameraZoom;
       const viewportHeight = cameraHeight / cameraZoom;
-      const maxWidth = viewportWidth * 0.8;
-      const maxHeight = viewportHeight * 0.8;
+      const maxWidth = viewportWidth * 1;
+      const maxHeight = viewportHeight * 1;
       const scaleX = maxWidth / imageDimensions.width;
       const scaleY = maxHeight / imageDimensions.height;
       scale = Math.min(scaleX, scaleY, 1.0);

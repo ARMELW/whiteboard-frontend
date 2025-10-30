@@ -40,8 +40,10 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
     if (!node) return pos;
 
     const scale = layer.scale || 1.0;
-    const width = img.width * scale;
-    const height = img.height * scale;
+    const scaleX = layer.scaleX || 1.0;
+    const scaleY = layer.scaleY || 1.0;
+    const width = img.width * scale * scaleX;
+    const height = img.height * scale * scaleY;
     
     let newX = pos.x;
     let newY = pos.y;
@@ -118,18 +120,16 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
           const node = imageRef.current;
           if (!node) return;
           
-          const scaleX = node.scaleX();
-          const scaleY = node.scaleY();
+          const transformScaleX = node.scaleX();
+          const transformScaleY = node.scaleY();
           
-          // Calculate new dimensions after transform
-          // Strategy: Absorb transform scale into width/height, keep layer.scale the same
-          // This ensures width/height always reflect the actual base dimensions
-          const currentWidth = layer.width || img.width;
-          const currentHeight = layer.height || img.height;
+          // Strategy: Keep base width/height and scale constant
+          // Update scaleX/scaleY to reflect the resize transformation
+          const currentScaleX = layer.scaleX || 1.0;
+          const currentScaleY = layer.scaleY || 1.0;
           
-          // New base dimensions = current dimensions * transform scale
-          const newWidth = currentWidth * scaleX;
-          const newHeight = currentHeight * scaleY;
+          const newScaleX = currentScaleX * transformScaleX;
+          const newScaleY = currentScaleY * transformScaleY;
 
           onChange({
             ...layer,
@@ -137,9 +137,11 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
               x: node.x(),
               y: node.y(),
             },
-            width: newWidth,
-            height: newHeight,
-            scale: layer.scale || 1.0, // Keep original scale
+            width: layer.width || img.width, // Keep original image width
+            height: layer.height || img.height, // Keep original image height
+            scale: layer.scale || 1.0, // Keep scale constant
+            scaleX: newScaleX, // Update scaleX to reflect resize
+            scaleY: newScaleY, // Update scaleY to reflect resize
             rotation: node.rotation(),
           });
           

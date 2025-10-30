@@ -66,6 +66,8 @@ export const useShapeTransform = (
     const rotation = node.rotation();
 
     let newConfig = { ...shapeConfig };
+    let newLayerWidth = layer.width;
+    let newLayerHeight = layer.height;
 
     if (shapeType === ShapeType.RECTANGLE || shapeType === ShapeType.SQUARE || 
         shapeType === ShapeType.TEXT_BOX || shapeType === ShapeType.HIGHLIGHT ||
@@ -77,6 +79,9 @@ export const useShapeTransform = (
       newConfig.x = node.x();
       newConfig.y = node.y();
       newConfig.rotation = rotation;
+      // Update layer dimensions
+      newLayerWidth = newConfig.width;
+      newLayerHeight = newConfig.height;
     } else if (shapeType === ShapeType.CIRCLE || shapeType === ShapeType.CIRCLE_CONCENTRIC) {
       newConfig.radius = Math.max(5, shapeConfig.radius * scaleX);
       if (shapeType === ShapeType.CIRCLE_CONCENTRIC && shapeConfig.radiuses) {
@@ -84,35 +89,53 @@ export const useShapeTransform = (
       }
       newConfig.x = node.x();
       newConfig.y = node.y();
+      // Update layer dimensions for circle (diameter)
+      newLayerWidth = newConfig.radius * 2;
+      newLayerHeight = newConfig.radius * 2;
     } else if (shapeType === ShapeType.ELLIPSE) {
       newConfig.radiusX = Math.max(5, shapeConfig.radiusX * scaleX);
       newConfig.radiusY = Math.max(5, shapeConfig.radiusY * scaleY);
       newConfig.x = node.x();
       newConfig.y = node.y();
       newConfig.rotation = rotation;
+      // Update layer dimensions for ellipse
+      newLayerWidth = newConfig.radiusX * 2;
+      newLayerHeight = newConfig.radiusY * 2;
     } else if (shapeType === ShapeType.TRIANGLE || shapeType === ShapeType.POLYGON || 
                shapeType === ShapeType.HEXAGON) {
       newConfig.radius = Math.max(5, shapeConfig.radius * scaleX);
       newConfig.x = node.x();
       newConfig.y = node.y();
       newConfig.rotation = rotation;
+      // Update layer dimensions (bounding box is radius * 2)
+      newLayerWidth = newConfig.radius * 2;
+      newLayerHeight = newConfig.radius * 2;
     } else if (shapeType === ShapeType.STAR) {
       newConfig.innerRadius = Math.max(5, shapeConfig.innerRadius * scaleX);
       newConfig.outerRadius = Math.max(5, shapeConfig.outerRadius * scaleX);
       newConfig.x = node.x();
       newConfig.y = node.y();
       newConfig.rotation = rotation;
+      // Update layer dimensions (use outer radius)
+      newLayerWidth = newConfig.outerRadius * 2;
+      newLayerHeight = newConfig.outerRadius * 2;
     } else if (shapeType === ShapeType.BANNER || shapeType === ShapeType.TIMELINE) {
       newConfig.width = Math.max(5, (shapeConfig.width || 100) * scaleX);
       newConfig.height = Math.max(5, (shapeConfig.height || 60) * scaleY);
       newConfig.x = node.x();
       newConfig.y = node.y();
       newConfig.rotation = rotation;
+      // Update layer dimensions
+      newLayerWidth = newConfig.width;
+      newLayerHeight = newConfig.height;
     } else if (shapeType === ShapeType.ICON || shapeType === ShapeType.DECORATIVE_SHAPE) {
       newConfig.size = Math.max(5, (shapeConfig.size || 80) * scaleX);
       newConfig.x = node.x();
       newConfig.y = node.y();
       newConfig.rotation = rotation;
+      // Update layer dimensions (square)
+      newLayerWidth = newConfig.size;
+      newLayerHeight = newConfig.size;
     } else if (shapeType === ShapeType.LINE || shapeType === ShapeType.ARROW || 
                shapeType === ShapeType.ARROW_DOUBLE || shapeType === ShapeType.ARROW_CURVE ||
                shapeType === ShapeType.CONNECTOR || shapeType === ShapeType.UNDERLINE_ANIMATED) {
@@ -123,10 +146,19 @@ export const useShapeTransform = (
       newConfig.x = node.x();
       newConfig.y = node.y();
       newConfig.rotation = rotation;
+      // Calculate bounding box for line-based shapes
+      if (newConfig.points && newConfig.points.length >= 2) {
+        const xCoords = newConfig.points.filter((_: number, i: number) => i % 2 === 0);
+        const yCoords = newConfig.points.filter((_: number, i: number) => i % 2 === 1);
+        newLayerWidth = Math.max(...xCoords) - Math.min(...xCoords);
+        newLayerHeight = Math.max(...yCoords) - Math.min(...yCoords);
+      }
     }
 
     onChange({
       ...layer,
+      width: newLayerWidth,
+      height: newLayerHeight,
       shape_config: newConfig,
     });
 

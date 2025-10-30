@@ -119,6 +119,17 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
           if (!node) return;
           
           const scaleX = node.scaleX();
+          const scaleY = node.scaleY();
+          
+          // Calculate new dimensions after transform
+          // Strategy: Absorb transform scale into width/height, keep layer.scale the same
+          // This ensures width/height always reflect the actual base dimensions
+          const currentWidth = layer.width || img.width;
+          const currentHeight = layer.height || img.height;
+          
+          // New base dimensions = current dimensions * transform scale
+          const newWidth = currentWidth * scaleX;
+          const newHeight = currentHeight * scaleY;
 
           onChange({
             ...layer,
@@ -126,7 +137,9 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
               x: node.x(),
               y: node.y(),
             },
-            scale: scaleX,
+            width: newWidth,
+            height: newHeight,
+            scale: layer.scale || 1.0, // Keep original scale
             rotation: node.rotation(),
           });
           

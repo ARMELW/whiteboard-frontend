@@ -168,18 +168,21 @@ export const LayerText: React.FC<LayerTextProps> = ({
           const scaleX = node.scaleX();
           const scaleY = node.scaleY();
           
-          // Calculate new dimensions based on current scale
+          // Get current text dimensions
+          // For text, node.width() returns the natural text width based on content
+          // The rendered width is node.width() * layer.scale
+          const textWidth = node.width();
+          const textHeight = node.height();
           const currentScale = layer.scale || 1.0;
-          const newScale = currentScale * scaleX;
           
-          // Get current text dimensions from the node
-          const currentWidth = node.width();
-          const currentHeight = node.height();
+          // Calculate current base dimensions (width/height in layer)
+          // If not set, use the text's natural dimensions
+          const currentWidth = layer.width || textWidth;
+          const currentHeight = layer.height || textHeight;
           
-          // Update base width and height (unscaled dimensions)
-          // New base dimensions = current rendered dimensions / new total scale
-          const newWidth = (currentWidth * scaleX) / newScale;
-          const newHeight = (currentHeight * scaleY) / newScale;
+          // Absorb transform scale into width/height, keeping layer.scale constant
+          const newWidth = currentWidth * scaleX;
+          const newHeight = currentHeight * scaleY;
           
           onChange({
             ...layer,
@@ -187,9 +190,9 @@ export const LayerText: React.FC<LayerTextProps> = ({
               x: node.x(),
               y: node.y(),
             },
-            width: newWidth * newScale,
-            height: newHeight * newScale,
-            scale: newScale,
+            width: newWidth,
+            height: newHeight,
+            scale: currentScale,
             rotation: node.rotation(),
           });
           node.scaleX(1);

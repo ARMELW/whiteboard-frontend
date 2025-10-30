@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Scene, Layer, Camera, SceneAudioConfig } from './types';
 import { generateSceneThumbnail } from '../../utils/sceneThumbnail';
+import { generateLayerSnapshotDebounced, shouldRegenerateSnapshot } from '../../utils/layerSnapshot';
 
 /**
  * UI-only store for scene state
@@ -169,6 +170,28 @@ export const useSceneStore = create<SceneState>((set) => ({
     set(state => ({
       scenes: state.scenes.map(s => s.id === sceneId ? { ...s, layers: [...(s.layers || []), layer] } : s)
     }));
+    
+    // Generate layer snapshot in background with scene context
+    const state = useSceneStore.getState();
+    const scene = state.scenes.find(s => s.id === sceneId);
+    
+    if (scene) {
+      generateLayerSnapshotDebounced(layer, (cachedImage) => {
+        if (cachedImage) {
+          set(state => ({
+            scenes: state.scenes.map(s => s.id === sceneId ? {
+              ...s,
+              layers: (s.layers || []).map(l => l.id === layer.id ? { ...l, cachedImage } : l)
+            } : s)
+          }));
+        }
+      }, 300, {
+        sceneWidth: scene.sceneWidth || 1920,
+        sceneHeight: scene.sceneHeight || 1080,
+        sceneBackgroundImage: scene.backgroundImage || null,
+      });
+    }
+    
     // If it's an image layer, wait for the image to load before updating the thumbnail
     if (layer.type === 'image' && layer.image_path) {
       const img = new window.Image();
@@ -190,6 +213,28 @@ export const useSceneStore = create<SceneState>((set) => ({
         layers: (s.layers || []).map(l => l.id === layer.id ? layer : l)
       } : s)
     }));
+    
+    // Generate layer snapshot in background with scene context
+    const state = useSceneStore.getState();
+    const scene = state.scenes.find(s => s.id === sceneId);
+    
+    if (scene) {
+      generateLayerSnapshotDebounced(layer, (cachedImage) => {
+        if (cachedImage) {
+          set(state => ({
+            scenes: state.scenes.map(s => s.id === sceneId ? {
+              ...s,
+              layers: (s.layers || []).map(l => l.id === layer.id ? { ...l, cachedImage } : l)
+            } : s)
+          }));
+        }
+      }, 300, {
+        sceneWidth: scene.sceneWidth || 1920,
+        sceneHeight: scene.sceneHeight || 1080,
+        sceneBackgroundImage: scene.backgroundImage || null,
+      });
+    }
+    
     debouncedUpdateThumbnail(sceneId);
   },
   updateLayerProperty: (sceneId: string, layerId: string, property: string, value: any) => {
@@ -199,6 +244,29 @@ export const useSceneStore = create<SceneState>((set) => ({
         layers: (s.layers || []).map(l => l.id === layerId ? { ...l, [property]: value } : l)
       } : s)
     }));
+    
+    // Regenerate layer snapshot if property affects visual appearance
+    const state = useSceneStore.getState();
+    const scene = state.scenes.find(s => s.id === sceneId);
+    const layer = scene?.layers?.find(l => l.id === layerId);
+    
+    if (layer && scene && shouldRegenerateSnapshot(property, layer.type)) {
+      generateLayerSnapshotDebounced(layer, (cachedImage) => {
+        if (cachedImage) {
+          set(state => ({
+            scenes: state.scenes.map(s => s.id === sceneId ? {
+              ...s,
+              layers: (s.layers || []).map(l => l.id === layerId ? { ...l, cachedImage } : l)
+            } : s)
+          }));
+        }
+      }, 300, {
+        sceneWidth: scene.sceneWidth || 1920,
+        sceneHeight: scene.sceneHeight || 1080,
+        sceneBackgroundImage: scene.backgroundImage || null,
+      });
+    }
+    
     // Only update thumbnail if property affects visual appearance
     const visualProperties = ['position', 'scale', 'opacity', 'image_path', 'text', 'locked'];
     if (visualProperties.includes(property)) {
@@ -250,6 +318,28 @@ export const useSceneStore = create<SceneState>((set) => ({
         return { ...s, layers };
       })
     }));
+    
+    // Generate layer snapshot in background for duplicated layer with scene context
+    const state = useSceneStore.getState();
+    const scene = state.scenes.find(s => s.id === sceneId);
+    
+    if (scene) {
+      generateLayerSnapshotDebounced(layer, (cachedImage) => {
+        if (cachedImage) {
+          set(state => ({
+            scenes: state.scenes.map(s => s.id === sceneId ? {
+              ...s,
+              layers: (s.layers || []).map(l => l.id === layer.id ? { ...l, cachedImage } : l)
+            } : s)
+          }));
+        }
+      }, 300, {
+        sceneWidth: scene.sceneWidth || 1920,
+        sceneHeight: scene.sceneHeight || 1080,
+        sceneBackgroundImage: scene.backgroundImage || null,
+      });
+    }
+    
     debouncedUpdateThumbnail(sceneId);
   },
 

@@ -40,9 +40,11 @@ export const useLayerEditor = ({
   // Track the current scene ID to detect scene changes
   const currentSceneIdRef = useRef<string | null>(null);
   const isMountedRef = useRef<boolean>(false);
+  const editedSceneRef = useRef(editedScene);
   
   useEffect(() => {
     isMountedRef.current = true;
+    editedSceneRef.current = editedScene;
     
     // Only flush and update when the scene ID actually changes
     const sceneId = scene?.id;
@@ -66,6 +68,13 @@ export const useLayerEditor = ({
           if (!isMountedRef.current || currentSceneIdRef.current !== sceneId) {
             console.log('[useLayerEditor] Cancelling flush - scene changed or component unmounted');
             break;
+          }
+          
+          // Check if the layer still exists in the current scene before updating
+          const layerExists = editedSceneRef.current?.layers?.some((l: any) => l.id === update.layer.id);
+          if (!layerExists) {
+            console.log(`[useLayerEditor] Skipping flush for deleted layer: ${update.layer.id}`);
+            continue;
           }
           
           try {
@@ -169,9 +178,15 @@ export const useLayerEditor = ({
       pendingLayerUpdatesRef.current.clear();
       
       updates.forEach((update) => {
-        updateLayer(update).catch(error => {
-          console.error('[useLayerEditor] Failed to flush update on unmount:', error);
-        });
+        // Only flush the update if the layer still exists in the scene
+        const layerExists = editedSceneRef.current?.layers?.some((l: any) => l.id === update.layer.id);
+        if (layerExists) {
+          updateLayer(update).catch(error => {
+            console.error('[useLayerEditor] Failed to flush update on unmount:', error);
+          });
+        } else {
+          console.log(`[useLayerEditor] Skipping flush for deleted layer: ${update.layer.id}`);
+        }
       });
     };
   }, [updateLayer]);
@@ -202,6 +217,9 @@ export const useLayerEditor = ({
   }, [setSelectedLayerId, addLayer]);
 
   const handleDeleteLayer = useCallback((layerId: string) => {
+    // Remove any pending updates for this layer since it's being deleted
+    pendingLayerUpdatesRef.current.delete(layerId);
+    
     setEditedScene((prev: any) => ({
       ...prev,
       layers: prev.layers.filter((layer: any) => layer.id !== layerId)

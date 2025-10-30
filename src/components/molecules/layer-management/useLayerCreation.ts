@@ -3,6 +3,26 @@ import { useCallback } from 'react';
 // Minimum camera zoom to prevent division by zero and extreme viewport calculations
 const MIN_CAMERA_ZOOM = 0.1;
 
+/**
+ * Estimate text dimensions based on font size and text content
+ * This is a rough approximation - actual dimensions may vary
+ */
+const estimateTextDimensions = (text: string, fontSize: number, fontFamily: string = 'Arial'): { width: number; height: number } => {
+  // Average character width is roughly 0.6 * fontSize for most fonts
+  const avgCharWidth = fontSize * 0.6;
+  const lines = text.split('\n');
+  const maxLineLength = Math.max(...lines.map(line => line.length));
+  
+  // Estimate width based on longest line
+  const width = maxLineLength * avgCharWidth;
+  
+  // Estimate height based on number of lines and line height
+  const lineHeight = 1.2; // Default line height
+  const height = lines.length * fontSize * lineHeight;
+  
+  return { width, height };
+};
+
 export interface LayerCreationOptions {
   sceneWidth?: number;
   sceneHeight?: number;
@@ -39,14 +59,20 @@ export const useLayerCreation = ({
     
     const text = 'Votre texte ici';
     const fontSize = 48;
+    const fontFamily = 'Arial';
     
     const initialX = cameraCenterX;
     const initialY = cameraCenterY;
+    
+    // Estimate text dimensions
+    const { width, height } = estimateTextDimensions(text, fontSize, fontFamily);
     
     return {
       id: `layer-${Date.now()}`,
       name: 'Texte',
       position: { x: initialX, y: initialY },
+      width,
+      height,
       z_index: layersLength + 1,
       skip_rate: 12,
       scale: cameraZoom,
@@ -55,7 +81,7 @@ export const useLayerCreation = ({
       type: 'text',
       text_config: {
         text: text,
-        font: 'Arial',
+        font: fontFamily,
         size: fontSize,
         color: [0, 0, 0],
         style: 'normal',
@@ -80,7 +106,13 @@ export const useLayerCreation = ({
     const { cameraCenterX, cameraCenterY, cameraWidth, cameraHeight, cameraZoom } = getCameraPosition();
     
     let calculatedScale = 1.0;
+    let baseWidth = 0;
+    let baseHeight = 0;
+    
     if (imageDimensions) {
+      baseWidth = imageDimensions.width;
+      baseHeight = imageDimensions.height;
+      
       // Camera zoom semantics: lower values mean zoomed out (larger viewport)
       // e.g., zoom = 0.8 means camera sees 800/0.8 = 1000 units of scene width
       // Account for camera zoom when calculating the viewport size in scene coordinates
@@ -109,6 +141,8 @@ export const useLayerCreation = ({
       image_path: imageUrl,
       name: fileName,
       position: { x: initialX, y: initialY },
+      width: baseWidth,
+      height: baseHeight,
       z_index: layersLength + 1,
       skip_rate: 10,
       scale: calculatedScale,
@@ -161,8 +195,15 @@ export const useLayerCreation = ({
     scaledShapeConfig.x = cameraCenterX - (shapeWidth / 2);
     scaledShapeConfig.y = cameraCenterY - (shapeHeight / 2);
     
+    // Calculate base width and height for the layer
+    // Use the original (unscaled) dimensions from the shape config
+    const baseWidth = shapeConfig.width || (shapeConfig.radius ? shapeConfig.radius * 2 : null) || shapeConfig.size || 100;
+    const baseHeight = shapeConfig.height || (shapeConfig.radius ? shapeConfig.radius * 2 : null) || shapeConfig.size || 100;
+    
     return {
       ...shapeLayer,
+      width: baseWidth,
+      height: baseHeight,
       z_index: layersLength + 1,
       skip_rate: 12,
       shape_config: scaledShapeConfig,

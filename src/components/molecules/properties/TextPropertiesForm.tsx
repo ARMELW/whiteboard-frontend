@@ -227,11 +227,39 @@ export const TextPropertiesForm: React.FC<TextPropertiesFormProps> = React.memo(
         <AccordionTrigger>
           <div className="flex items-center gap-2">
             <AlignLeft className="w-4 h-4" />
-            <span>Spacing</span>
+            <span>Spacing & Dimensions</span>
           </div>
         </AccordionTrigger>
         <AccordionContent>
           <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-foreground text-xs mb-1.5">Width</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10000"
+                  step="1"
+                  value={Math.round(layer.width || 0)}
+                  onChange={(e) => onPropertyChange(layerId, 'width', Number(e.target.value))}
+                  className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  disabled={layer.locked}
+                />
+              </div>
+              <div>
+                <label className="block text-foreground text-xs mb-1.5">Height</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10000"
+                  step="1"
+                  value={Math.round(layer.height || 0)}
+                  onChange={(e) => onPropertyChange(layerId, 'height', Number(e.target.value))}
+                  className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  disabled={layer.locked}
+                />
+              </div>
+            </div>
             <div>
               <label className="block text-foreground text-xs mb-1.5">
                 Interligne: <span className="font-mono">{(textConfig.line_height || 1.2).toFixed(1)}</span>

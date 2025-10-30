@@ -52,6 +52,8 @@ export interface Layer {
   type: LayerType;
   mode: LayerMode;
   position: Position;
+  width?: number;
+  height?: number;
   z_index: number;
   scale: number;
   opacity: number;

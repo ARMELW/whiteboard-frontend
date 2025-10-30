@@ -140,6 +140,9 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = React.mem
                 <label className="block text-foreground text-xs mb-1.5">Width</label>
                 <input
                   type="number"
+                  min="1"
+                  max="10000"
+                  step="1"
                   value={Math.round(layer.width || 0)}
                   onChange={(e) => onPropertyChange(layer.id, 'width', Number(e.target.value))}
                   className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
@@ -150,6 +153,9 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = React.mem
                 <label className="block text-foreground text-xs mb-1.5">Height</label>
                 <input
                   type="number"
+                  min="1"
+                  max="10000"
+                  step="1"
                   value={Math.round(layer.height || 0)}
                   onChange={(e) => onPropertyChange(layer.id, 'height', Number(e.target.value))}
                   className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"

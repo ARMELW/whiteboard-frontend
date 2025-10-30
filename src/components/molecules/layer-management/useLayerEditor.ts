@@ -40,9 +40,11 @@ export const useLayerEditor = ({
   // Track the current scene ID to detect scene changes
   const currentSceneIdRef = useRef<string | null>(null);
   const isMountedRef = useRef<boolean>(false);
+  const editedSceneRef = useRef(editedScene);
   
   useEffect(() => {
     isMountedRef.current = true;
+    editedSceneRef.current = editedScene;
     
     // Only flush and update when the scene ID actually changes
     const sceneId = scene?.id;
@@ -69,7 +71,7 @@ export const useLayerEditor = ({
           }
           
           // Check if the layer still exists in the current scene before updating
-          const layerExists = editedScene?.layers?.some((l: any) => l.id === update.layer.id);
+          const layerExists = editedSceneRef.current?.layers?.some((l: any) => l.id === update.layer.id);
           if (!layerExists) {
             console.log(`[useLayerEditor] Skipping flush for deleted layer: ${update.layer.id}`);
             continue;
@@ -175,12 +177,9 @@ export const useLayerEditor = ({
       const updates = Array.from(pendingLayerUpdatesRef.current.values());
       pendingLayerUpdatesRef.current.clear();
       
-      // Get the current scene to validate layers exist before flushing
-      const currentSceneState = editedScene;
-      
       updates.forEach((update) => {
         // Only flush the update if the layer still exists in the scene
-        const layerExists = currentSceneState?.layers?.some((l: any) => l.id === update.layer.id);
+        const layerExists = editedSceneRef.current?.layers?.some((l: any) => l.id === update.layer.id);
         if (layerExists) {
           updateLayer(update).catch(error => {
             console.error('[useLayerEditor] Failed to flush update on unmount:', error);
@@ -190,7 +189,7 @@ export const useLayerEditor = ({
         }
       });
     };
-  }, [updateLayer, editedScene]);
+  }, [updateLayer]);
 
   const handleAddLayer = useCallback(async (newLayer: any) => {
     // First, update local state immediately for responsive UI

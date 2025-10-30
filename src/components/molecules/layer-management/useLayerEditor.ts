@@ -68,6 +68,13 @@ export const useLayerEditor = ({
             break;
           }
           
+          // Check if the layer still exists in the current scene before updating
+          const layerExists = editedScene?.layers?.some((l: any) => l.id === update.layer.id);
+          if (!layerExists) {
+            console.log(`[useLayerEditor] Skipping flush for deleted layer: ${update.layer.id}`);
+            continue;
+          }
+          
           try {
             await updateLayer(update);
           } catch (error) {
@@ -168,13 +175,22 @@ export const useLayerEditor = ({
       const updates = Array.from(pendingLayerUpdatesRef.current.values());
       pendingLayerUpdatesRef.current.clear();
       
+      // Get the current scene to validate layers exist before flushing
+      const currentSceneState = editedScene;
+      
       updates.forEach((update) => {
-        updateLayer(update).catch(error => {
-          console.error('[useLayerEditor] Failed to flush update on unmount:', error);
-        });
+        // Only flush the update if the layer still exists in the scene
+        const layerExists = currentSceneState?.layers?.some((l: any) => l.id === update.layer.id);
+        if (layerExists) {
+          updateLayer(update).catch(error => {
+            console.error('[useLayerEditor] Failed to flush update on unmount:', error);
+          });
+        } else {
+          console.log(`[useLayerEditor] Skipping flush for deleted layer: ${update.layer.id}`);
+        }
       });
     };
-  }, [updateLayer]);
+  }, [updateLayer, editedScene]);
 
   const handleAddLayer = useCallback(async (newLayer: any) => {
     // First, update local state immediately for responsive UI
@@ -202,6 +218,9 @@ export const useLayerEditor = ({
   }, [setSelectedLayerId, addLayer]);
 
   const handleDeleteLayer = useCallback((layerId: string) => {
+    // Remove any pending updates for this layer since it's being deleted
+    pendingLayerUpdatesRef.current.delete(layerId);
+    
     setEditedScene((prev: any) => ({
       ...prev,
       layers: prev.layers.filter((layer: any) => layer.id !== layerId)

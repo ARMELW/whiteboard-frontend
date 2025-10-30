@@ -13,10 +13,10 @@ export interface LayerImageProps {
   allLayers?: any[];
 }
 
-const LayerImageComponent: React.FC<LayerImageProps> = ({ 
-  layer, 
-  isSelected, 
-  onSelect, 
+const LayerImageComponent: React.FC<LayerImageProps> = ({
+  layer,
+  isSelected,
+  onSelect,
   onChange,
   selectedLayerIds = [],
   allLayers = []
@@ -39,20 +39,24 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
     const node = imageRef.current;
     if (!node) return pos;
 
-    const scale = layer.scale || 1.0;
-    const scaleX = layer.scaleX || 1.0;
-    const scaleY = layer.scaleY || 1.0;
-    const width = img.width * scale * scaleX;
-    const height = img.height * scale * scaleY;
-    
+    // Utilisation des dimensions stockées dans le layer, ou calcul initial
+    // pour garantir la bonne limite de déplacement.
+    const currentScale = layer.scale || 1.0;
+    const width = layer.width || (img.width * currentScale); 
+    const height = layer.height || (img.height * currentScale);
+
     let newX = pos.x;
     let newY = pos.y;
+    const stageWidth = 1920;
+    const stageHeight = 1080;
 
+    // Limites en X
     if (newX < 0) newX = 0;
-    if (newX + width > 1920) newX = 1920 - width;
+    if (newX + width > stageWidth) newX = stageWidth - width;
 
+    // Limites en Y
     if (newY < 0) newY = 0;
-    if (newY + height > 1080) newY = 1080 - height;
+    if (newY + height > stageHeight) newY = stageHeight - height;
 
     return { x: newX, y: newY };
   };
@@ -63,8 +67,13 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
         image={img}
         x={layer.position?.x || 0}
         y={layer.position?.y || 0}
-        scaleX={(layer.scale || 1.0) * (layer.scaleX || 1.0) * (layer.flipX ? -1 : 1)}
-        scaleY={(layer.scale || 1.0) * (layer.scaleY || 1.0) * (layer.flipY ? -1 : 1)}
+        
+        // CORRECTION 1: Simplification des scaleX/scaleY.
+        // L'échelle globale (layer.scale) et le flip sont appliqués ici.
+        // On retire layer.scaleX/Y si on ne gère que l'échelle uniforme.
+        scaleX={(layer.scale || 1.0) * (layer.flipX ? -1 : 1)}
+        scaleY={(layer.scale || 1.0) * (layer.flipY ? -1 : 1)}
+        
         offsetX={layer.flipX ? img.width : 0}
         offsetY={layer.flipY ? img.height : 0}
         rotation={layer.rotation || 0}
@@ -94,7 +103,7 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
         onDragEnd={(e) => {
           const finalX = e.target.x();
           const finalY = e.target.y();
-          
+
           const updatedLayer = {
             ...layer,
             position: {
@@ -102,34 +111,33 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
               y: finalY,
             }
           };
-          
-          // If multiple layers were selected, batch all updates together
+
           if (selectedLayerIds.length > 1 && dragStartPosRef.current) {
             const deltaX = finalX - dragStartPosRef.current.x;
             const deltaY = finalY - dragStartPosRef.current.y;
-            
+
             applyMultiLayerDrag(selectedLayerIds, layer.id, updatedLayer, allLayers, deltaX, deltaY, onChange);
           } else {
             // Single layer drag
             onChange(updatedLayer);
           }
-          
+
           dragStartPosRef.current = null;
         }}
         onTransformEnd={() => {
           const node = imageRef.current;
           if (!node) return;
+
+          // CORRECTION 2: S'assurer que la nouvelle échelle est lue correctement (valeur absolue)
+          // et que les dimensions sont mises à jour.
           
-          const transformScaleX = node.scaleX();
-          const transformScaleY = node.scaleY();
+          // La nouvelle échelle est la valeur absolue de scaleX du node.
+          // Elle inclut déjà la précédente layer.scale et le facteur du transformer.
+          const newScale = Math.abs(node.scaleX()); 
           
-          // Strategy: Keep base width/height and scale constant
-          // Update scaleX/scaleY to reflect the resize transformation
-          const currentScaleX = layer.scaleX || 1.0;
-          const currentScaleY = layer.scaleY || 1.0;
-          
-          const newScaleX = currentScaleX * transformScaleX;
-          const newScaleY = currentScaleY * transformScaleY;
+          // Calcul des nouvelles dimensions affichées
+          const newWidth = img.width * newScale;
+          const newHeight = img.height * newScale;
 
           onChange({
             ...layer,
@@ -137,16 +145,19 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
               x: node.x(),
               y: node.y(),
             },
-            width: layer.width || img.width, // Keep original image width
-            height: layer.height || img.height, // Keep original image height
-            scale: layer.scale || 1.0, // Keep scale constant
-            scaleX: newScaleX, // Update scaleX to reflect resize
-            scaleY: newScaleY, // Update scaleY to reflect resize
+            // Mise à jour de width et height
+            width: newWidth,
+            height: newHeight,
+            // Mise à jour de l'échelle
+            scale: newScale,
             rotation: node.rotation(),
           });
-          
-          node.scaleX(1);
-          node.scaleY(1);
+
+          // ESSENTIEL : Réinitialiser le scale du nœud Konva à l'état de base (1 ou -1 pour le flip)
+          // Cela force Konva à utiliser la nouvelle valeur 'layer.scale' (qui est dans les props)
+          // pour le prochain rendu/transformation.
+          node.scaleX(layer.flipX ? -1 : 1);
+          node.scaleY(layer.flipY ? -1 : 1);
         }}
       />
       {isSelected && !layer.locked && (
@@ -158,9 +169,9 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
               return oldBox;
             }
 
-            if (newBox.x < 0 || newBox.y < 0 || 
-                newBox.x + newBox.width > 1920 || 
-                newBox.y + newBox.height > 1080) {
+            if (newBox.x < 0 || newBox.y < 0 ||
+              newBox.x + newBox.width > 1920 ||
+              newBox.y + newBox.height > 1080) {
               return oldBox;
             }
 
@@ -173,7 +184,7 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
 };
 
 function areEqual(prevProps: LayerImageProps, nextProps: LayerImageProps) {
-  // Compare layer id, position, scale, rotation, isSelected, locked
+  // Comparaison plus complète pour inclure width/height/scale
   const l1 = prevProps.layer;
   const l2 = nextProps.layer;
   return (
@@ -181,6 +192,8 @@ function areEqual(prevProps: LayerImageProps, nextProps: LayerImageProps) {
     l1.position?.x === l2.position?.x &&
     l1.position?.y === l2.position?.y &&
     l1.scale === l2.scale &&
+    l1.width === l2.width && // Ajout de la comparaison de width
+    l1.height === l2.height && // Ajout de la comparaison de height
     l1.rotation === l2.rotation &&
     l1.locked === l2.locked &&
     prevProps.isSelected === nextProps.isSelected

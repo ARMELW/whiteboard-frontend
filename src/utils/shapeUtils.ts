@@ -54,6 +54,8 @@ export interface ShapeLayer {
   name: string;
   zIndex: number;
   position: { x: number; y: number };
+  width: number;
+  height: number;
   scale: number;
   opacity: number;
   shape_config: ShapeConfig;
@@ -1101,18 +1103,47 @@ export function createShapeLayer(shapeType: string, customConfig: Partial<ShapeC
     throw new Error(`Unknown shape type: ${shapeType}`);
   }
 
+  const mergedConfig = {
+    ...defaultConfig,
+    ...customConfig,
+  };
+
+  // Calculate width and height from shape config
+  let width = 200; // Default fallback
+  let height = 200; // Default fallback
+
+  if (mergedConfig.width !== undefined && mergedConfig.height !== undefined) {
+    width = mergedConfig.width;
+    height = mergedConfig.height;
+  } else if (mergedConfig.radius !== undefined) {
+    // For circular shapes
+    width = mergedConfig.radius * 2;
+    height = mergedConfig.radius * 2;
+  } else if (mergedConfig.radiusX !== undefined && mergedConfig.radiusY !== undefined) {
+    // For elliptical shapes
+    width = mergedConfig.radiusX * 2;
+    height = mergedConfig.radiusY * 2;
+  } else if (mergedConfig.outerRadius !== undefined) {
+    // For star shapes
+    width = mergedConfig.outerRadius * 2;
+    height = mergedConfig.outerRadius * 2;
+  } else if (mergedConfig.size !== undefined) {
+    // For shapes with size property
+    width = mergedConfig.size;
+    height = mergedConfig.size;
+  }
+
   return {
     id: `layer-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     type: 'shape',
     name: `${shapeType.charAt(0).toUpperCase() + shapeType.slice(1)} Shape`,
     zIndex: 100,
     position: { x: 0, y: 0 },
+    width,
+    height,
     scale: 1.0,
     opacity: 1.0,
-    shape_config: {
-      ...defaultConfig,
-      ...customConfig,
-    },
+    shape_config: mergedConfig,
   };
 }
 

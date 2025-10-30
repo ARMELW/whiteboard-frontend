@@ -8,6 +8,7 @@ import {
   VoiceType 
 } from '../types';
 import { Scene, LayerType, LayerMode, SceneAnimationType } from '../../scenes/types';
+import { DEFAULT_LAYER_DIMENSIONS } from '@/utils/layerValidation';
 
 // Mock delay to simulate API call
 const mockDelay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -337,6 +338,8 @@ export const generateScenesFromWizard = async (
         x: 100 + (idx * 150),
         y: 100 + (Math.random() * 200),
       },
+      width: doodle.size?.width || DEFAULT_LAYER_DIMENSIONS[LayerType.IMAGE].width,
+      height: doodle.size?.height || DEFAULT_LAYER_DIMENSIONS[LayerType.IMAGE].height,
       z_index: idx,
       scale: 1,
       opacity: 1,

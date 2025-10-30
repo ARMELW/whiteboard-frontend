@@ -192,6 +192,8 @@ const MediaLibrary: React.FC = () => {
       type: LayerType.IMAGE,
       mode: LayerMode.STATIC,
       position: { x, y },
+      width: item.width,
+      height: item.height,
       z_index: currentScene.layers.length,
       scale,
       opacity: 1.0,
@@ -232,11 +234,15 @@ const MediaLibrary: React.FC = () => {
     
     let position = { x: 100, y: 100 };
     let scale = 1;
+    let width = 1920; // Default width
+    let height = 1080; // Default height
     
     if (imageDimensions) {
       const result = calculateLayerPosition(imageDimensions.width, imageDimensions.height);
       position = { x: result.x, y: result.y };
       scale = result.scale;
+      width = imageDimensions.width;
+      height = imageDimensions.height;
     }
     
     const newLayer = {
@@ -245,6 +251,8 @@ const MediaLibrary: React.FC = () => {
       type: LayerType.IMAGE,
       mode: LayerMode.STATIC,
       position,
+      width,
+      height,
       z_index: (scene.layers?.length || 0) + 1,
       scale,
       opacity: 1,

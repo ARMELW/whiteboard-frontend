@@ -6,8 +6,9 @@ import {
   GeneratedAsset,
   WizardConfiguration,
 } from '../types';
-import { Scene } from '../../scenes/types';
+import { Scene, LayerType } from '../../scenes/types';
 import { v4 as uuidv4 } from 'uuid';
+import { DEFAULT_LAYER_DIMENSIONS } from '@/utils/layerValidation';
 
 /**
  * Service API pour la génération AI via le wizard
@@ -278,6 +279,8 @@ class AIService {
         type: 'IMAGE' as any,
         mode: 'DRAW' as any,
         position: doodle.position || { x: 100 + idx * 150, y: 100 },
+        width: doodle.size?.width || DEFAULT_LAYER_DIMENSIONS[LayerType.IMAGE].width,
+        height: doodle.size?.height || DEFAULT_LAYER_DIMENSIONS[LayerType.IMAGE].height,
         z_index: idx,
         scale: 1,
         opacity: 1,

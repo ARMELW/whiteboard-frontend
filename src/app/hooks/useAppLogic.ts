@@ -105,6 +105,8 @@ export function useAppLogic({
       image_path: asset.dataUrl,
       name: asset.name,
       position: { x: 100, y: 100 },
+      width: asset.width || 1920,
+      height: asset.height || 1080,
       z_index: (currentScene.layers?.length || 0) + 1,
       skip_rate: 10,
       scale: 1.0,

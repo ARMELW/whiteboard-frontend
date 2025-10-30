@@ -168,22 +168,15 @@ export const LayerText: React.FC<LayerTextProps> = ({
           const scaleX = node.scaleX();
           const scaleY = node.scaleY();
           
-          // Get current text dimensions
-          // For text, node.width() and node.height() return the natural text dimensions
-          // based on content, font size, and line height (intrinsic dimensions)
+          // Strategy: Keep base width/height as intrinsic text dimensions
+          // Update scale to reflect the resize transformation
           const textWidth = node.width();
           const textHeight = node.height();
           const currentScale = layer.scale || 1.0;
           
-          // Calculate the current rendered dimensions (what's actually visible)
-          // Rendered size = intrinsic size * current scale
-          const currentRenderedWidth = textWidth * currentScale;
-          const currentRenderedHeight = textHeight * currentScale;
-          
-          // After transform, new rendered size = current rendered size * transform scale
-          // Update width/height to reflect the new visual dimensions
-          const newWidth = currentRenderedWidth * scaleX;
-          const newHeight = currentRenderedHeight * scaleY;
+          // Use average of scaleX and scaleY for uniform scaling
+          const transformScale = (scaleX + scaleY) / 2;
+          const newScale = currentScale * transformScale;
           
           onChange({
             ...layer,
@@ -191,9 +184,9 @@ export const LayerText: React.FC<LayerTextProps> = ({
               x: node.x(),
               y: node.y(),
             },
-            width: newWidth,
-            height: newHeight,
-            scale: currentScale,
+            width: textWidth, // Keep intrinsic text width
+            height: textHeight, // Keep intrinsic text height
+            scale: newScale, // Update scale to reflect resize
             rotation: node.rotation(),
           });
           node.scaleX(1);

@@ -328,13 +328,14 @@ export const calculateProjectedLayerDimensions = (
     cameraZoom
   );
   
+  // Calculate layer dimensions in scene space (base dimensions × layer scale)
   const layerWidth = (layer.width || 0) * (layer.scale || 1);
   const layerHeight = (layer.height || 0) * (layer.scale || 1);
   
   return {
-    // Apply the same uniform scale factor to both width and height (ensures proportionality)
-    width: layer.width,
-    height: layer.height
+    // Apply projection scale to get final projected dimensions on screen
+    width: layerWidth * projectionScale,
+    height: layerHeight * projectionScale
   };
 };
 

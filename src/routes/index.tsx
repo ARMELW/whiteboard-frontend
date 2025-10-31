@@ -12,6 +12,7 @@ import { LandingPage } from '@/pages/LandingPage';
 import { ProtectedRoute } from '@/app/auth/components';
 import { SubscriptionFeaturesDemo } from '@/pages/demo/SubscriptionFeaturesDemo';
 import MultiCameraDemo from '@/pages/demo/MultiCameraDemo';
+import { ProjectionTestPageStandalone } from '@/pages/ProjectionTestPageStandalone';
 
 export const router = createBrowserRouter([
   {
@@ -37,6 +38,10 @@ export const router = createBrowserRouter([
   {
     path: '/demo/multi-camera',
     element: <MultiCameraDemo />,
+  },
+  {
+    path: '/test/projection',
+    element: <ProjectionTestPageStandalone />,
   },
   {
     path: '/dashboard',

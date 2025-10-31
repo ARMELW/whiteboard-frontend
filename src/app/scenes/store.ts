@@ -30,6 +30,10 @@ interface SceneState {
   previewLoading: boolean;
   previewStartSceneIndex: number | null;
   
+  // Projection screen dimensions (for preview and positioning)
+  projectionScreenWidth: number;
+  projectionScreenHeight: number;
+  
   // Temporary scene data actions (for optimistic UI updates)
   setScenes: (scenes: Scene[]) => void;
   setCurrentProjectId: (projectId: string | null) => void;
@@ -73,6 +77,9 @@ interface SceneState {
   startPreview: (videoUrl: string, type: 'full' | 'scene') => void;
   stopPreview: () => void;
   
+  // Projection Screen Actions
+  setProjectionScreen: (width: number, height: number) => void;
+  
   // Reset all state
   reset: () => void;
 }
@@ -92,6 +99,8 @@ const initialUIState = {
   previewType: null,
   previewLoading: false,
   previewStartSceneIndex: null,
+  projectionScreenWidth: 1920,
+  projectionScreenHeight: 1080,
 };
 
 const initialDataState = {
@@ -465,6 +474,12 @@ export const useSceneStore = create<SceneState>((set) => ({
     previewType: null,
     previewLoading: false,
     previewStartSceneIndex: null
+  }),
+  
+  // Projection Screen Actions
+  setProjectionScreen: (width, height) => set({ 
+    projectionScreenWidth: width,
+    projectionScreenHeight: height 
   }),
   
   reset: () => set({ ...initialDataState, ...initialUIState }),

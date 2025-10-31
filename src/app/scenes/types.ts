@@ -52,6 +52,7 @@ export interface Layer {
   type: LayerType;
   mode: LayerMode;
   position: Position;
+  camera_position?: Position;
   width: number;
   height: number;
   z_index: number;

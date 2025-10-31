@@ -1,0 +1,101 @@
+{
+  "description": "Example layer with camera_position field",
+  "scene": {
+    "id": "scene-camera-position-demo",
+    "title": "Démonstration Camera Position",
+    "sceneWidth": 1920,
+    "sceneHeight": 1080,
+    "sceneCameras": [
+      {
+        "id": "default-camera",
+        "name": "Caméra Par Défaut",
+        "position": { "x": 0.5, "y": 0.5 },
+        "width": 1920,
+        "height": 1080,
+        "zoom": 1.0,
+        "isDefault": true
+      }
+    ],
+    "layers": [
+      {
+        "id": "layer-1",
+        "name": "Centered Text",
+        "type": "text",
+        "mode": "draw",
+        "position": {
+          "x": 960,
+          "y": 540
+        },
+        "camera_position": {
+          "x": 960,
+          "y": 540
+        },
+        "width": 400,
+        "height": 80,
+        "z_index": 1,
+        "scale": 1.0,
+        "opacity": 1.0,
+        "text_config": {
+          "text": "Centered in camera",
+          "font": "Arial",
+          "size": 48,
+          "color": [0, 0, 0],
+          "align": "center"
+        }
+      },
+      {
+        "id": "layer-2",
+        "name": "Top Left Image",
+        "type": "image",
+        "mode": "static",
+        "position": {
+          "x": 200,
+          "y": 150
+        },
+        "camera_position": {
+          "x": 200,
+          "y": 150
+        },
+        "width": 300,
+        "height": 200,
+        "z_index": 2,
+        "scale": 1.0,
+        "opacity": 1.0,
+        "image_path": "https://example.com/image.jpg"
+      },
+      {
+        "id": "layer-3",
+        "name": "Off-camera Element",
+        "type": "text",
+        "mode": "static",
+        "position": {
+          "x": 2500,
+          "y": 1500
+        },
+        "camera_position": {
+          "x": 2500,
+          "y": 1500
+        },
+        "width": 200,
+        "height": 50,
+        "z_index": 3,
+        "scale": 1.0,
+        "opacity": 1.0,
+        "text_config": {
+          "text": "Outside camera view",
+          "font": "Arial",
+          "size": 24,
+          "color": [255, 0, 0]
+        }
+      }
+    ]
+  },
+  "notes": {
+    "camera_position_explanation": "The camera_position field shows where each layer appears relative to the default camera viewport.",
+    "layer_1": "Positioned at (960, 540) in scene and camera - exactly centered",
+    "layer_2": "Positioned at (200, 150) in scene and camera - top-left area",
+    "layer_3": "Positioned at (2500, 1500) - outside the 1920x1080 camera viewport",
+    "calculation": "camera_position = layer.position - (camera.position * sceneSize - camera.size / 2)",
+    "default_camera": "With default camera at (0.5, 0.5) and size 1920x1080, viewport is (0, 0) to (1920, 1080)"
+  }
+}

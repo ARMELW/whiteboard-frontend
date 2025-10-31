@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { calculateCameraRelativePosition, createDefaultCamera } from '@/utils/cameraAnimator';
 
 // Minimum camera zoom to prevent division by zero and extreme viewport calculations
 const MIN_CAMERA_ZOOM = 0.1;
@@ -27,13 +28,21 @@ export interface LayerCreationOptions {
   sceneWidth?: number;
   sceneHeight?: number;
   selectedCamera?: any;
+  sceneCameras?: any[];
 }
 
 export const useLayerCreation = ({ 
   sceneWidth = 1920, 
   sceneHeight = 1080,
-  selectedCamera 
+  selectedCamera,
+  sceneCameras = []
 }: LayerCreationOptions = {}) => {
+  
+  const getDefaultCamera = useCallback(() => {
+    // Find the default camera from sceneCameras array
+    const defaultCam = sceneCameras?.find((cam: any) => cam.isDefault === true);
+    return defaultCam || createDefaultCamera('16:9');
+  }, [sceneCameras]);
   
   const getCameraPosition = useCallback(() => {
     let cameraCenterX = sceneWidth / 2;
@@ -55,7 +64,7 @@ export const useLayerCreation = ({
   }, [sceneWidth, sceneHeight, selectedCamera]);
 
   const createTextLayer = useCallback((layersLength: number) => {
-    const { cameraCenterX, cameraCenterY, cameraZoom } = getCameraPosition();
+    const { cameraCenterX, cameraCenterY, cameraZoom, cameraWidth, cameraHeight } = getCameraPosition();
     
     const text = 'Votre texte ici';
     const fontSize = 48;
@@ -67,10 +76,20 @@ export const useLayerCreation = ({
     // Estimate text dimensions
     const { width, height } = estimateTextDimensions(text, fontSize, fontFamily);
     
+    // Calculate camera-relative position using DEFAULT camera (not selected camera)
+    const defaultCamera = getDefaultCamera();
+    const cameraPosition = calculateCameraRelativePosition(
+      { x: initialX, y: initialY },
+      defaultCamera,
+      sceneWidth,
+      sceneHeight
+    );
+    
     return {
       id: `layer-${Date.now()}`,
       name: 'Texte',
       position: { x: initialX, y: initialY },
+      camera_position: cameraPosition,
       width,
       height,
       z_index: layersLength + 1,
@@ -95,7 +114,7 @@ export const useLayerCreation = ({
         drawing: null,
       }
     };
-  }, [getCameraPosition]);
+  }, [getCameraPosition, getDefaultCamera, sceneWidth, sceneHeight]);
 
   const createImageLayer = useCallback((
     imageUrl: string, 
@@ -136,11 +155,21 @@ export const useLayerCreation = ({
     const initialX = cameraCenterX - (scaledImageWidth / 2);
     const initialY = cameraCenterY - (scaledImageHeight / 2);
     
+    // Calculate camera-relative position using DEFAULT camera (not selected camera)
+    const defaultCamera = getDefaultCamera();
+    const cameraPosition = calculateCameraRelativePosition(
+      { x: initialX, y: initialY },
+      defaultCamera,
+      sceneWidth,
+      sceneHeight
+    );
+    
     return {
       id: `layer-${Date.now()}`,
       image_path: imageUrl,
       name: fileName,
       position: { x: initialX, y: initialY },
+      camera_position: cameraPosition,
       width: baseWidth,
       height: baseHeight,
       z_index: layersLength + 1,
@@ -156,10 +185,10 @@ export const useLayerCreation = ({
         drawing: null,
       }
     };
-  }, [getCameraPosition]);
+  }, [getCameraPosition, getDefaultCamera, sceneWidth, sceneHeight]);
 
   const createShapeLayer = useCallback((shapeLayer: any, layersLength: number) => {
-    const { cameraCenterX, cameraCenterY, cameraZoom } = getCameraPosition();
+    const { cameraCenterX, cameraCenterY, cameraZoom, cameraWidth, cameraHeight } = getCameraPosition();
     
     const shapeConfig = shapeLayer.shape_config;
     const scaledShapeConfig = { ...shapeConfig };
@@ -200,8 +229,20 @@ export const useLayerCreation = ({
     const baseWidth = shapeConfig.width || (shapeConfig.radius ? shapeConfig.radius * 2 : null) || shapeConfig.size || 100;
     const baseHeight = shapeConfig.height || (shapeConfig.radius ? shapeConfig.radius * 2 : null) || shapeConfig.size || 100;
     
+    // Calculate camera-relative position using DEFAULT camera (not selected camera)
+    const layerPosition = { x: scaledShapeConfig.x, y: scaledShapeConfig.y };
+    const defaultCamera = getDefaultCamera();
+    const cameraPosition = calculateCameraRelativePosition(
+      layerPosition,
+      defaultCamera,
+      sceneWidth,
+      sceneHeight
+    );
+    
     return {
       ...shapeLayer,
+      position: layerPosition,
+      camera_position: cameraPosition,
       width: baseWidth,
       height: baseHeight,
       z_index: layersLength + 1,
@@ -214,7 +255,7 @@ export const useLayerCreation = ({
         drawing: null,
       }
     };
-  }, [getCameraPosition]);
+  }, [getCameraPosition, getDefaultCamera, sceneWidth, sceneHeight]);
 
   return {
     createTextLayer,

@@ -50,7 +50,7 @@ export const ProjectionViewer: React.FC<ProjectionViewerProps> = ({
 
   const visibleLayers = projectedLayers.filter(l => l.isVisible);
   const hiddenLayers = projectedLayers.filter(l => !l.isVisible);
-
+console.log('projectedLayers',projectedLayers);
   // Calculate display scale to fit large projections in the viewer
   // This scales the entire canvas uniformly while maintaining correct proportions
   const maxDisplayWidth = 1200;
@@ -185,7 +185,7 @@ export const ProjectionViewer: React.FC<ProjectionViewerProps> = ({
           {/* Projected Layers */}
           {projectedLayers.map(layer => {
             const isHovered = hoveredLayerId === layer.id;
-            
+
             return layer.isVisible && (
               <div
                 key={layer.id}
@@ -207,7 +207,7 @@ export const ProjectionViewer: React.FC<ProjectionViewerProps> = ({
                   overflow: 'visible'
                 }}
               >
-                {/* Layer name label - positioned outside to not affect layer box size */}
+                {/* Layer name label - font size based only on layer width */}
                 {layer.width > 40 && layer.height > 20 && (
                   <div style={{
                     position: 'absolute',
@@ -227,7 +227,7 @@ export const ProjectionViewer: React.FC<ProjectionViewerProps> = ({
                     {scene.layers?.find(l => l.id === layer.id)?.name || layer.id}
                   </div>
                 )}
-                
+
                 {/* Coordinates tooltip */}
                 {showCoordinates && isHovered && (
                   <div style={{

@@ -194,18 +194,25 @@ export interface ProjectedLayer {
 
 /**
  * Calculate scale factor to fit scene into projection screen
- * Maintains aspect ratio
+ * Maintains aspect ratio.
+ * Note: sceneWidth/sceneHeight here represents the area CAPTURED by the camera.
  */
 export const calculateProjectionScale = (
-  sceneWidth: number,
-  sceneHeight: number,
+  capturedWidth: number,
+  capturedHeight: number,
   screenWidth: number,
-  screenHeight: number
+  screenHeight: number,
+  cameraZoom: number = 1 // New parameter to factor in camera zoom
 ): number => {
-  const scaleX = screenWidth / sceneWidth;
-  const scaleY = screenHeight / sceneHeight;
+  // Adjust captured dimensions by the zoom factor. Higher zoom means smaller captured area (division).
+  // This effectively magnifies the content.
+  const effectiveCapturedWidth = capturedWidth / cameraZoom;
+  const effectiveCapturedHeight = capturedHeight / cameraZoom;
+
+  const scaleX = screenWidth / effectiveCapturedWidth;
+  const scaleY = screenHeight / effectiveCapturedHeight;
   
-  // Use minimum scale to ensure entire scene fits
+  // Use minimum scale to ensure entire captured area fits (letterboxing/pillarboxing)
   return Math.min(scaleX, scaleY);
 };
 
@@ -224,36 +231,60 @@ export const calculateProjectedLayerPosition = (
   // Use scene dimensions as fallback if camera dimensions are not set
   const cameraWidth = camera.width || sceneWidth;
   const cameraHeight = camera.height || sceneHeight;
+  const cameraZoom = camera.zoom || 1; // Get zoom factor
   
+  // --- Correction pour la position de la caméra ---
+  // Assurer que la position de la caméra a une valeur par défaut de 0.5 (centre) si elle manque.
+  const cameraCenterX = camera.position?.x ?? 0.5;
+  const cameraCenterY = camera.position?.y ?? 0.5;
+  // ----------------------------------------------
+
+
   // Use pre-calculated camera_position if available (preferred)
   // This ensures consistency with backend calculations. camera_position is the layer's
   // top-left position relative to the camera's top-left viewport corner.
   let relativeX: number;
   let relativeY: number;
   
+  // Define the effective camera viewport width/height
+  const effectiveCameraWidth = cameraWidth / cameraZoom;
+  const effectiveCameraHeight = cameraHeight / cameraZoom;
+  
   if (layer.camera_position != null && 
       typeof layer.camera_position.x === 'number' && 
       typeof layer.camera_position.y === 'number') {
-    // Use authoritative camera-relative position from backend
+    // Path 1: Use authoritative camera-relative position from backend
+    // NOTE: We assume layer.camera_position.x/y represents the LAYER'S TOP-LEFT relative to the CAMERA'S TOP-LEFT.
     relativeX = layer.camera_position.x;
     relativeY = layer.camera_position.y;
   } else {
-    // Fallback: Calculate camera viewport's top-left corner in scene coordinates
-    // camera.position.x/y is the camera's center point expressed as a percentage of scene width/height (0.0 to 1.0)
-    const cameraViewportX = (camera.position.x * sceneWidth) - (cameraWidth / 2);
-    const cameraViewportY = (camera.position.y * sceneHeight) - (cameraHeight / 2);
+    // Path 2: Fallback - Calculate position relative to camera from absolute scene coordinates.
     
-    // Get layer position (top-left) relative to camera's top-left
-    relativeX = layer.position.x - cameraViewportX;
-    relativeY = layer.position.y - cameraViewportY;
+    // 1. Calculate layer's true dimensions in scene space (needed for Center -> Top-Left conversion)
+    const layerSceneWidth = (layer.width || 0) * (layer.scale || 1);
+    const layerSceneHeight = (layer.height || 0) * (layer.scale || 1);
+
+    // 2. Assume layer.position (layer.position.x/y) is the CENTER, convert to TOP-LEFT
+    const layerTLX = layer.position.x - (layerSceneWidth / 2);
+    const layerTLY = layer.position.y - (layerSceneHeight / 2);
+    
+    // 3. Calculate camera viewport's top-left corner in scene coordinates
+    // cameraCenterX/Y is the camera's CENTER point (0.0 to 1.0 of sceneWidth/Height)
+    const cameraViewportX = (cameraCenterX * sceneWidth) - (effectiveCameraWidth / 2); // Utilisation de cameraCenterX
+    const cameraViewportY = (cameraCenterY * sceneHeight) - (effectiveCameraHeight / 2); // Utilisation de cameraCenterY
+    
+    // 4. Get layer position (top-left) relative to camera's top-left
+    relativeX = layerTLX - cameraViewportX; // Use layerTLX (Top-Left)
+    relativeY = layerTLY - cameraViewportY; // Use layerTLY (Top-Left)
   }
   
-  // Calculate projection scale
+  // Calculate projection scale, passing the zoom factor
   const projectionScale = calculateProjectionScale(
-    cameraWidth,
-    cameraHeight,
+    cameraWidth, // Passed as "capturedWidth"
+    cameraHeight, // Passed as "capturedHeight"
     screenWidth,
-    screenHeight
+    screenHeight,
+    cameraZoom
   );
   
   // Project onto screen (gives top-left corner position)
@@ -261,8 +292,8 @@ export const calculateProjectedLayerPosition = (
   const projectedY = relativeY * projectionScale;
   
   // Center the projection if screen is larger than needed (letterboxing/pillarboxing)
-  const scaledCameraWidth = cameraWidth * projectionScale;
-  const scaledCameraHeight = cameraHeight * projectionScale;
+  const scaledCameraWidth = effectiveCameraWidth * projectionScale;
+  const scaledCameraHeight = effectiveCameraHeight * projectionScale;
   const offsetX = (screenWidth - scaledCameraWidth) / 2;
   const offsetY = (screenHeight - scaledCameraHeight) / 2;
   
@@ -286,20 +317,24 @@ export const calculateProjectedLayerDimensions = (
   // Use scene dimensions as fallback if camera dimensions are not set
   const cameraWidth = camera.width || sceneWidth;
   const cameraHeight = camera.height || sceneHeight;
-  
+  const cameraZoom = camera.zoom || 1; // Get zoom factor
+
+  // Projection scale must be uniform for both width and height to ensure proportionality.
   const projectionScale = calculateProjectionScale(
     cameraWidth,
     cameraHeight,
     screenWidth,
-    screenHeight
+    screenHeight,
+    cameraZoom
   );
   
   const layerWidth = (layer.width || 0) * (layer.scale || 1);
   const layerHeight = (layer.height || 0) * (layer.scale || 1);
   
   return {
-    width: layerWidth * projectionScale,
-    height: layerHeight * projectionScale
+    // Apply the same uniform scale factor to both width and height (ensures proportionality)
+    width: layer.width,
+    height: layer.height
   };
 };
 
@@ -315,25 +350,40 @@ export const isLayerVisibleInCamera = (
   // Use scene dimensions as fallback if camera dimensions are not set
   const cameraWidth = camera.width || sceneWidth;
   const cameraHeight = camera.height || sceneHeight;
+  const cameraZoom = camera.zoom || 1; // Get zoom factor
   
+  // --- Correction pour la position de la caméra ---
+  const cameraCenterX = camera.position?.x ?? 0.5;
+  const cameraCenterY = camera.position?.y ?? 0.5;
+  // ----------------------------------------------
+
+  // Calculate the effective width/height of the captured area
+  const effectiveCameraWidth = cameraWidth / cameraZoom;
+  const effectiveCameraHeight = cameraHeight / cameraZoom;
+
   // Calculate camera viewport bounds (Top-Left and Bottom-Right)
-  const cameraViewportX = (camera.position.x * sceneWidth) - (cameraWidth / 2);
-  const cameraViewportY = (camera.position.y * sceneHeight) - (cameraHeight / 2);
-  const cameraViewportRight = cameraViewportX + cameraWidth;
-  const cameraViewportBottom = cameraViewportY + cameraHeight;
+  // Camera center position minus half the effective width/height
+  const cameraViewportX = (cameraCenterX * sceneWidth) - (effectiveCameraWidth / 2);
+  const cameraViewportY = (cameraCenterY * sceneHeight) - (effectiveCameraHeight / 2);
+  const cameraViewportRight = cameraViewportX + effectiveCameraWidth;
+  const cameraViewportBottom = cameraViewportY + effectiveCameraHeight;
   
   // Calculate layer bounds (Top-Left and Bottom-Right)
+  // NOTE: Assuming layer.position is the CENTER, we adjust to Top-Left for visibility check
   const layerWidth = (layer.width || 0) * (layer.scale || 1);
   const layerHeight = (layer.height || 0) * (layer.scale || 1);
-  const layerRight = layer.position.x + layerWidth;
-  const layerBottom = layer.position.y + layerHeight;
+  const layerTLX = layer.position.x - (layerWidth / 2);
+  const layerTLY = layer.position.y - (layerHeight / 2);
+
+  const layerRight = layerTLX + layerWidth;
+  const layerBottom = layerTLY + layerHeight;
   
   // Check for overlap (layer is visible if it overlaps with camera viewport)
   // This uses Axis-Aligned Bounding Box (AABB) checking.
   const isOverlapping = !(
-    layer.position.x > cameraViewportRight ||
+    layerTLX > cameraViewportRight ||
     layerRight < cameraViewportX ||
-    layer.position.y > cameraViewportBottom ||
+    layerTLY > cameraViewportBottom ||
     layerBottom < cameraViewportY
   );
   
@@ -343,10 +393,9 @@ export const isLayerVisibleInCamera = (
 /**
  * Project all layers for a scene onto the projection screen
  *
- * NOTE: THIS FUNCTION APPLIES A CORRECTION TO THE POSITION (x, y) BY SUBTRACTING
- * HALF OF THE PROJECTED WIDTH/HEIGHT. This assumes the rendering engine uses 
- * CENTER-ANCHORING for all elements. If your renderer uses TOP-LEFT-ANCHORING,
- * this correction should be REMOVED.
+ * NOTE: This function calculates the TOP-LEFT position for CSS rendering.
+ * The center-to-top-left conversion is now handled in calculateProjectedLayerPosition (fallback path)
+ * or assumed to be handled by layer.camera_position (authoritative path).
  */
 export const projectLayersToScreen = (
   layers: Layer[],
@@ -382,20 +431,11 @@ export const projectLayersToScreen = (
       sceneHeight
     );
     
-    // --- CORRECTION D'ANCRAGE SÉLECTIVE ---
-    // Applique la correction de Top-Left vers Centre UNIQUEMENT pour le texte,
-    // car le moteur de rendu gère les images différemment (Haut-Gauche).
-    if (layer.type === LayerType.TEXT) {
-      const centerXAdjusted = position.x - (dimensions.width / 2);
-      const centerYAdjusted = position.y - (dimensions.height / 2);
-      position.x = centerXAdjusted;
-      position.y = centerYAdjusted;
-    }
-    // ------------------------------------
+    // La position 'position' est déjà le Top-Left projeté. Aucune correction supplémentaire nécessaire ici.
 
     return {
       id: layer.id,
-      position,
+      position, // C'est le coin Top-Left projeté
       width: dimensions.width,
       height: dimensions.height,
       scale: layer.scale || 1,

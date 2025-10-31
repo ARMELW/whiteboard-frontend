@@ -27,7 +27,7 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
   const [img] = useImage(layer.image_path);
   const imageRef = useRef<Konva.Image>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
-  const dragStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const dragStartPosRef = useRef<{ x: number; y: number; currentX?: number; currentY?: number } | null>(null);
 
   React.useEffect(() => {
     if (isSelected && transformerRef.current && imageRef.current && img) {
@@ -37,6 +37,19 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
   }, [isSelected, img]);
 
   if (!img) return null;
+
+  // Calcul de la position absolue de la caméra par défaut en pixels
+  const defaultCamera = sceneCameras?.find((cam: any) => cam.isDefault);
+  const cameraPixelX = defaultCamera ? (defaultCamera.position?.x ?? 0.5) * (defaultCamera.width ?? 1920) : 0;
+  const cameraPixelY = defaultCamera ? (defaultCamera.position?.y ?? 0.5) * (defaultCamera.height ?? 1080) : 0;
+
+  // Position du layer relative à la caméra
+  const cameraPosition = {
+    x: (layer.position?.x ?? 0) - cameraPixelX,
+    y: (layer.position?.y ?? 0) - cameraPixelY
+  };
+
+  // Met à jour camera_position au premier chargement du layer
 
   const dragBoundFunc = (pos: { x: number; y: number }) => {
     const node = imageRef.current;

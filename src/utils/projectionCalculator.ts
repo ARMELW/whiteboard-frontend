@@ -193,6 +193,44 @@ export interface ProjectedLayer {
 // --- PROJECTION FUNCTIONS ---
 
 /**
+ * Helper function to calculate layer's top-left position
+ * Accounts for different positioning systems between layer types
+ * 
+ * Konva Positioning Behavior by Layer Type:
+ * - TEXT: Uses offsetX/offsetY for alignment, position represents the reference point (center by default)
+ * - IMAGE: No offset by default (unless flipped), position represents top-left corner
+ * - SHAPE: Currently uses top-left (same as IMAGE)
+ * - VIDEO: Currently uses top-left (same as IMAGE)
+ * - AUDIO: N/A (audio layers don't have visual positioning)
+ * 
+ * @param layer - The layer to calculate position for
+ * @param layerWidth - The layer's width in scene units
+ * @param layerHeight - The layer's height in scene units
+ * @returns The top-left position { x, y }
+ */
+const calculateLayerTopLeft = (
+  layer: Layer,
+  layerWidth: number,
+  layerHeight: number
+): Position => {
+  if (layer.type === LayerType.TEXT) {
+    // For text, position is the center point (Konva uses offsetX/offsetY for centering)
+    // Convert to top-left for consistent calculations
+    return {
+      x: layer.position.x - (layerWidth / 2),
+      y: layer.position.y - (layerHeight / 2)
+    };
+  } else {
+    // For images, shapes, and other visual types, position is already top-left (Konva default, no offset)
+    // Note: If future layer types use different positioning, add explicit cases here
+    return {
+      x: layer.position.x,
+      y: layer.position.y
+    };
+  }
+};
+
+/**
  * Calculate scale factor to fit scene into projection screen
  * Maintains aspect ratio.
  * Note: sceneWidth/sceneHeight here represents the area CAPTURED by the camera.
@@ -254,28 +292,37 @@ export const calculateProjectedLayerPosition = (
       typeof layer.camera_position.x === 'number' && 
       typeof layer.camera_position.y === 'number') {
     // Path 1: Use authoritative camera-relative position from backend
-    // NOTE: We assume layer.camera_position.x/y represents the LAYER'S TOP-LEFT relative to the CAMERA'S TOP-LEFT.
+    // 
+    // camera_position represents the position of layer.position relative to camera viewport
+    // For all layer types, we use camera_position directly as it represents the same reference point
+    // 
+    // Coordinate System Alignment:
+    // - Backend calculates: camera_position = layer.position - cameraViewportTopLeft
+    // - Frontend stores: layer.position (CENTER for text, TOP-LEFT for images)
+    // - Backend doesn't apply Konva offsets, it just calculates from raw position values
+    // - This is correct because layer.position is stored in the database as-is (the reference point)
+    // - For projection, we need to convert these reference points to TOP-LEFT for CSS rendering
+    //   (this conversion happens later when we project to screen coordinates)
     relativeX = layer.camera_position.x;
     relativeY = layer.camera_position.y;
   } else {
     // Path 2: Fallback - Calculate position relative to camera from absolute scene coordinates.
     
-    // 1. Calculate layer's true dimensions in scene space (needed for Center -> Top-Left conversion)
+    // Calculate layer's scaled dimensions
     const layerSceneWidth = (layer.width || 0) * (layer.scale || 1);
     const layerSceneHeight = (layer.height || 0) * (layer.scale || 1);
-
-    // 2. Assume layer.position (layer.position.x/y) is the CENTER, convert to TOP-LEFT
-    const layerTLX = layer.position.x - (layerSceneWidth / 2);
-    const layerTLY = layer.position.y - (layerSceneHeight / 2);
     
-    // 3. Calculate camera viewport's top-left corner in scene coordinates
+    // Get layer's top-left position (accounts for text vs image positioning)
+    const layerTopLeft = calculateLayerTopLeft(layer, layerSceneWidth, layerSceneHeight);
+    
+    // Calculate camera viewport's top-left corner in scene coordinates
     // cameraCenterX/Y is the camera's CENTER point (0.0 to 1.0 of sceneWidth/Height)
-    const cameraViewportX = (cameraCenterX * sceneWidth) - (effectiveCameraWidth / 2); // Utilisation de cameraCenterX
-    const cameraViewportY = (cameraCenterY * sceneHeight) - (effectiveCameraHeight / 2); // Utilisation de cameraCenterY
+    const cameraViewportX = (cameraCenterX * sceneWidth) - (effectiveCameraWidth / 2);
+    const cameraViewportY = (cameraCenterY * sceneHeight) - (effectiveCameraHeight / 2);
     
-    // 4. Get layer position (top-left) relative to camera's top-left
-    relativeX = layerTLX - cameraViewportX; // Use layerTLX (Top-Left)
-    relativeY = layerTLY - cameraViewportY; // Use layerTLY (Top-Left)
+    // Get layer position (top-left) relative to camera's top-left
+    relativeX = layerTopLeft.x - cameraViewportX;
+    relativeY = layerTopLeft.y - cameraViewportY;
   }
   
   // Calculate projection scale, passing the zoom factor
@@ -370,21 +417,21 @@ export const isLayerVisibleInCamera = (
   const cameraViewportBottom = cameraViewportY + effectiveCameraHeight;
   
   // Calculate layer bounds (Top-Left and Bottom-Right)
-  // NOTE: Assuming layer.position is the CENTER, we adjust to Top-Left for visibility check
   const layerWidth = (layer.width || 0) * (layer.scale || 1);
   const layerHeight = (layer.height || 0) * (layer.scale || 1);
-  const layerTLX = layer.position.x - (layerWidth / 2);
-  const layerTLY = layer.position.y - (layerHeight / 2);
+  
+  // Get layer's top-left position (accounts for text vs image positioning)
+  const layerTopLeft = calculateLayerTopLeft(layer, layerWidth, layerHeight);
 
-  const layerRight = layerTLX + layerWidth;
-  const layerBottom = layerTLY + layerHeight;
+  const layerRight = layerTopLeft.x + layerWidth;
+  const layerBottom = layerTopLeft.y + layerHeight;
   
   // Check for overlap (layer is visible if it overlaps with camera viewport)
   // This uses Axis-Aligned Bounding Box (AABB) checking.
   const isOverlapping = !(
-    layerTLX > cameraViewportRight ||
+    layerTopLeft.x > cameraViewportRight ||
     layerRight < cameraViewportX ||
-    layerTLY > cameraViewportBottom ||
+    layerTopLeft.y > cameraViewportBottom ||
     layerBottom < cameraViewportY
   );
   

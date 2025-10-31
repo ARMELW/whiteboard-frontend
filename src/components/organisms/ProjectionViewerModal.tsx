@@ -19,15 +19,37 @@ export const ProjectionViewerModal: React.FC<ProjectionViewerModalProps> = ({
 }) => {
   const scene = useCurrentScene();
 
+  // Handle escape key to close modal
+  React.useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      window.addEventListener('keydown', handleEscape);
+      return () => window.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-[95vw] max-h-[95vh] overflow-auto">
+    <div 
+      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div 
+        className="bg-white rounded-lg shadow-2xl w-full max-w-[95vw] max-h-[95vh] overflow-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="projection-viewer-title"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-purple-600 to-purple-700 text-white sticky top-0 z-10">
           <div>
-            <h3 className="text-xl font-bold">🎯 Projection Debugger</h3>
+            <h3 id="projection-viewer-title" className="text-xl font-bold">🎯 Projection Debugger</h3>
             <p className="text-sm opacity-90 mt-1">
               Vérifier les coordonnées et positions des layers projetés
             </p>
@@ -36,6 +58,7 @@ export const ProjectionViewerModal: React.FC<ProjectionViewerModalProps> = ({
             onClick={onClose}
             className="p-2 hover:bg-white/20 rounded-lg transition-colors"
             title="Fermer"
+            aria-label="Fermer le debugger de projection"
           >
             <X className="w-6 h-6" />
           </button>

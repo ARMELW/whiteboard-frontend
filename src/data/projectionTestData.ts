@@ -298,7 +298,7 @@ export const testSceneCameraOffset: Scene = {
       name: 'Hidden (Bottom-Right)',
       type: LayerType.TEXT,
       mode: LayerMode.STATIC,
-      position: { x: 1600, y: 900 }, // Should be hidden (outside camera)
+      position: { x: 1700, y: 1000 }, // Should be hidden (outside camera viewport)
       width: 200,
       height: 80,
       z_index: 3,

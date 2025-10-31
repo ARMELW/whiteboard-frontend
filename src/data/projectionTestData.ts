@@ -521,6 +521,225 @@ export const testSceneSmallCamera: Scene = {
 };
 
 /**
+ * Test Case 7: Real Scene Data with Images and Text
+ * - Multiple image layers with actual dimensions and camera positions
+ * - One text layer with actual text configuration
+ * - Tests projection with real content (not placeholders)
+ */
+export const testSceneRealContent: Scene = {
+  id: '2c1299ac-1050-4958-b2b3-41d6b8828115',
+  projectId: 'c3acefb8-f001-42f4-b8d9-38ce66120f7a',
+  title: 'Test 7: Real Content (Images + Text)',
+  content: 'Scene with actual images and text to verify positioning accuracy',
+  duration: 5,
+  animation: 'fade',
+  backgroundImage: null,
+  backgroundColor: '#ffffff',
+  sceneWidth: 1920,
+  sceneHeight: 1080,
+  layers: [
+    {
+      id: '32b84286-f2f9-4ff7-b41b-505aabfedd4e',
+      mode: LayerMode.STATIC,
+      name: 'happy.png',
+      type: LayerType.IMAGE,
+      flipX: false,
+      flipY: false,
+      scale: 0.31983119880247624,
+      width: 205.01179843238728,
+      height: 298.7223396815128,
+      scaleX: 1,
+      scaleY: 1,
+      opacity: 1,
+      z_index: 0,
+      fileName: 'happy.png',
+      position: {
+        x: 772.4046897903114,
+        y: 336.2776603184868
+      },
+      rotation: 0,
+      image_path: '/test-image.png',
+      camera_position: {
+        x: 212.4046897903114,
+        y: 21.277660318486824
+      },
+      visible: true
+    },
+    {
+      id: 'fad6847e-22bf-42d1-bbad-5ed0bdb60939',
+      mode: LayerMode.STATIC,
+      name: 'happy.png',
+      type: LayerType.IMAGE,
+      flipX: false,
+      flipY: false,
+      scale: 0.34322888561771275,
+      width: 220.0097156809539,
+      height: 320.57577916694373,
+      scaleX: 1,
+      scaleY: 1,
+      opacity: 1,
+      z_index: 1,
+      fileName: 'happy.png',
+      position: {
+        x: 1069.4067725417424,
+        y: 326.5598988752353
+      },
+      rotation: 0,
+      image_path: '/test-image.png',
+      camera_position: {
+        x: 509.4067725417424,
+        y: 11.55989887523532
+      },
+      visible: true
+    },
+    {
+      id: 'layer-1761894594345',
+      mode: LayerMode.DRAW,
+      name: 'Texte',
+      type: LayerType.TEXT,
+      audio: {
+        drawing: null,
+        narration: null,
+        typewriter: null,
+        soundEffects: []
+      },
+      scale: 1,
+      width: 431.99999999999994,
+      height: 57.599999999999994,
+      opacity: 1,
+      z_index: 3,
+      position: {
+        x: 737,
+        y: 716
+      },
+      skip_rate: 12,
+      text: 'Votre texte ici',
+      text_config: {
+        font: 'Arial',
+        size: 48,
+        text: 'Votre texte ici',
+        align: 'center',
+        color: [0, 0, 0],
+        style: 'normal',
+        line_height: 1.2
+      },
+      camera_position: {
+        x: 177,
+        y: 401
+      },
+      visible: true
+    }
+  ],
+  cameras: [],
+  sceneCameras: [
+    {
+      id: 'de2471fe-512f-4cdb-816c-12ba00768860',
+      name: 'Vue par défaut',
+      zoom: 1,
+      scale: 1,
+      width: 800,
+      easing: 'ease_out',
+      height: 450,
+      locked: true,
+      duration: 2,
+      position: {
+        x: 0.5,
+        y: 0.5
+      },
+      isDefault: true,
+      movementType: 'ease_out',
+      pauseDuration: 0,
+      transition_duration: 0
+    }
+  ],
+  multiTimeline: {},
+  audio: {},
+  transitionType: 'fade',
+  draggingSpeed: 1,
+  slideDuration: 0,
+  syncSlideWithVoice: false,
+  createdAt: '2025-10-30T17:37:57.214Z',
+  updatedAt: '2025-10-31T16:28:32.007Z'
+};
+
+/**
+ * Test Case 8: Real Scene Data - Small Image
+ * - Single small image layer
+ * - Tests projection with smaller content
+ */
+export const testSceneRealContentSmall: Scene = {
+  id: 'c8444455-8a12-4083-853e-f23d8a05349a',
+  projectId: 'c3acefb8-f001-42f4-b8d9-38ce66120f7a',
+  title: 'Test 8: Real Content (Small Image)',
+  content: 'Scene with a small image to verify scale and positioning',
+  duration: 5,
+  animation: 'fade',
+  backgroundImage: null,
+  backgroundColor: '#f0f0f0',
+  sceneWidth: 1920,
+  sceneHeight: 1080,
+  layers: [
+    {
+      id: '6ebad48f-0f12-40e2-946e-9c4719b6ea02',
+      mode: LayerMode.STATIC,
+      name: 'happy.png',
+      type: LayerType.IMAGE,
+      flipX: false,
+      flipY: false,
+      scale: 0.13306519872172928,
+      width: 85.29479238062846,
+      height: 124.28289560609515,
+      scaleX: 1,
+      scaleY: 1,
+      opacity: 1,
+      z_index: 0,
+      fileName: 'happy.png',
+      position: {
+        x: 632.274281982672,
+        y: 372.6196246050165
+      },
+      rotation: 0,
+      image_path: '/test-image.png',
+      camera_position: {
+        x: 72.27428198267205,
+        y: 57.6196246050165
+      },
+      visible: true
+    }
+  ],
+  cameras: [],
+  sceneCameras: [
+    {
+      id: 'ee096ad9-d94f-45cd-b09d-7bbbd370fe34',
+      name: 'Vue par défaut',
+      zoom: 1,
+      scale: 1,
+      width: 800,
+      easing: 'ease_out',
+      height: 450,
+      locked: true,
+      duration: 2,
+      position: {
+        x: 0.5,
+        y: 0.5
+      },
+      isDefault: true,
+      movementType: 'ease_out',
+      pauseDuration: 0,
+      transition_duration: 0
+    }
+  ],
+  multiTimeline: {},
+  audio: {},
+  transitionType: 'fade',
+  draggingSpeed: 1,
+  slideDuration: 0,
+  syncSlideWithVoice: false,
+  createdAt: '2025-10-31T05:18:41.655Z',
+  updatedAt: '2025-10-31T10:46:37.750Z'
+};
+
+/**
  * All test scenes in a single array
  */
 export const allTestScenes: Scene[] = [
@@ -529,7 +748,9 @@ export const allTestScenes: Scene[] = [
   testSceneCameraZoom,
   testSceneCameraOffset,
   testSceneComplex,
-  testSceneSmallCamera
+  testSceneSmallCamera,
+  testSceneRealContent,
+  testSceneRealContentSmall
 ];
 
 /**

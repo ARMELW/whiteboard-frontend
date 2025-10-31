@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Sparkles } from 'lucide-react';
+import { Menu, X, Pencil } from 'lucide-react';
 import { useState } from 'react';
 
 export function Navbar() {
@@ -14,15 +14,21 @@ export function Navbar() {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b-2 border-gray-900/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
+          <Link to="/" className="flex items-center space-x-2 group">
+            <div 
+              className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center border-2 border-gray-900/10 group-hover:scale-105 transition-transform"
+              style={{ boxShadow: '2px 2px 0px rgba(0, 0, 0, 0.1)' }}
+            >
+              <Pencil className="w-5 h-5 text-white" strokeWidth={2.5} />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span 
+              className="text-2xl font-bold text-gray-900 group-hover:text-amber-600 transition-colors"
+              style={{ fontFamily: "'Caveat', cursive" }}
+            >
               Doodlio
             </span>
           </Link>
@@ -33,9 +39,10 @@ export function Navbar() {
               <a
                 key={link.name}
                 href={link.href}
-                className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                className="text-gray-700 hover:text-amber-600 transition-colors font-medium relative group"
               >
                 {link.name}
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-500 group-hover:w-full transition-all duration-300"></span>
               </a>
             ))}
           </div>
@@ -45,13 +52,14 @@ export function Navbar() {
             <Button
               variant="ghost"
               onClick={() => navigate('/login')}
-              className="text-gray-700 hover:text-blue-600"
+              className="text-gray-700 hover:text-amber-600 font-medium"
             >
               Se connecter
             </Button>
             <Button
               onClick={() => navigate('/signup')}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold border-2 border-gray-900/10 shadow-md hover:shadow-lg transition-all"
+              style={{ boxShadow: '2px 2px 0px rgba(0, 0, 0, 0.1)' }}
             >
               Commencer gratuitement
             </Button>
@@ -95,7 +103,7 @@ export function Navbar() {
                   navigate('/login');
                   setMobileMenuOpen(false);
                 }}
-                className="w-full"
+                className="w-full border-2 hover:border-amber-500 hover:bg-amber-50"
               >
                 Se connecter
               </Button>
@@ -104,7 +112,7 @@ export function Navbar() {
                   navigate('/signup');
                   setMobileMenuOpen(false);
                 }}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-semibold shadow-md"
               >
                 Commencer gratuitement
               </Button>

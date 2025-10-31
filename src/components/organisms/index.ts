@@ -13,3 +13,5 @@ export { default as ContextTabs } from './ContextTabs';
 export { default as MediaLibrary } from './MediaLibrary';
 export { TextEditor } from './TextEditor';
 export { TextLibrary } from './TextLibrary';
+export { ProjectionViewer } from './ProjectionViewer';
+export { default as ProjectionViewerModal } from './ProjectionViewerModal';

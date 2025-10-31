@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
-import { Save, Download, Undo, Redo, FileVideo, Play, Clock, Library, BookmarkPlus, Camera, Plus, ZoomIn, ZoomOut, Lock, Unlock, Sparkles, Loader2, ImageIcon, Check } from 'lucide-react';
+import { Save, Download, Undo, Redo, FileVideo, Play, Clock, Library, BookmarkPlus, Camera, Plus, ZoomIn, ZoomOut, Lock, Unlock, Sparkles, Loader2, ImageIcon, Check, Maximize2 } from 'lucide-react';
 import { useSceneStore, useSaveScene } from '@/app/scenes';
 import { useWizardStore } from '@/app/wizard';
 import { useHistory } from '@/app/history';
@@ -19,6 +19,7 @@ interface AnimationHeaderProps {
   onSaveAsTemplate: () => void;
   onOpenExportModal: () => void;
   onOpenThumbnailMaker?: () => void;
+  onOpenProjectionViewer?: () => void;
   hasCurrentScene: boolean;
   cameras?: CameraType[];
   selectedCameraId?: string | null;
@@ -35,6 +36,7 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
   onSaveAsTemplate,
   onOpenExportModal,
   onOpenThumbnailMaker,
+  onOpenProjectionViewer,
   hasCurrentScene,
   cameras = [],
   selectedCameraId = null,
@@ -252,6 +254,19 @@ const AnimationHeader: React.FC<AnimationHeaderProps> = ({
         >
           <Clock className="w-5 h-5" />
         </button>
+        {onOpenProjectionViewer && (
+          <button
+            onClick={onOpenProjectionViewer}
+            disabled={!hasCurrentScene}
+            className={`p-2 rounded transition-colors ${!hasCurrentScene
+                ? 'text-gray-500 cursor-not-allowed'
+                : 'hover:bg-gray-800 text-gray-300'
+              }`}
+            title="Debugger la projection (vérifier les coordonnées)"
+          >
+            <Maximize2 className="w-5 h-5" />
+          </button>
+        )}
         <div className="h-6 w-px  mx-2" />
 
       </div>

@@ -558,7 +558,7 @@ export const testSceneRealContent: Scene = {
         y: 336.2776603184868
       },
       rotation: 0,
-      image_path: '/test-image.png',
+      image_path: '/happy.png',
       camera_position: {
         x: 212.4046897903114,
         y: 21.277660318486824
@@ -585,7 +585,7 @@ export const testSceneRealContent: Scene = {
         y: 326.5598988752353
       },
       rotation: 0,
-      image_path: '/test-image.png',
+      image_path: '/happy.png',
       camera_position: {
         x: 509.4067725417424,
         y: 11.55989887523532

@@ -118,7 +118,7 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = React.mem
                 <label className="block text-foreground text-xs mb-1.5">Position X</label>
                 <input
                   type="number"
-                  value={Math.round(layer.position?.x || 0)}
+                  value={layer.position?.x !== undefined ? Math.round(layer.position.x) : 0}
                   onChange={(e) => handlePositionChange('x', Number(e.target.value))}
                   className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   disabled={layer.locked}
@@ -128,7 +128,7 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = React.mem
                 <label className="block text-foreground text-xs mb-1.5">Position Y</label>
                 <input
                   type="number"
-                  value={Math.round(layer.position?.y || 0)}
+                  value={layer.position?.y !== undefined ? Math.round(layer.position.y) : 0}
                   onChange={(e) => handlePositionChange('y', Number(e.target.value))}
                   className="w-full bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   disabled={layer.locked}
@@ -172,13 +172,13 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = React.mem
                   <div>
                     <label className="block text-muted-foreground text-xs mb-1">Camera X</label>
                     <div className="bg-background text-foreground border border-border rounded px-3 py-2 text-sm font-mono">
-                      {Math.round(layer.camera_position.x)}
+                      {layer.camera_position.x !== undefined ? Math.round(layer.camera_position.x) : 0}
                     </div>
                   </div>
                   <div>
                     <label className="block text-muted-foreground text-xs mb-1">Camera Y</label>
                     <div className="bg-background text-foreground border border-border rounded px-3 py-2 text-sm font-mono">
-                      {Math.round(layer.camera_position.y)}
+                      {layer.camera_position.y !== undefined ? Math.round(layer.camera_position.y) : 0}
                     </div>
                   </div>
                 </div>

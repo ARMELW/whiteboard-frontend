@@ -55,15 +55,17 @@ interface LayerShapeProps {
   onChange: (layer: ShapeLayer) => void;
   selectedLayerIds?: string[];
   allLayers?: any[];
+  sceneCameras?: any[];
 }
 
-const LayerShape: React.FC<LayerShapeProps> = ({ layer, isSelected, onSelect, onChange, selectedLayerIds = [], allLayers = [] }) => {
+const LayerShape: React.FC<LayerShapeProps> = ({ layer, isSelected, onSelect, onChange, selectedLayerIds = [], allLayers = [], sceneCameras = [] }) => {
   const { shapeRef, transformerRef, handleDragStart, handleDragEnd, handleTransformEnd } = useShapeTransform(
     isSelected,
     layer,
     onChange,
     selectedLayerIds,
-    allLayers
+    allLayers,
+    sceneCameras
   );
 
   if (!layer.shape_config) {

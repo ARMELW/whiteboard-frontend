@@ -3,6 +3,7 @@
  */
 
 import type { Layer } from '@/app/scenes/types';
+import { updateLayerCameraPosition } from './cameraAnimator';
 
 /**
  * Updates the position of a layer based on a delta, handling different layer types
@@ -10,26 +11,36 @@ import type { Layer } from '@/app/scenes/types';
  * @param targetLayer - The layer to update
  * @param deltaX - The change in X position
  * @param deltaY - The change in Y position
+ * @param sceneCameras - Array of cameras in the scene (optional)
  * @returns Updated layer object
  */
 export const updateLayerPosition = (
   targetLayer: Layer,
   deltaX: number,
-  deltaY: number
+  deltaY: number,
+  sceneCameras: any[] = []
 ): Layer => {
+  let updatedLayer: Layer;
+  
   if (targetLayer.type === 'shape' && targetLayer.shape_config) {
     // For shape layers
-    return {
+    const newX = (targetLayer.shape_config.x || 0) + deltaX;
+    const newY = (targetLayer.shape_config.y || 0) + deltaY;
+    updatedLayer = {
       ...targetLayer,
       shape_config: {
         ...targetLayer.shape_config,
-        x: (targetLayer.shape_config.x || 0) + deltaX,
-        y: (targetLayer.shape_config.y || 0) + deltaY
+        x: newX,
+        y: newY
+      },
+      position: {
+        x: newX,
+        y: newY
       }
     };
   } else {
     // For image/text layers
-    return {
+    updatedLayer = {
       ...targetLayer,
       position: {
         x: (targetLayer.position?.x || 0) + deltaX,
@@ -37,6 +48,9 @@ export const updateLayerPosition = (
       }
     };
   }
+
+  // Update camera_position based on new position
+  return updateLayerCameraPosition(updatedLayer, sceneCameras);
 };
 
 /**
@@ -49,6 +63,7 @@ export const updateLayerPosition = (
  * @param deltaX - The change in X position
  * @param deltaY - The change in Y position
  * @param onChange - Callback to apply the changes
+ * @param sceneCameras - Array of cameras in the scene (optional)
  */
 export const applyMultiLayerDrag = (
   selectedLayerIds: string[],
@@ -57,7 +72,8 @@ export const applyMultiLayerDrag = (
   allLayers: Layer[],
   deltaX: number,
   deltaY: number,
-  onChange: (layer: Layer) => void
+  onChange: (layer: Layer) => void,
+  sceneCameras: any[] = []
 ) => {
   // Batch all layer updates to ensure simultaneous movement
   const updatedLayers: Layer[] = [currentLayer]; // Include the dragged layer
@@ -66,7 +82,7 @@ export const applyMultiLayerDrag = (
     if (layerId !== currentLayerId) {
       const targetLayer = allLayers.find(l => l.id === layerId);
       if (targetLayer) {
-        const updatedLayer = updateLayerPosition(targetLayer, deltaX, deltaY);
+        const updatedLayer = updateLayerPosition(targetLayer, deltaX, deltaY, sceneCameras);
         updatedLayers.push(updatedLayer);
       }
     }

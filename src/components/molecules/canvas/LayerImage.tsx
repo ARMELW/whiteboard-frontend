@@ -3,6 +3,7 @@ import { Image as KonvaImage, Transformer } from 'react-konva';
 import useImage from 'use-image';
 import Konva from 'konva';
 import { applyMultiLayerDrag } from '@/utils/multiLayerDrag';
+import { updateLayerCameraPosition } from '@/utils/cameraAnimator';
 
 export interface LayerImageProps {
   layer: any;
@@ -11,6 +12,7 @@ export interface LayerImageProps {
   onChange: (layer: any) => void;
   selectedLayerIds?: string[];
   allLayers?: any[];
+  sceneCameras?: any[];
 }
 
 const LayerImageComponent: React.FC<LayerImageProps> = ({
@@ -19,7 +21,8 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
   onSelect,
   onChange,
   selectedLayerIds = [],
-  allLayers = []
+  allLayers = [],
+  sceneCameras = []
 }) => {
   const [img] = useImage(layer.image_path);
   const imageRef = useRef<Konva.Image>(null);
@@ -104,7 +107,7 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
           const finalX = e.target.x();
           const finalY = e.target.y();
 
-          const updatedLayer = {
+          let updatedLayer = {
             ...layer,
             position: {
               x: finalX,
@@ -112,11 +115,14 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
             }
           };
 
+          // Update camera_position based on new position
+          updatedLayer = updateLayerCameraPosition(updatedLayer, sceneCameras);
+
           if (selectedLayerIds.length > 1 && dragStartPosRef.current) {
             const deltaX = finalX - dragStartPosRef.current.x;
             const deltaY = finalY - dragStartPosRef.current.y;
 
-            applyMultiLayerDrag(selectedLayerIds, layer.id, updatedLayer, allLayers, deltaX, deltaY, onChange);
+            applyMultiLayerDrag(selectedLayerIds, layer.id, updatedLayer, allLayers, deltaX, deltaY, onChange, sceneCameras);
           } else {
             // Single layer drag
             onChange(updatedLayer);
@@ -139,7 +145,7 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
           const newWidth = img.width * newScale;
           const newHeight = img.height * newScale;
 
-          onChange({
+          let updatedLayer = {
             ...layer,
             position: {
               x: node.x(),
@@ -151,7 +157,12 @@ const LayerImageComponent: React.FC<LayerImageProps> = ({
             // Mise à jour de l'échelle
             scale: newScale,
             rotation: node.rotation(),
-          });
+          };
+
+          // Update camera_position based on new position
+          updatedLayer = updateLayerCameraPosition(updatedLayer, sceneCameras);
+          
+          onChange(updatedLayer);
 
           // ESSENTIEL : Réinitialiser le scale du nœud Konva à l'état de base (1 ou -1 pour le flip)
           // Cela force Konva à utiliser la nouvelle valeur 'layer.scale' (qui est dans les props)

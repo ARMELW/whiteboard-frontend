@@ -438,6 +438,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                           }}
                           selectedLayerIds={selectedLayerIds}
                           allLayers={sortedLayers}
+                          sceneCameras={sceneCameras}
                         />
                       );
                     } else if (layer.type === 'shape') {
@@ -450,6 +451,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                           onChange={onUpdateLayer as (layer: any) => void}
                           selectedLayerIds={selectedLayerIds}
                           allLayers={sortedLayers}
+                          sceneCameras={sceneCameras}
                         />
                       );
                     } else {
@@ -462,6 +464,7 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                           onChange={onUpdateLayer as (layer: any) => void}
                           selectedLayerIds={selectedLayerIds}
                           allLayers={sortedLayers}
+                          sceneCameras={sceneCameras}
                         />
                       );
                     }

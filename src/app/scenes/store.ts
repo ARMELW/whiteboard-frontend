@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Scene, Layer, Camera, SceneAudioConfig } from './types';
 import { generateSceneThumbnail } from '../../utils/sceneThumbnail';
 import { generateLayerSnapshotDebounced, shouldRegenerateSnapshot } from '../../utils/layerSnapshot';
+import { updateLayerCameraPosition } from '../../utils/cameraAnimator';
 
 /**
  * UI-only store for scene state
@@ -253,7 +254,7 @@ export const useSceneStore = create<SceneState>((set) => ({
         layers: (s.layers || []).map(l => {
           if (l.id !== layerId) return l;
           
-          const updatedLayer = { ...l, [property]: value };
+          let updatedLayer = { ...l, [property]: value };
           
           // If scale properties are being changed, also update width/height
           if (property === 'scaleX' || property === 'scaleY') {
@@ -289,6 +290,11 @@ export const useSceneStore = create<SceneState>((set) => ({
             
             updatedLayer.width = estimatedWidth;
             updatedLayer.height = estimatedHeight;
+          }
+          
+          // If position is being updated, also recalculate camera_position
+          if (property === 'position' && updatedLayer.position) {
+            updatedLayer = updateLayerCameraPosition(updatedLayer, s.sceneCameras || []);
           }
           
           return updatedLayer;

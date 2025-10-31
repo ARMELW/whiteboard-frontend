@@ -17,6 +17,8 @@
  * @param {string} options.sceneBackgroundImage - Optional scene background image URL to render behind the layer
  * @param {object} options.camera - Camera configuration for viewport-relative export. If provided, layer is positioned relative to camera viewport.
  * @param {boolean} options.useFullScene - If true, exports layer with full scene dimensions and real scene position (ignores camera)
+ * @param {number} options.projectionScreenWidth - Optional projection screen width for proportional scaling (takes precedence over camera dimensions)
+ * @param {number} options.projectionScreenHeight - Optional projection screen height for proportional scaling (takes precedence over camera dimensions)
  * @returns {Promise<string>} Data URL of the exported PNG
  */
 

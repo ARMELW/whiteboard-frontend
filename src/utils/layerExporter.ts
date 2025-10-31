@@ -17,6 +17,8 @@
  * @param {string} options.sceneBackgroundImage - Optional scene background image URL to render behind the layer
  * @param {object} options.camera - Camera configuration for viewport-relative export. If provided, layer is positioned relative to camera viewport.
  * @param {boolean} options.useFullScene - If true, exports layer with full scene dimensions and real scene position (ignores camera)
+ * @param {number} options.projectionScreenWidth - Optional projection screen width for proportional scaling (takes precedence over camera dimensions)
+ * @param {number} options.projectionScreenHeight - Optional projection screen height for proportional scaling (takes precedence over camera dimensions)
  * @returns {Promise<string>} Data URL of the exported PNG
  */
 
@@ -31,6 +33,8 @@ export const exportLayerFromJSON = async (layer, options = {}) => {
     sceneBackgroundImage = null,
     camera = null,
     useFullScene = false,
+    projectionScreenWidth,
+    projectionScreenHeight,
   } = options;
 
   // Determine canvas dimensions
@@ -41,6 +45,10 @@ export const exportLayerFromJSON = async (layer, options = {}) => {
     // Use full scene dimensions for export
     canvasWidth = sceneWidth;
     canvasHeight = sceneHeight;
+  } else if (projectionScreenWidth && projectionScreenHeight) {
+    // Use projection screen dimensions when provided (for proportional scaling)
+    canvasWidth = projectionScreenWidth;
+    canvasHeight = projectionScreenHeight;
   } else if (camera) {
     // Use camera dimensions when camera is provided
     canvasWidth = camera.width || 800;
@@ -74,7 +82,18 @@ export const exportLayerFromJSON = async (layer, options = {}) => {
       await renderBackgroundImage(ctx, sceneBackgroundImage, canvasWidth, canvasHeight);
     } else {
       // For camera mode, render background cropped to camera viewport
-      await renderBackgroundImage(ctx, sceneBackgroundImage, canvasWidth, canvasHeight, camera, sceneWidth, sceneHeight);
+      // Pass projection screen info for proper scaling
+      await renderBackgroundImage(
+        ctx, 
+        sceneBackgroundImage, 
+        canvasWidth, 
+        canvasHeight, 
+        camera, 
+        sceneWidth, 
+        sceneHeight,
+        projectionScreenWidth,
+        projectionScreenHeight
+      );
     }
   }
 
@@ -82,6 +101,7 @@ export const exportLayerFromJSON = async (layer, options = {}) => {
   console.log('Rendering layer:', layer.type, layer);
   try {
     let modifiedLayer;
+    let projectionScale = 1;
     
     if (useFullScene) {
       // Full scene mode: use layer's real scene position
@@ -94,19 +114,37 @@ export const exportLayerFromJSON = async (layer, options = {}) => {
       };
     } else if (camera) {
       // Camera-relative positioning: calculate camera viewport and layer position relative to it
-      const cameraX = (camera.position.x * sceneWidth) - (canvasWidth / 2);
-      const cameraY = (camera.position.y * sceneHeight) - (canvasHeight / 2);
+      const cameraWidth = camera.width || sceneWidth;
+      const cameraHeight = camera.height || sceneHeight;
+      
+      // Calculate projection scale if using projection screen dimensions
+      if (projectionScreenWidth && projectionScreenHeight) {
+        const scaleX = projectionScreenWidth / cameraWidth;
+        const scaleY = projectionScreenHeight / cameraHeight;
+        projectionScale = Math.min(scaleX, scaleY);
+      }
+      
+      const cameraX = (camera.position.x * sceneWidth) - (cameraWidth / 2);
+      const cameraY = (camera.position.y * sceneHeight) - (cameraHeight / 2);
       
       // Calculate layer position relative to camera viewport
       const layerX = (layer.position?.x || 0) - cameraX;
       const layerY = (layer.position?.y || 0) - cameraY;
       
+      // Apply projection scale to position and add centering offset if needed
+      const scaledCameraWidth = cameraWidth * projectionScale;
+      const scaledCameraHeight = cameraHeight * projectionScale;
+      const offsetX = (canvasWidth - scaledCameraWidth) / 2;
+      const offsetY = (canvasHeight - scaledCameraHeight) / 2;
+      
       modifiedLayer = {
         ...layer,
         position: {
-          x: layerX,
-          y: layerY
-        }
+          x: layerX * projectionScale + offsetX,
+          y: layerY * projectionScale + offsetY
+        },
+        // Apply projection scale to layer dimensions as well
+        scale: (layer.scale || 1) * projectionScale
       };
     } else {
       // Legacy behavior: center the layer on the canvas
@@ -152,8 +190,10 @@ export const exportLayerFromJSON = async (layer, options = {}) => {
  * @param {object} camera - Optional camera for viewport cropping
  * @param {number} sceneWidth - Scene width for camera cropping
  * @param {number} sceneHeight - Scene height for camera cropping
+ * @param {number} projectionScreenWidth - Optional projection screen width for scaling
+ * @param {number} projectionScreenHeight - Optional projection screen height for scaling
  */
-const renderBackgroundImage = (ctx, imageUrl, width, height, camera = null, sceneWidth = 1920, sceneHeight = 1080) => {
+const renderBackgroundImage = (ctx, imageUrl, width, height, camera = null, sceneWidth = 1920, sceneHeight = 1080, projectionScreenWidth = null, projectionScreenHeight = null) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -164,25 +204,42 @@ const renderBackgroundImage = (ctx, imageUrl, width, height, camera = null, scen
         
         if (camera) {
           // Camera mode: crop background to camera viewport
+          const cameraWidth = camera.width || sceneWidth;
+          const cameraHeight = camera.height || sceneHeight;
+          
+          // Calculate projection scale if using projection screen dimensions
+          let projectionScale = 1;
+          if (projectionScreenWidth && projectionScreenHeight) {
+            const scaleX = projectionScreenWidth / cameraWidth;
+            const scaleY = projectionScreenHeight / cameraHeight;
+            projectionScale = Math.min(scaleX, scaleY);
+          }
+          
           // Calculate camera viewport in scene coordinates
-          const cameraX = (camera.position.x * sceneWidth) - (width / 2);
-          const cameraY = (camera.position.y * sceneHeight) - (height / 2);
+          const cameraX = (camera.position.x * sceneWidth) - (cameraWidth / 2);
+          const cameraY = (camera.position.y * sceneHeight) - (cameraHeight / 2);
           
           // Scale background image to scene dimensions
           const scaleX = img.width / sceneWidth;
           const scaleY = img.height / sceneHeight;
           
-          // Source rectangle in background image
+          // Source rectangle in background image (based on camera viewport)
           const srcX = cameraX * scaleX;
           const srcY = cameraY * scaleY;
-          const srcWidth = width * scaleX;
-          const srcHeight = height * scaleY;
+          const srcWidth = cameraWidth * scaleX;
+          const srcHeight = cameraHeight * scaleY;
           
-          // Draw cropped section
+          // Calculate destination rectangle with projection scaling
+          const scaledCameraWidth = cameraWidth * projectionScale;
+          const scaledCameraHeight = cameraHeight * projectionScale;
+          const offsetX = (width - scaledCameraWidth) / 2;
+          const offsetY = (height - scaledCameraHeight) / 2;
+          
+          // Draw cropped and scaled section
           ctx.drawImage(
             img,
-            srcX, srcY, srcWidth, srcHeight,  // source rectangle
-            0, 0, width, height                // destination rectangle
+            srcX, srcY, srcWidth, srcHeight,  // source rectangle (camera viewport in scene)
+            offsetX, offsetY, scaledCameraWidth, scaledCameraHeight  // destination rectangle (scaled to projection)
           );
         } else {
           // Full scene mode or legacy: cover entire canvas

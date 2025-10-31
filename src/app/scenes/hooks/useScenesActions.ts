@@ -3,6 +3,7 @@ import { useSceneStore } from '../store';
 import { ScenePayload, Layer, Camera } from '../types';
 import scenesService from '../api/scenesService';
 import { scenesKeys } from '../config';
+import { updateLayerCameraPosition } from '../../../utils/cameraAnimator';
 
 export const useScenesActions = () => {
   const queryClient = useQueryClient();
@@ -215,11 +216,45 @@ export const useScenesActions = () => {
     },
     updateLayerProperty: (sceneId: string, layerId: string, property: string, value: any) => {
       updateLayerProperty(sceneId, layerId, property, value);
-      // Also update backend
+      
+      // Build the layer data to send to the API
+      let layerData: any = { [property]: value };
+      
+      // If position is being updated, also recalculate and send camera_position
+      if (property === 'position' && value) {
+        const scenes = useSceneStore.getState().scenes;
+        const scene = scenes.find(s => s.id === sceneId);
+        if (!scene) {
+          console.warn(`Scene ${sceneId} not found for camera_position calculation`);
+        } else {
+          const layer = scene.layers?.find(l => l.id === layerId);
+          if (!layer) {
+            console.warn(`Layer ${layerId} not found in scene ${sceneId}`);
+          } else {
+            // Calculate camera_position for the new position
+            // We need to pass a layer object to updateLayerCameraPosition, so we create
+            // a temporary one with the updated position to get the correct camera_position
+            const tempLayer = { ...layer, position: value };
+            const updatedLayer = updateLayerCameraPosition(
+              tempLayer, 
+              scene.sceneCameras as any[] || [],
+              scene.sceneWidth || 1920,
+              scene.sceneHeight || 1080
+            );
+            // Include the recalculated camera_position in the API update
+            layerData = {
+              position: value,
+              camera_position: updatedLayer.camera_position
+            };
+          }
+        }
+      }
+      
+      // Send update to backend
       updateLayerMutation.mutate({ 
         sceneId, 
         layerId, 
-        layerData: { [property]: value } 
+        layerData
       });
     },
     deleteLayer: async (params: { sceneId: string; layerId: string }) => {

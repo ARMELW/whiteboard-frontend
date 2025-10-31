@@ -294,7 +294,12 @@ export const useSceneStore = create<SceneState>((set) => ({
           
           // If position is being updated, also recalculate camera_position
           if (property === 'position' && updatedLayer.position) {
-            updatedLayer = updateLayerCameraPosition(updatedLayer, s.sceneCameras || []);
+            updatedLayer = updateLayerCameraPosition(
+              updatedLayer, 
+              s.sceneCameras || [],
+              s.sceneWidth || 1920,
+              s.sceneHeight || 1080
+            );
           }
           
           return updatedLayer;

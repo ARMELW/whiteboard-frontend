@@ -254,28 +254,42 @@ export const calculateProjectedLayerPosition = (
       typeof layer.camera_position.x === 'number' && 
       typeof layer.camera_position.y === 'number') {
     // Path 1: Use authoritative camera-relative position from backend
-    // NOTE: We assume layer.camera_position.x/y represents the LAYER'S TOP-LEFT relative to the CAMERA'S TOP-LEFT.
+    // camera_position represents the position of layer.position relative to camera viewport
+    // For all layer types, we use camera_position directly as it represents the same reference point
+    // The backend calculates it from layer.position without knowing about Konva rendering offsets
     relativeX = layer.camera_position.x;
     relativeY = layer.camera_position.y;
   } else {
     // Path 2: Fallback - Calculate position relative to camera from absolute scene coordinates.
     
-    // 1. Calculate layer's true dimensions in scene space (needed for Center -> Top-Left conversion)
+    // Calculate layer's scaled dimensions
     const layerSceneWidth = (layer.width || 0) * (layer.scale || 1);
     const layerSceneHeight = (layer.height || 0) * (layer.scale || 1);
-
-    // 2. Assume layer.position (layer.position.x/y) is the CENTER, convert to TOP-LEFT
-    const layerTLX = layer.position.x - (layerSceneWidth / 2);
-    const layerTLY = layer.position.y - (layerSceneHeight / 2);
     
-    // 3. Calculate camera viewport's top-left corner in scene coordinates
+    // Determine layer's top-left position based on type
+    // - Images: position is already TOP-LEFT (Konva default, offsetX/Y = 0)
+    // - Text: position is CENTER (Konva renders with offsetY = height/2)
+    let layerTLX: number;
+    let layerTLY: number;
+    
+    if (layer.type === LayerType.TEXT) {
+      // For text, position is the center point - convert to top-left
+      layerTLX = layer.position.x - (layerSceneWidth / 2);
+      layerTLY = layer.position.y - (layerSceneHeight / 2);
+    } else {
+      // For images and other types, position is already top-left
+      layerTLX = layer.position.x;
+      layerTLY = layer.position.y;
+    }
+    
+    // Calculate camera viewport's top-left corner in scene coordinates
     // cameraCenterX/Y is the camera's CENTER point (0.0 to 1.0 of sceneWidth/Height)
-    const cameraViewportX = (cameraCenterX * sceneWidth) - (effectiveCameraWidth / 2); // Utilisation de cameraCenterX
-    const cameraViewportY = (cameraCenterY * sceneHeight) - (effectiveCameraHeight / 2); // Utilisation de cameraCenterY
+    const cameraViewportX = (cameraCenterX * sceneWidth) - (effectiveCameraWidth / 2);
+    const cameraViewportY = (cameraCenterY * sceneHeight) - (effectiveCameraHeight / 2);
     
-    // 4. Get layer position (top-left) relative to camera's top-left
-    relativeX = layerTLX - cameraViewportX; // Use layerTLX (Top-Left)
-    relativeY = layerTLY - cameraViewportY; // Use layerTLY (Top-Left)
+    // Get layer position (top-left) relative to camera's top-left
+    relativeX = layerTLX - cameraViewportX;
+    relativeY = layerTLY - cameraViewportY;
   }
   
   // Calculate projection scale, passing the zoom factor
@@ -370,11 +384,24 @@ export const isLayerVisibleInCamera = (
   const cameraViewportBottom = cameraViewportY + effectiveCameraHeight;
   
   // Calculate layer bounds (Top-Left and Bottom-Right)
-  // NOTE: Assuming layer.position is the CENTER, we adjust to Top-Left for visibility check
   const layerWidth = (layer.width || 0) * (layer.scale || 1);
   const layerHeight = (layer.height || 0) * (layer.scale || 1);
-  const layerTLX = layer.position.x - (layerWidth / 2);
-  const layerTLY = layer.position.y - (layerHeight / 2);
+  
+  // Determine layer's top-left position based on type
+  // - Images: position is already TOP-LEFT (Konva default, offsetX/Y = 0)
+  // - Text: position is CENTER (Konva renders with offsetY = height/2)
+  let layerTLX: number;
+  let layerTLY: number;
+  
+  if (layer.type === LayerType.TEXT) {
+    // For text, position is the center point - convert to top-left
+    layerTLX = layer.position.x - (layerWidth / 2);
+    layerTLY = layer.position.y - (layerHeight / 2);
+  } else {
+    // For images and other types, position is already top-left
+    layerTLX = layer.position.x;
+    layerTLY = layer.position.y;
+  }
 
   const layerRight = layerTLX + layerWidth;
   const layerBottom = layerTLY + layerHeight;

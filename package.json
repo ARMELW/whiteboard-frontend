@@ -8,7 +8,10 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:projection": "playwright test test/projection-system.spec.js",
+    "test:projection:ui": "playwright test test/projection-system.spec.js --ui",
+    "test:projection:headed": "playwright test test/projection-system.spec.js --headed"
   },
   "dependencies": {
     "@better-auth/stripe": "^1.3.32",
@@ -54,6 +57,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4.1.14",
     "@types/howler": "^2.2.12",
     "@types/react": "^19.1.16",

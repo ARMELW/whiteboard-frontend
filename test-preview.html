@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real Scene Preview Demo</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f3f4f6;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #1f2937;
+      margin-bottom: 10px;
+    }
+    .description {
+      color: #6b7280;
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+    .demo-section {
+      background: white;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .demo-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 16px;
+    }
+    .feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .feature-list li {
+      padding: 12px 0;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: start;
+    }
+    .feature-list li:last-child {
+      border-bottom: none;
+    }
+    .feature-icon {
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+    .code-block {
+      background: #1f2937;
+      color: #f3f4f6;
+      padding: 16px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .highlight {
+      background: #22c55e;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: 600;
+    }
+    .alert {
+      background: #dbeafe;
+      border-left: 4px solid #3b82f6;
+      padding: 16px;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+    .alert-title {
+      font-weight: 600;
+      color: #1e40af;
+      margin-bottom: 8px;
+    }
+    .screenshot-placeholder {
+      background: #e5e7eb;
+      border: 2px dashed #9ca3af;
+      border-radius: 8px;
+      padding: 40px;
+      text-align: center;
+      color: #6b7280;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎬 Real Scene Preview Feature - Documentation</h1>
+    <p class="description">
+      A new feature that allows users and developers to view scenes exactly as they will be rendered in the final video export,
+      with optional debugging information to identify position issues.
+    </p>
+
+    <div class="demo-section">
+      <div class="demo-title">✨ Key Features</div>
+      <ul class="feature-list">
+        <li>
+          <span class="feature-icon">📹</span>
+          <div>
+            <strong>Real Scene Preview Mode</strong><br>
+            Toggle between edit mode and real preview mode to see exactly how the scene will appear in the final video
+          </div>
+        </li>
+        <li>
+          <span class="feature-icon">🎯</span>
+          <div>
+            <strong>Camera Viewport Visualization</strong><br>
+            Shows the active camera's viewport with a green dashed border, highlighting what will be visible in the final render
+          </div>
+        </li>
+        <li>
+          <span class="feature-icon">🔍</span>
+          <div>
+            <strong>Position Debug Overlay</strong><br>
+            Displays crosshairs and coordinates for each layer, making it easy to identify positioning errors
+          </div>
+        </li>
+        <li>
+          <span class="feature-icon">🎨</span>
+          <div>
+            <strong>Visual Feedback</strong><br>
+            Layers inside the camera viewport are highlighted in green, while those outside are shown in gray
+          </div>
+        </li>
+        <li>
+          <span class="feature-icon">⚙️</span>
+          <div>
+            <strong>Toggleable Debug Info</strong><br>
+            Debug overlays can be enabled or disabled based on user preference
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="demo-section">
+      <div class="demo-title">🔧 How to Use</div>
+      <ol style="line-height: 2;">
+        <li>Open a scene in the editor</li>
+        <li>Look for the <span class="highlight">Mode Prévisualisation Réelle</span> button in the toolbar below the camera controls</li>
+        <li>Click the button to toggle between Edit Mode and Real Preview Mode</li>
+        <li>In Real Preview Mode:
+          <ul>
+            <li>The camera viewport is highlighted with a green dashed border</li>
+            <li>Position crosshairs appear at the center of each layer</li>
+            <li>Layer names and coordinates are displayed</li>
+            <li>Layers inside the camera view are shown in green, outside in gray</li>
+          </ul>
+        </li>
+        <li>Use the "Afficher les infos de débogage" checkbox to show/hide debug information</li>
+        <li>Select different cameras from the camera selector to see how each camera views the scene</li>
+      </ol>
+    </div>
+
+    <div class="demo-section">
+      <div class="demo-title">💻 Implementation Details</div>
+      <p style="margin-bottom: 16px;">The feature consists of two main components:</p>
+      
+      <h3 style="font-size: 16px; margin: 20px 0 10px;">1. RealScenePreview Component</h3>
+      <p style="color: #6b7280; margin-bottom: 12px;">
+        Location: <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 3px;">src/components/molecules/RealScenePreview.tsx</code>
+      </p>
+      <div class="code-block">
+// Key features:
+- Renders layers without edit controls
+- Calculates camera viewport in scene coordinates
+- Adds debug overlay layer with:
+  * Camera viewport visualization
+  * Position crosshairs for each layer
+  * Coordinate labels
+  * Visual indicators for in/out of view
+      </div>
+
+      <h3 style="font-size: 16px; margin: 20px 0 10px;">2. SceneCanvas Enhancement</h3>
+      <p style="color: #6b7280; margin-bottom: 12px;">
+        Location: <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 3px;">src/components/organisms/SceneCanvas.tsx</code>
+      </p>
+      <div class="code-block">
+// Changes:
+- Added preview mode state management
+- New toolbar with mode toggle button
+- Conditional rendering: edit mode vs preview mode
+- Debug info toggle checkbox
+      </div>
+    </div>
+
+    <div class="alert">
+      <div class="alert-title">💡 Benefits</div>
+      <ul style="margin: 8px 0 0 20px; line-height: 1.8;">
+        <li>Quickly identify position errors without exporting the video</li>
+        <li>Understand how different cameras capture the scene</li>
+        <li>Debug text positioning issues (especially relevant given the text positioning bug history)</li>
+        <li>Verify that all elements are within the camera viewport</li>
+        <li>Improve workflow by providing instant visual feedback</li>
+      </ul>
+    </div>
+
+    <div class="demo-section">
+      <div class="demo-title">🖼️ Visual Example</div>
+      <div class="screenshot-placeholder">
+        <div style="font-size: 48px; margin-bottom: 16px;">📸</div>
+        <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Screenshots will be available after testing</div>
+        <div style="font-size: 14px;">
+          The preview mode shows:<br>
+          • Scene canvas with layers<br>
+          • Green dashed border around camera viewport<br>
+          • Red crosshairs at each layer's position<br>
+          • Position coordinates next to each layer
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-section">
+      <div class="demo-title">🎯 Use Cases</div>
+      <ul style="line-height: 2;">
+        <li><strong>Position Debugging:</strong> Quickly identify if elements are positioned correctly relative to the camera</li>
+        <li><strong>Camera Planning:</strong> Test different camera positions and zoom levels to find the best composition</li>
+        <li><strong>QA Testing:</strong> Verify that scenes render correctly before exporting</li>
+        <li><strong>Learning Tool:</strong> Help new users understand the relationship between scene space and camera viewport</li>
+      </ul>
+    </div>
+
+    <div style="text-align: center; padding: 40px 0; color: #9ca3af;">
+      <p>This feature addresses the issue: "Add real scene preview for position error debugging"</p>
+      <p style="font-size: 14px; margin-top: 8px;">✅ Implemented by GitHub Copilot</p>
+    </div>
+  </div>
+</body>
+</html>

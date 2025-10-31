@@ -19,6 +19,7 @@ export const ProjectionTestPageStandalone: React.FC = () => {
   const [showGrid, setShowGrid] = useState(true);
   const [showCoordinates, setShowCoordinates] = useState(true);
   const [showDebugInfo, setShowDebugInfo] = useState(true);
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   
   const setProjectionScreen = useSceneStore(state => state.setProjectionScreen);
   const scene: Scene = allTestScenes[selectedSceneIndex];
@@ -334,6 +335,17 @@ export const ProjectionTestPageStandalone: React.FC = () => {
               {projectedLayers.map(layer => {
                 const originalLayer = scene.layers?.find(l => l.id === layer.id);
                 const isHovered = hoveredLayerId === layer.id;
+                const isImage = originalLayer?.type === 'image';
+                const isText = originalLayer?.type === 'text';
+
+                // Helper to convert color array to CSS color
+                const getColorFromConfig = (colorConfig: string | number[] | undefined): string => {
+                  if (typeof colorConfig === 'string') return colorConfig;
+                  if (Array.isArray(colorConfig) && colorConfig.length >= 3) {
+                    return `rgb(${colorConfig[0]}, ${colorConfig[1]}, ${colorConfig[2]})`;
+                  }
+                  return '#000000';
+                };
 
                 return layer.isVisible && (
                   <div
@@ -349,32 +361,81 @@ export const ProjectionTestPageStandalone: React.FC = () => {
                       opacity: layer.opacity,
                       transform: `rotate(${layer.rotation || 0}deg)`,
                       transformOrigin: 'center center',
-                      border: isHovered ? '3px solid #00ff00' : '2px dashed rgba(0,123,255,0.6)',
-                      backgroundColor: isHovered ? 'rgba(0,255,0,0.15)' : 'rgba(173,216,230,0.3)',
+                      border: isHovered ? '3px solid #00ff00' : (isImage || isText ? '1px solid rgba(0,123,255,0.3)' : '2px dashed rgba(0,123,255,0.6)'),
+                      backgroundColor: isHovered ? 'rgba(0,255,0,0.15)' : (isImage || isText ? 'transparent' : 'rgba(173,216,230,0.3)'),
                       cursor: 'pointer',
                       transition: 'all 0.2s',
                       boxSizing: 'border-box',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      zIndex: 1
+                      zIndex: originalLayer?.z_index || 1,
+                      overflow: 'visible'
                     }}
                   >
-                    {/* Layer content */}
-                    {originalLayer?.text && (
+                    {/* Image content */}
+                    {isImage && originalLayer?.image_path && (
+                      <>
+                        {!failedImages.has(layer.id) ? (
+                          <img
+                            src={originalLayer.image_path}
+                            alt={originalLayer.name || 'Layer image'}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'contain',
+                              pointerEvents: 'none'
+                            }}
+                            onError={() => {
+                              setFailedImages(prev => new Set(prev).add(layer.id));
+                            }}
+                          />
+                        ) : (
+                          <div style={{
+                            fontSize: '12px',
+                            color: '#666',
+                            textAlign: 'center'
+                          }}>
+                            {originalLayer.fileName || originalLayer.name || 'Image'}
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Text content */}
+                    {isText && originalLayer?.text_config && (
                       <div style={{
-                        fontSize: Math.max(10, Math.min(16, layer.width / 12)),
-                        fontWeight: 'bold',
-                        color: originalLayer.text_config?.color || '#000000',
-                        textAlign: 'center',
-                        textShadow: '0 0 4px white',
-                        padding: 5,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        maxWidth: '100%'
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: originalLayer.text_config.align === 'center' ? 'center' : 
+                                       originalLayer.text_config.align === 'right' ? 'flex-end' : 'flex-start',
+                        fontSize: `${originalLayer.text_config.size || 16}px`,
+                        fontFamily: originalLayer.text_config.font || 'Arial',
+                        fontStyle: originalLayer.text_config.style || 'normal',
+                        color: getColorFromConfig(originalLayer.text_config.color),
+                        textAlign: originalLayer.text_config.align || 'left',
+                        lineHeight: originalLayer.text_config.line_height || 1.2,
+                        padding: '5px',
+                        boxSizing: 'border-box',
+                        wordWrap: 'break-word',
+                        overflow: 'hidden'
                       }}>
-                        {originalLayer.text}
+                        {originalLayer.text_config.text || originalLayer.text || ''}
+                      </div>
+                    )}
+
+                    {/* Fallback for other layer types */}
+                    {!isImage && !isText && (
+                      <div style={{
+                        fontSize: 12,
+                        fontWeight: 'bold',
+                        color: '#666',
+                        textAlign: 'center',
+                        padding: 5
+                      }}>
+                        {originalLayer?.name || `Layer ${layer.id.substring(0, 8)}`}
                       </div>
                     )}
 
@@ -382,7 +443,7 @@ export const ProjectionTestPageStandalone: React.FC = () => {
                     {showCoordinates && isHovered && (
                       <div style={{
                         position: 'absolute',
-                        top: -70,
+                        top: -90,
                         left: '50%',
                         transform: 'translateX(-50%)',
                         backgroundColor: 'rgba(0,0,0,0.9)',
@@ -393,11 +454,15 @@ export const ProjectionTestPageStandalone: React.FC = () => {
                         whiteSpace: 'nowrap',
                         zIndex: 1000,
                         pointerEvents: 'none',
-                        fontFamily: 'monospace'
+                        fontFamily: 'monospace',
+                        boxShadow: '0 4px 8px rgba(0,0,0,0.5)'
                       }}>
                         <div><strong>{originalLayer?.name}</strong></div>
+                        <div>Type: {originalLayer?.type}</div>
                         <div>Scene: ({Math.round(originalLayer?.position.x || 0)}, {Math.round(originalLayer?.position.y || 0)})</div>
+                        <div>Camera Pos: ({Math.round(originalLayer?.camera_position?.x || 0)}, {Math.round(originalLayer?.camera_position?.y || 0)})</div>
                         <div>Projected: ({Math.round(layer.position.x)}, {Math.round(layer.position.y)})</div>
+                        <div>Scene Size: {Math.round(originalLayer?.width || 0)}×{Math.round(originalLayer?.height || 0)}</div>
                         <div>Proj Size: {Math.round(layer.width)}×{Math.round(layer.height)}</div>
                         <div>Layer Scale: {layer.scale}x</div>
                       </div>

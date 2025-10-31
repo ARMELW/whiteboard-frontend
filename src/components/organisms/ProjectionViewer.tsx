@@ -51,6 +51,16 @@ export const ProjectionViewer: React.FC<ProjectionViewerProps> = ({
   const visibleLayers = projectedLayers.filter(l => l.isVisible);
   const hiddenLayers = projectedLayers.filter(l => !l.isVisible);
 
+  // Calculate display scale to fit large projections in the viewer
+  // This scales the entire canvas uniformly while maintaining correct proportions
+  const maxDisplayWidth = 1200;
+  const maxDisplayHeight = 675;
+  const displayScale = Math.min(
+    1, // Don't scale up, only scale down
+    maxDisplayWidth / screenWidth,
+    maxDisplayHeight / screenHeight
+  );
+
   return (
     <div className="projection-viewer" style={{ padding: 20, backgroundColor: '#f5f5f5' }}>
       {/* Controls */}
@@ -110,17 +120,27 @@ export const ProjectionViewer: React.FC<ProjectionViewerProps> = ({
         padding: 20,
         borderRadius: 8
       }}>
-        <div style={{ 
-          position: 'relative',
-          width: Math.min(screenWidth, 1200),
-          height: Math.min(screenHeight, 675),
-          backgroundColor: scene.backgroundColor || '#ffffff',
-          backgroundImage: scene.backgroundImage ? `url(${scene.backgroundImage})` : undefined,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-          overflow: 'hidden'
+        {/* Wrapper to handle scaled dimensions */}
+        <div style={{
+          width: `${screenWidth * displayScale}px`,
+          height: `${screenHeight * displayScale}px`,
+          position: 'relative'
         }}>
+          <div style={{ 
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: `${screenWidth}px`,
+            height: `${screenHeight}px`,
+            backgroundColor: scene.backgroundColor || '#ffffff',
+            backgroundImage: scene.backgroundImage ? `url(${scene.backgroundImage})` : undefined,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            overflow: 'hidden',
+            transform: `scale(${displayScale})`,
+            transformOrigin: 'top left'
+          }}>
           {/* Grid */}
           {showGrid && (
             <svg 
@@ -165,7 +185,6 @@ export const ProjectionViewer: React.FC<ProjectionViewerProps> = ({
           {/* Projected Layers */}
           {projectedLayers.map(layer => {
             const isHovered = hoveredLayerId === layer.id;
-            const displayScale = Math.min(screenWidth, 1200) / screenWidth;
             
             return layer.isVisible && (
               <div
@@ -174,10 +193,10 @@ export const ProjectionViewer: React.FC<ProjectionViewerProps> = ({
                 onMouseLeave={() => setHoveredLayerId(null)}
                 style={{
                   position: 'absolute',
-                  left: layer.position.x * displayScale,
-                  top: layer.position.y * displayScale,
-                  width: layer.width * displayScale,
-                  height: layer.height * displayScale,
+                  left: `${layer.position.x}px`,
+                  top: `${layer.position.y}px`,
+                  width: `${layer.width}px`,
+                  height: `${layer.height}px`,
                   opacity: layer.opacity,
                   transform: `rotate(${layer.rotation || 0}deg)`,
                   border: isHovered ? '2px solid #00ff00' : '1px dashed rgba(0,123,255,0.5)',
@@ -187,7 +206,7 @@ export const ProjectionViewer: React.FC<ProjectionViewerProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: Math.max(10, 12 * displayScale),
+                  fontSize: Math.max(10, 12),
                   fontWeight: 'bold',
                   color: isHovered ? '#00ff00' : '#0066cc',
                   textShadow: '0 0 3px white',
@@ -225,22 +244,24 @@ export const ProjectionViewer: React.FC<ProjectionViewerProps> = ({
             );
           })}
 
-          {/* Bounds indicator */}
-          {showBounds && (
-            <div style={{
-              position: 'absolute',
-              bottom: 10,
-              right: 10,
-              backgroundColor: 'rgba(0,0,0,0.7)',
-              color: 'white',
-              padding: '8px 12px',
-              borderRadius: 4,
-              fontSize: 11,
-              fontFamily: 'monospace'
-            }}>
-              Canvas: {Math.min(screenWidth, 1200)}×{Math.min(screenHeight, 675)}
-            </div>
-          )}
+            {/* Bounds indicator */}
+            {showBounds && (
+              <div style={{
+                position: 'absolute',
+                bottom: 10,
+                right: 10,
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                color: 'white',
+                padding: '8px 12px',
+                borderRadius: 4,
+                fontSize: 11,
+                fontFamily: 'monospace'
+              }}>
+                Canvas: {screenWidth}×{screenHeight}
+                {displayScale < 1 && ` (scaled ${(displayScale * 100).toFixed(0)}%)`}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

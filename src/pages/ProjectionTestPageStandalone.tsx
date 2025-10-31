@@ -19,6 +19,7 @@ export const ProjectionTestPageStandalone: React.FC = () => {
   const [showGrid, setShowGrid] = useState(true);
   const [showCoordinates, setShowCoordinates] = useState(true);
   const [showDebugInfo, setShowDebugInfo] = useState(true);
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   
   const setProjectionScreen = useSceneStore(state => state.setProjectionScreen);
   const scene: Scene = allTestScenes[selectedSceneIndex];
@@ -338,7 +339,7 @@ export const ProjectionTestPageStandalone: React.FC = () => {
                 const isText = originalLayer?.type === 'text';
 
                 // Helper to convert color array to CSS color
-                const getColorFromConfig = (colorConfig: any): string => {
+                const getColorFromConfig = (colorConfig: string | number[] | undefined): string => {
                   if (typeof colorConfig === 'string') return colorConfig;
                   if (Array.isArray(colorConfig) && colorConfig.length >= 3) {
                     return `rgb(${colorConfig[0]}, ${colorConfig[1]}, ${colorConfig[2]})`;
@@ -374,29 +375,31 @@ export const ProjectionTestPageStandalone: React.FC = () => {
                   >
                     {/* Image content */}
                     {isImage && originalLayer?.image_path && (
-                      <img
-                        src={originalLayer.image_path}
-                        alt={originalLayer.name || 'Layer image'}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'contain',
-                          pointerEvents: 'none'
-                        }}
-                        onError={(e) => {
-                          // Fallback if image fails to load
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          // Show filename instead
-                          const parent = target.parentElement;
-                          if (parent) {
-                            const fallback = document.createElement('div');
-                            fallback.textContent = originalLayer.fileName || originalLayer.name || 'Image';
-                            fallback.style.cssText = 'font-size: 12px; color: #666; text-align: center;';
-                            parent.appendChild(fallback);
-                          }
-                        }}
-                      />
+                      <>
+                        {!failedImages.has(layer.id) ? (
+                          <img
+                            src={originalLayer.image_path}
+                            alt={originalLayer.name || 'Layer image'}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'contain',
+                              pointerEvents: 'none'
+                            }}
+                            onError={() => {
+                              setFailedImages(prev => new Set(prev).add(layer.id));
+                            }}
+                          />
+                        ) : (
+                          <div style={{
+                            fontSize: '12px',
+                            color: '#666',
+                            textAlign: 'center'
+                          }}>
+                            {originalLayer.fileName || originalLayer.name || 'Image'}
+                          </div>
+                        )}
+                      </>
                     )}
 
                     {/* Text content */}

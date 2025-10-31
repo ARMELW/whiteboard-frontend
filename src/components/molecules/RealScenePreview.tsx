@@ -1,7 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Stage, Layer as KonvaLayer, Rect, Text as KonvaText, Group } from 'react-konva';
-import { LayerImage, LayerText } from './';
+import Konva from 'konva';
+import { LayerImage } from './canvas/LayerImage';
+import { LayerText } from './canvas/LayerText';
 import LayerShape from '../LayerShape';
+import { ShapeLayer } from '../../utils/shapeUtils';
 import type { Scene, Layer, Camera } from '../../app/scenes/types';
 
 interface RealScenePreviewProps {
@@ -26,7 +29,7 @@ const RealScenePreview: React.FC<RealScenePreviewProps> = ({
   zoom,
   showDebugInfo = true
 }) => {
-  const stageRef = useRef(null);
+  const stageRef = useRef<Konva.Stage>(null);
   const [cameraViewport, setCameraViewport] = useState<{
     x: number;
     y: number;
@@ -108,7 +111,7 @@ const RealScenePreview: React.FC<RealScenePreviewProps> = ({
               return (
                 <LayerShape
                   key={layer.id}
-                  layer={layer as any}
+                  layer={layer as ShapeLayer}
                   isSelected={false}
                   onSelect={() => {}}
                   onChange={() => {}}

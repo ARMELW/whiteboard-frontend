@@ -203,21 +203,30 @@ export const ProjectionViewer: React.FC<ProjectionViewerProps> = ({
                   backgroundColor: isHovered ? 'rgba(0,255,0,0.1)' : 'rgba(173,216,230,0.3)',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: Math.max(10, 12),
-                  fontWeight: 'bold',
-                  color: isHovered ? '#00ff00' : '#0066cc',
-                  textShadow: '0 0 3px white',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  padding: 5
+                  boxSizing: 'border-box',
+                  overflow: 'visible'
                 }}
               >
-                {/* Find original layer to get name */}
-                {scene.layers?.find(l => l.id === layer.id)?.name || layer.id}
+                {/* Layer name label - positioned outside to not affect layer box size */}
+                {layer.width > 40 && layer.height > 20 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    fontSize: Math.max(8, Math.min(12, layer.width / 15)),
+                    fontWeight: 'bold',
+                    color: isHovered ? '#00ff00' : '#0066cc',
+                    textShadow: '0 0 3px white',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '90%',
+                    pointerEvents: 'none'
+                  }}>
+                    {scene.layers?.find(l => l.id === layer.id)?.name || layer.id}
+                  </div>
+                )}
                 
                 {/* Coordinates tooltip */}
                 {showCoordinates && isHovered && (

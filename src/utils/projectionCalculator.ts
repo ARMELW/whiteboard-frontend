@@ -195,6 +195,14 @@ export interface ProjectedLayer {
 /**
  * Helper function to calculate layer's top-left position
  * Accounts for different positioning systems between layer types
+ * 
+ * Konva Positioning Behavior by Layer Type:
+ * - TEXT: Uses offsetX/offsetY for alignment, position represents the reference point (center by default)
+ * - IMAGE: No offset by default (unless flipped), position represents top-left corner
+ * - SHAPE: Currently uses top-left (same as IMAGE)
+ * - VIDEO: Currently uses top-left (same as IMAGE)
+ * - AUDIO: N/A (audio layers don't have visual positioning)
+ * 
  * @param layer - The layer to calculate position for
  * @param layerWidth - The layer's width in scene units
  * @param layerHeight - The layer's height in scene units
@@ -213,7 +221,8 @@ const calculateLayerTopLeft = (
       y: layer.position.y - (layerHeight / 2)
     };
   } else {
-    // For images and other types, position is already top-left (Konva default, no offset)
+    // For images, shapes, and other visual types, position is already top-left (Konva default, no offset)
+    // Note: If future layer types use different positioning, add explicit cases here
     return {
       x: layer.position.x,
       y: layer.position.y
@@ -283,9 +292,17 @@ export const calculateProjectedLayerPosition = (
       typeof layer.camera_position.x === 'number' && 
       typeof layer.camera_position.y === 'number') {
     // Path 1: Use authoritative camera-relative position from backend
+    // 
     // camera_position represents the position of layer.position relative to camera viewport
     // For all layer types, we use camera_position directly as it represents the same reference point
-    // The backend calculates it from layer.position without knowing about Konva rendering offsets
+    // 
+    // Coordinate System Alignment:
+    // - Backend calculates: camera_position = layer.position - cameraViewportTopLeft
+    // - Frontend stores: layer.position (CENTER for text, TOP-LEFT for images)
+    // - Backend doesn't apply Konva offsets, it just calculates from raw position values
+    // - This is correct because layer.position is stored in the database as-is (the reference point)
+    // - For projection, we need to convert these reference points to TOP-LEFT for CSS rendering
+    //   (this conversion happens later when we project to screen coordinates)
     relativeX = layer.camera_position.x;
     relativeY = layer.camera_position.y;
   } else {

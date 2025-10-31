@@ -55,6 +55,10 @@ export const calculateProjectedLayerPosition = (
   screenWidth: number,
   screenHeight: number
 ): ProjectedPosition => {
+  // Use scene dimensions as fallback if camera dimensions are not set
+  const cameraWidth = camera.width || sceneWidth;
+  const cameraHeight = camera.height || sceneHeight;
+  
   // Use pre-calculated camera_position if available (preferred)
   // This ensures consistency with backend calculations
   let relativeX: number;
@@ -68,8 +72,8 @@ export const calculateProjectedLayerPosition = (
     relativeY = layer.camera_position.y;
   } else {
     // Fallback: Calculate camera viewport in scene coordinates
-    const cameraViewportX = (camera.position.x * sceneWidth) - (camera.width / 2);
-    const cameraViewportY = (camera.position.y * sceneHeight) - (camera.height / 2);
+    const cameraViewportX = (camera.position.x * sceneWidth) - (cameraWidth / 2);
+    const cameraViewportY = (camera.position.y * sceneHeight) - (cameraHeight / 2);
     
     // Get layer position relative to camera
     relativeX = layer.position.x - cameraViewportX;
@@ -78,8 +82,8 @@ export const calculateProjectedLayerPosition = (
   
   // Calculate projection scale
   const projectionScale = calculateProjectionScale(
-    camera.width,
-    camera.height,
+    cameraWidth,
+    cameraHeight,
     screenWidth,
     screenHeight
   );
@@ -89,8 +93,8 @@ export const calculateProjectedLayerPosition = (
   const projectedY = relativeY * projectionScale;
   
   // Center the projection if screen is larger than needed
-  const scaledCameraWidth = camera.width * projectionScale;
-  const scaledCameraHeight = camera.height * projectionScale;
+  const scaledCameraWidth = cameraWidth * projectionScale;
+  const scaledCameraHeight = cameraHeight * projectionScale;
   const offsetX = (screenWidth - scaledCameraWidth) / 2;
   const offsetY = (screenHeight - scaledCameraHeight) / 2;
   
@@ -111,9 +115,13 @@ export const calculateProjectedLayerDimensions = (
   screenWidth: number,
   screenHeight: number
 ): ProjectionDimensions => {
+  // Use scene dimensions as fallback if camera dimensions are not set
+  const cameraWidth = camera.width || sceneWidth;
+  const cameraHeight = camera.height || sceneHeight;
+  
   const projectionScale = calculateProjectionScale(
-    camera.width,
-    camera.height,
+    cameraWidth,
+    cameraHeight,
     screenWidth,
     screenHeight
   );
@@ -136,11 +144,15 @@ export const isLayerVisibleInCamera = (
   sceneWidth: number,
   sceneHeight: number
 ): boolean => {
+  // Use scene dimensions as fallback if camera dimensions are not set
+  const cameraWidth = camera.width || sceneWidth;
+  const cameraHeight = camera.height || sceneHeight;
+  
   // Calculate camera viewport bounds
-  const cameraViewportX = (camera.position.x * sceneWidth) - (camera.width / 2);
-  const cameraViewportY = (camera.position.y * sceneHeight) - (camera.height / 2);
-  const cameraViewportRight = cameraViewportX + camera.width;
-  const cameraViewportBottom = cameraViewportY + camera.height;
+  const cameraViewportX = (camera.position.x * sceneWidth) - (cameraWidth / 2);
+  const cameraViewportY = (camera.position.y * sceneHeight) - (cameraHeight / 2);
+  const cameraViewportRight = cameraViewportX + cameraWidth;
+  const cameraViewportBottom = cameraViewportY + cameraHeight;
   
   // Calculate layer bounds
   const layerWidth = (layer.width || 0) * (layer.scale || 1);

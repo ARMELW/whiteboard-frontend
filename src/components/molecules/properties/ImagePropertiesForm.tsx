@@ -163,6 +163,27 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = React.mem
                 />
               </div>
             </div>
+            {layer.camera_position && (
+              <div className="p-3 bg-secondary/50 rounded border border-border">
+                <label className="block text-foreground text-xs font-medium mb-2">
+                  Position relative to camera
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-muted-foreground text-xs mb-1">Camera X</label>
+                    <div className="bg-background text-foreground border border-border rounded px-3 py-2 text-sm font-mono">
+                      {Math.round(layer.camera_position.x)}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-muted-foreground text-xs mb-1">Camera Y</label>
+                    <div className="bg-background text-foreground border border-border rounded px-3 py-2 text-sm font-mono">
+                      {Math.round(layer.camera_position.y)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             <div>
               <label className="block text-foreground text-xs mb-1.5">
                 Échelle: <span className="font-mono">{(layer.scale || 1.0).toFixed(2)}</span>

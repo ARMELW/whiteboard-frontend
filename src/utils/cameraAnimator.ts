@@ -275,6 +275,31 @@ export const normalizePosition = (position: Position): Position => {
   };
 };
 
+/**
+ * Calculate layer position relative to camera viewport
+ * @param {object} layerPosition - Layer position in scene coordinates {x, y}
+ * @param {object} camera - Camera configuration
+ * @param {number} sceneWidth - Scene width in pixels
+ * @param {number} sceneHeight - Scene height in pixels
+ * @returns {object} Position relative to camera viewport {x, y}
+ */
+export const calculateCameraRelativePosition = (
+  layerPosition: Position,
+  camera: Camera,
+  sceneWidth: number = 1920,
+  sceneHeight: number = 1080
+): Position => {
+  // Calculate camera viewport top-left corner in scene coordinates
+  const cameraX = (camera.position.x * sceneWidth) - (camera.width / 2);
+  const cameraY = (camera.position.y * sceneHeight) - (camera.height / 2);
+  
+  // Calculate layer position relative to camera viewport
+  return {
+    x: layerPosition.x - cameraX,
+    y: layerPosition.y - cameraY,
+  };
+};
+
 export default {
   createCamera,
   createDefaultCamera,
@@ -284,5 +309,6 @@ export default {
   getLayerAnimationState,
   validateCamera,
   normalizePosition,
+  calculateCameraRelativePosition,
   DEFAULT_CAMERA,
 };

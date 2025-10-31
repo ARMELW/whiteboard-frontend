@@ -193,6 +193,35 @@ export interface ProjectedLayer {
 // --- PROJECTION FUNCTIONS ---
 
 /**
+ * Helper function to calculate layer's top-left position
+ * Accounts for different positioning systems between layer types
+ * @param layer - The layer to calculate position for
+ * @param layerWidth - The layer's width in scene units
+ * @param layerHeight - The layer's height in scene units
+ * @returns The top-left position { x, y }
+ */
+const calculateLayerTopLeft = (
+  layer: Layer,
+  layerWidth: number,
+  layerHeight: number
+): Position => {
+  if (layer.type === LayerType.TEXT) {
+    // For text, position is the center point (Konva uses offsetX/offsetY for centering)
+    // Convert to top-left for consistent calculations
+    return {
+      x: layer.position.x - (layerWidth / 2),
+      y: layer.position.y - (layerHeight / 2)
+    };
+  } else {
+    // For images and other types, position is already top-left (Konva default, no offset)
+    return {
+      x: layer.position.x,
+      y: layer.position.y
+    };
+  }
+};
+
+/**
  * Calculate scale factor to fit scene into projection screen
  * Maintains aspect ratio.
  * Note: sceneWidth/sceneHeight here represents the area CAPTURED by the camera.
@@ -266,21 +295,8 @@ export const calculateProjectedLayerPosition = (
     const layerSceneWidth = (layer.width || 0) * (layer.scale || 1);
     const layerSceneHeight = (layer.height || 0) * (layer.scale || 1);
     
-    // Determine layer's top-left position based on type
-    // - Images: position is already TOP-LEFT (Konva default, offsetX/Y = 0)
-    // - Text: position is CENTER (Konva renders with offsetY = height/2)
-    let layerTLX: number;
-    let layerTLY: number;
-    
-    if (layer.type === LayerType.TEXT) {
-      // For text, position is the center point - convert to top-left
-      layerTLX = layer.position.x - (layerSceneWidth / 2);
-      layerTLY = layer.position.y - (layerSceneHeight / 2);
-    } else {
-      // For images and other types, position is already top-left
-      layerTLX = layer.position.x;
-      layerTLY = layer.position.y;
-    }
+    // Get layer's top-left position (accounts for text vs image positioning)
+    const layerTopLeft = calculateLayerTopLeft(layer, layerSceneWidth, layerSceneHeight);
     
     // Calculate camera viewport's top-left corner in scene coordinates
     // cameraCenterX/Y is the camera's CENTER point (0.0 to 1.0 of sceneWidth/Height)
@@ -288,8 +304,8 @@ export const calculateProjectedLayerPosition = (
     const cameraViewportY = (cameraCenterY * sceneHeight) - (effectiveCameraHeight / 2);
     
     // Get layer position (top-left) relative to camera's top-left
-    relativeX = layerTLX - cameraViewportX;
-    relativeY = layerTLY - cameraViewportY;
+    relativeX = layerTopLeft.x - cameraViewportX;
+    relativeY = layerTopLeft.y - cameraViewportY;
   }
   
   // Calculate projection scale, passing the zoom factor
@@ -387,31 +403,18 @@ export const isLayerVisibleInCamera = (
   const layerWidth = (layer.width || 0) * (layer.scale || 1);
   const layerHeight = (layer.height || 0) * (layer.scale || 1);
   
-  // Determine layer's top-left position based on type
-  // - Images: position is already TOP-LEFT (Konva default, offsetX/Y = 0)
-  // - Text: position is CENTER (Konva renders with offsetY = height/2)
-  let layerTLX: number;
-  let layerTLY: number;
-  
-  if (layer.type === LayerType.TEXT) {
-    // For text, position is the center point - convert to top-left
-    layerTLX = layer.position.x - (layerWidth / 2);
-    layerTLY = layer.position.y - (layerHeight / 2);
-  } else {
-    // For images and other types, position is already top-left
-    layerTLX = layer.position.x;
-    layerTLY = layer.position.y;
-  }
+  // Get layer's top-left position (accounts for text vs image positioning)
+  const layerTopLeft = calculateLayerTopLeft(layer, layerWidth, layerHeight);
 
-  const layerRight = layerTLX + layerWidth;
-  const layerBottom = layerTLY + layerHeight;
+  const layerRight = layerTopLeft.x + layerWidth;
+  const layerBottom = layerTopLeft.y + layerHeight;
   
   // Check for overlap (layer is visible if it overlaps with camera viewport)
   // This uses Axis-Aligned Bounding Box (AABB) checking.
   const isOverlapping = !(
-    layerTLX > cameraViewportRight ||
+    layerTopLeft.x > cameraViewportRight ||
     layerRight < cameraViewportX ||
-    layerTLY > cameraViewportBottom ||
+    layerTopLeft.y > cameraViewportBottom ||
     layerBottom < cameraViewportY
   );
   

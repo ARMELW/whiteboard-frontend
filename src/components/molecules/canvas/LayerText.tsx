@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Text, Transformer } from 'react-konva';
 import Konva from 'konva';
 import { applyMultiLayerDrag } from '@/utils/multiLayerDrag';
+import { updateLayerCameraPosition } from '@/utils/cameraAnimator';
 
 export interface LayerTextProps {
   layer: any;
@@ -12,6 +13,7 @@ export interface LayerTextProps {
   onStopEditing?: () => void;
   selectedLayerIds?: string[];
   allLayers?: any[];
+  sceneCameras?: any[];
 }
 
 export const LayerText: React.FC<LayerTextProps> = ({ 
@@ -22,7 +24,8 @@ export const LayerText: React.FC<LayerTextProps> = ({
   onStartEditing,
   onStopEditing,
   selectedLayerIds = [],
-  allLayers = []
+  allLayers = [],
+  sceneCameras = []
 }) => {
   const textRef = useRef<Konva.Text>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
@@ -143,20 +146,23 @@ export const LayerText: React.FC<LayerTextProps> = ({
           const finalX = e.target.x();
           const finalY = e.target.y();
           
-          const updatedLayer = {
+          let updatedLayer = {
             ...layer,
             position: {
               x: finalX,
               y: finalY,
             }
           };
+
+          // Update camera_position based on new position
+          updatedLayer = updateLayerCameraPosition(updatedLayer, sceneCameras);
           
           // If multiple layers were selected, batch all updates together
           if (selectedLayerIds.length > 1 && dragStartPosRef.current) {
             const deltaX = finalX - dragStartPosRef.current.x;
             const deltaY = finalY - dragStartPosRef.current.y;
             
-            applyMultiLayerDrag(selectedLayerIds, layer.id, updatedLayer, allLayers, deltaX, deltaY, onChange);
+            applyMultiLayerDrag(selectedLayerIds, layer.id, updatedLayer, allLayers, deltaX, deltaY, onChange, sceneCameras);
           } else {
             // Single layer drag
             onChange(updatedLayer);
@@ -180,7 +186,7 @@ export const LayerText: React.FC<LayerTextProps> = ({
           const newScaleX = currentScaleX * transformScaleX;
           const newScaleY = currentScaleY * transformScaleY;
           
-          onChange({
+          let updatedLayer = {
             ...layer,
             position: {
               x: node.x(),
@@ -192,7 +198,12 @@ export const LayerText: React.FC<LayerTextProps> = ({
             scaleX: newScaleX, // Update scaleX to reflect resize
             scaleY: newScaleY, // Update scaleY to reflect resize
             rotation: node.rotation(),
-          });
+          };
+
+          // Update camera_position based on new position
+          updatedLayer = updateLayerCameraPosition(updatedLayer, sceneCameras);
+          
+          onChange(updatedLayer);
           node.scaleX(1);
           node.scaleY(1);
           // Keep selection after transform

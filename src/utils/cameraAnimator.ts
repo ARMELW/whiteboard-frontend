@@ -300,6 +300,39 @@ export const calculateCameraRelativePosition = (
   };
 };
 
+/**
+ * Update a layer with a new camera_position based on its current position
+ * This function finds the default camera and recalculates the camera_position
+ * @param {object} layer - The layer to update
+ * @param {array} cameras - Array of cameras in the scene
+ * @param {number} sceneWidth - Scene width in pixels
+ * @param {number} sceneHeight - Scene height in pixels
+ * @returns {object} Updated layer with recalculated camera_position
+ */
+export const updateLayerCameraPosition = (
+  layer: any,
+  cameras: Camera[] = [],
+  sceneWidth: number = 1920,
+  sceneHeight: number = 1080
+): any => {
+  // Find the default camera
+  const defaultCamera = cameras.find(cam => cam.isDefault === true) || createDefaultCamera('16:9');
+  
+  // Calculate the new camera_position based on current layer position
+  const cameraPosition = calculateCameraRelativePosition(
+    layer.position,
+    defaultCamera,
+    sceneWidth,
+    sceneHeight
+  );
+  
+  // Return the updated layer with new camera_position
+  return {
+    ...layer,
+    camera_position: cameraPosition
+  };
+};
+
 export default {
   createCamera,
   createDefaultCamera,
@@ -310,5 +343,6 @@ export default {
   validateCamera,
   normalizePosition,
   calculateCameraRelativePosition,
+  updateLayerCameraPosition,
   DEFAULT_CAMERA,
 };

@@ -2,13 +2,15 @@ import { useRef, useEffect } from 'react';
 import Konva from 'konva';
 import { ShapeType, ShapeLayer } from '../../../utils/shapeUtils';
 import { applyMultiLayerDrag } from '../../../utils/multiLayerDrag';
+import { updateLayerCameraPosition } from '../../../utils/cameraAnimator';
 
 export const useShapeTransform = (
   isSelected: boolean,
   layer: ShapeLayer,
   onChange: (layer: ShapeLayer) => void,
   selectedLayerIds: string[] = [],
-  allLayers: any[] = []
+  allLayers: any[] = [],
+  sceneCameras: any[] = []
 ) => {
   const shapeRef = useRef<any>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
@@ -38,17 +40,24 @@ export const useShapeTransform = (
       x: finalX,
       y: finalY,
     };
-    const updatedLayer = {
+    let updatedLayer: any = {
       ...layer,
       shape_config: newConfig,
+      position: {
+        x: finalX,
+        y: finalY
+      }
     };
+
+    // Update camera_position based on new position
+    updatedLayer = updateLayerCameraPosition(updatedLayer, sceneCameras);
     
     // If multiple layers were selected, batch all updates together
     if (selectedLayerIds.length > 1 && dragStartPosRef.current) {
       const deltaX = finalX - dragStartPosRef.current.x;
       const deltaY = finalY - dragStartPosRef.current.y;
       
-      applyMultiLayerDrag(selectedLayerIds, layer.id, updatedLayer, allLayers, deltaX, deltaY, onChange);
+      applyMultiLayerDrag(selectedLayerIds, layer.id, updatedLayer, allLayers, deltaX, deltaY, onChange, sceneCameras);
     } else {
       // Single layer drag
       onChange(updatedLayer);
@@ -161,12 +170,21 @@ export const useShapeTransform = (
       }
     }
 
-    onChange({
+    let updatedLayer: any = {
       ...layer,
       width: newLayerWidth,
       height: newLayerHeight,
       shape_config: newConfig,
-    });
+      position: {
+        x: newConfig.x,
+        y: newConfig.y
+      }
+    };
+
+    // Update camera_position based on new position
+    updatedLayer = updateLayerCameraPosition(updatedLayer, sceneCameras);
+
+    onChange(updatedLayer);
 
     node.scaleX(1);
     node.scaleY(1);

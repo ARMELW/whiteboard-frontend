@@ -6,6 +6,7 @@ import { useScenesActions } from '@/app/scenes';
 import CameraManagerModal from './CameraManagerModal';
 import { createDefaultCamera } from '../../utils/cameraAnimator';
 import LayerShape from '../LayerShape';
+import RealScenePreview from '../molecules/RealScenePreview';
 import type { Scene, Layer, Camera } from '../../app/scenes/types';
 
 /**
@@ -59,6 +60,8 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
   const [selectedCameraId, setSelectedCameraId] = useState<string>('default-camera');
   const [hasInitialCentered, setHasInitialCentered] = useState(false);
   const [showCameraManager, setShowCameraManager] = useState(false);
+  const [isRealPreviewMode, setIsRealPreviewMode] = useState(false);
+  const [showDebugInfo, setShowDebugInfo] = useState(true);
   const { updateScene } = useScenesActions();
   
   // Notify parent when camera selection changes
@@ -222,6 +225,45 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
           }}
         />
       )}
+      
+      {/* Preview Mode Toolbar */}
+      <div className="bg-white border-b border-border px-4 py-2 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsRealPreviewMode(!isRealPreviewMode)}
+            className={`${
+              isRealPreviewMode 
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-secondary text-foreground'
+            } hover:opacity-90 font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors text-sm shadow-sm`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            {isRealPreviewMode ? 'Mode Prévisualisation Réelle' : 'Mode Édition'}
+          </button>
+          
+          {isRealPreviewMode && (
+            <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showDebugInfo}
+                onChange={(e) => setShowDebugInfo(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300"
+              />
+              Afficher les infos de débogage
+            </label>
+          )}
+        </div>
+        
+        {isRealPreviewMode && (
+          <div className="text-xs text-muted-foreground bg-secondary px-3 py-1.5 rounded">
+            💡 Cette vue montre exactement comment la scène sera rendue dans la vidéo finale
+          </div>
+        )}
+      </div>
+      
       {/* Main Content Area */}
       <div className="flex flex-1 min-h-0 bg-white" style={{ height: '100%' }}>
         {/* Canvas Area - Centered viewport */}
@@ -246,9 +288,20 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
               position: 'relative'
             }}
           >
-            {/* Konva Stage for layers and cameras */}
-            <div style={{ position: 'relative', zIndex: 2 }}>
-              <Stage
+            {isRealPreviewMode ? (
+              /* Real Scene Preview Mode */
+              <RealScenePreview
+                scene={scene}
+                selectedCamera={sceneCameras.find(cam => cam.id === selectedCameraId)}
+                sceneWidth={sceneWidth}
+                sceneHeight={sceneHeight}
+                zoom={sceneZoom}
+                showDebugInfo={showDebugInfo}
+              />
+            ) : (
+              /* Edit Mode - Konva Stage for layers and cameras */
+              <div style={{ position: 'relative', zIndex: 2 }}>
+                <Stage
                 width={sceneWidth}
                 height={sceneHeight}
                 scaleX={sceneZoom}
@@ -333,7 +386,8 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                   })}
                 </KonvaLayer>
               </Stage>
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -60,7 +60,9 @@ export const calculateProjectedLayerPosition = (
   let relativeX: number;
   let relativeY: number;
   
-  if (layer.camera_position !== undefined) {
+  if (layer.camera_position != null && 
+      typeof layer.camera_position.x === 'number' && 
+      typeof layer.camera_position.y === 'number') {
     // Use authoritative camera-relative position from backend
     relativeX = layer.camera_position.x;
     relativeY = layer.camera_position.y;

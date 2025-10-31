@@ -17,7 +17,9 @@ const calculateProjectedLayerPosition = (layer, camera, sceneWidth, sceneHeight,
   let relativeX;
   let relativeY;
   
-  if (layer.camera_position !== undefined) {
+  if (layer.camera_position != null && 
+      typeof layer.camera_position.x === 'number' && 
+      typeof layer.camera_position.y === 'number') {
     // Use authoritative camera-relative position from backend
     relativeX = layer.camera_position.x;
     relativeY = layer.camera_position.y;
@@ -146,6 +148,48 @@ const tests = [
       // projection scale = 2.4
       // projected = (400 * 2.4, 225 * 2.4) = (960, 540)
       position: { x: 960, y: 540 }
+    }
+  },
+  {
+    name: 'Layer with null camera_position (fallback calculation)',
+    layer: {
+      position: { x: 960, y: 540 },
+      camera_position: null, // Explicitly null - should fall back
+      width: 200,
+      height: 150,
+      scale: 1
+    },
+    camera: {
+      position: { x: 0.5, y: 0.5 },
+      width: 800,
+      height: 450
+    },
+    scene: { width: 1920, height: 1080 },
+    screen: { width: 640, height: 480 },
+    expected: {
+      // Should fall back to calculation
+      position: { x: 320, y: 240 }
+    }
+  },
+  {
+    name: 'Layer with invalid camera_position (fallback calculation)',
+    layer: {
+      position: { x: 960, y: 540 },
+      camera_position: { x: 400 }, // Missing y - should fall back
+      width: 200,
+      height: 150,
+      scale: 1
+    },
+    camera: {
+      position: { x: 0.5, y: 0.5 },
+      width: 800,
+      height: 450
+    },
+    scene: { width: 1920, height: 1080 },
+    screen: { width: 640, height: 480 },
+    expected: {
+      // Should fall back to calculation
+      position: { x: 320, y: 240 }
     }
   }
 ];

@@ -13,6 +13,7 @@ import SaveAsTemplateDialog from './SaveAsTemplateDialog';
 import CameraManagerModal from './CameraManagerModal';
 import ExportModal from './ExportModal';
 import ThumbnailMaker from './ThumbnailMaker';
+import ProjectionViewerModal from './ProjectionViewerModal';
 import { AiWizardDialog } from './wizard';
 import { useScenes, useSceneStore, useCurrentScene, useScenesActions } from '@/app/scenes';
 import { useAssets, useAssetsActions } from '@/app/assets';
@@ -47,6 +48,7 @@ const AnimationContainer: React.FC = () => {
   const [showCameraManager, setShowCameraManager] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showThumbnailMaker, setShowThumbnailMaker] = useState(false);
+  const [showProjectionViewer, setShowProjectionViewer] = useState(false);
   
   // Camera state lifted from SceneCanvas
   const [cameras, setCameras] = useState<Camera[]>([]);
@@ -119,6 +121,12 @@ const AnimationContainer: React.FC = () => {
           onClose={() => setShowThumbnailMaker(false)}
         />
       )}
+      {showProjectionViewer && (
+        <ProjectionViewerModal
+          isOpen={showProjectionViewer}
+          onClose={() => setShowProjectionViewer(false)}
+        />
+      )}
       
       {/* AI Wizard Dialog */}
       <AiWizardDialog />
@@ -129,6 +137,7 @@ const AnimationContainer: React.FC = () => {
         onSaveAsTemplate={() => setShowSaveAsTemplate(true)}
         onOpenExportModal={() => setShowExportModal(true)}
         onOpenThumbnailMaker={() => setShowThumbnailMaker(true)}
+        onOpenProjectionViewer={() => setShowProjectionViewer(true)}
         hasCurrentScene={!!currentScene}
         cameras={cameras}
         selectedCameraId={selectedCameraId}

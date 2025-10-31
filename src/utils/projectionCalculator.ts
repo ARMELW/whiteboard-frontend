@@ -55,13 +55,26 @@ export const calculateProjectedLayerPosition = (
   screenWidth: number,
   screenHeight: number
 ): ProjectedPosition => {
-  // Calculate camera viewport in scene coordinates
-  const cameraViewportX = (camera.position.x * sceneWidth) - (camera.width / 2);
-  const cameraViewportY = (camera.position.y * sceneHeight) - (camera.height / 2);
+  // Use pre-calculated camera_position if available (preferred)
+  // This ensures consistency with backend calculations
+  let relativeX: number;
+  let relativeY: number;
   
-  // Get layer position relative to camera
-  const relativeX = layer.position.x - cameraViewportX;
-  const relativeY = layer.position.y - cameraViewportY;
+  if (layer.camera_position != null && 
+      typeof layer.camera_position.x === 'number' && 
+      typeof layer.camera_position.y === 'number') {
+    // Use authoritative camera-relative position from backend
+    relativeX = layer.camera_position.x;
+    relativeY = layer.camera_position.y;
+  } else {
+    // Fallback: Calculate camera viewport in scene coordinates
+    const cameraViewportX = (camera.position.x * sceneWidth) - (camera.width / 2);
+    const cameraViewportY = (camera.position.y * sceneHeight) - (camera.height / 2);
+    
+    // Get layer position relative to camera
+    relativeX = layer.position.x - cameraViewportX;
+    relativeY = layer.position.y - cameraViewportY;
+  }
   
   // Calculate projection scale
   const projectionScale = calculateProjectionScale(

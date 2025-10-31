@@ -8,7 +8,7 @@ const { test, expect } = require('@playwright/test');
 test.describe('Projection System Tests', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to the standalone projection test page
-    await page.goto('http://localhost:5173/test/projection');
+    await page.goto('/test/projection');
     
     // Wait for the page to load
     await page.waitForLoadState('networkidle');
@@ -290,7 +290,7 @@ test.describe('Projection System Tests', () => {
 
 test.describe('Projection Accuracy Tests', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:5173/test/projection');
+    await page.goto('/test/projection');
     await page.waitForLoadState('networkidle');
     await page.waitForSelector('h1:has-text("Projection Test Page")', { timeout: 10000 });
   });

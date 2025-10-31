@@ -217,15 +217,23 @@ export const useScenesActions = () => {
     updateLayerProperty: (sceneId: string, layerId: string, property: string, value: any) => {
       updateLayerProperty(sceneId, layerId, property, value);
       
-      // If position is being updated, also recalculate and send camera_position
+      // Build the layer data to send to the API
       let layerData: any = { [property]: value };
+      
+      // If position is being updated, also recalculate and send camera_position
       if (property === 'position' && value) {
         const scenes = useSceneStore.getState().scenes;
         const scene = scenes.find(s => s.id === sceneId);
-        if (scene) {
+        if (!scene) {
+          console.warn(`Scene ${sceneId} not found for camera_position calculation`);
+        } else {
           const layer = scene.layers?.find(l => l.id === layerId);
-          if (layer) {
-            // Create a temporary layer with the new position to calculate camera_position
+          if (!layer) {
+            console.warn(`Layer ${layerId} not found in scene ${sceneId}`);
+          } else {
+            // Calculate camera_position for the new position
+            // We need to pass a layer object to updateLayerCameraPosition, so we create
+            // a temporary one with the updated position to get the correct camera_position
             const tempLayer = { ...layer, position: value };
             const updatedLayer = updateLayerCameraPosition(
               tempLayer, 
@@ -242,7 +250,7 @@ export const useScenesActions = () => {
         }
       }
       
-      // Also update backend
+      // Send update to backend
       updateLayerMutation.mutate({ 
         sceneId, 
         layerId, 

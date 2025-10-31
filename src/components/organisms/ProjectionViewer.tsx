@@ -122,16 +122,16 @@ export const ProjectionViewer: React.FC<ProjectionViewerProps> = ({
       }}>
         {/* Wrapper to handle scaled dimensions */}
         <div style={{
-          width: screenWidth * displayScale,
-          height: screenHeight * displayScale,
+          width: `${screenWidth * displayScale}px`,
+          height: `${screenHeight * displayScale}px`,
           position: 'relative'
         }}>
           <div style={{ 
             position: 'absolute',
             top: 0,
             left: 0,
-            width: screenWidth,
-            height: screenHeight,
+            width: `${screenWidth}px`,
+            height: `${screenHeight}px`,
             backgroundColor: scene.backgroundColor || '#ffffff',
             backgroundImage: scene.backgroundImage ? `url(${scene.backgroundImage})` : undefined,
             backgroundSize: 'cover',
@@ -193,10 +193,10 @@ export const ProjectionViewer: React.FC<ProjectionViewerProps> = ({
                 onMouseLeave={() => setHoveredLayerId(null)}
                 style={{
                   position: 'absolute',
-                  left: layer.position.x,
-                  top: layer.position.y,
-                  width: layer.width,
-                  height: layer.height,
+                  left: `${layer.position.x}px`,
+                  top: `${layer.position.y}px`,
+                  width: `${layer.width}px`,
+                  height: `${layer.height}px`,
                   opacity: layer.opacity,
                   transform: `rotate(${layer.rotation || 0}deg)`,
                   border: isHovered ? '2px solid #00ff00' : '1px dashed rgba(0,123,255,0.5)',

@@ -13,8 +13,11 @@ import {
   downloadDataUrl, 
   validateLayerJSON 
 } from '../../../utils/layerExporter';
+import { useSceneStore } from '../../../app/scenes/store';
 
 export const useSceneExport = (sceneWidth = 1920, sceneHeight = 1080) => {
+  const projectionScreenWidth = useSceneStore(state => state.projectionScreenWidth);
+  const projectionScreenHeight = useSceneStore(state => state.projectionScreenHeight);
   
   const exportScene = useCallback(async (scene: any) => {
     try {
@@ -129,6 +132,8 @@ export const useSceneExport = (sceneWidth = 1920, sceneHeight = 1080) => {
         background: '#FFFFFF',
         pixelRatio: 1,
         sceneBackgroundImage: scene.backgroundImage,
+        projectionScreenWidth,
+        projectionScreenHeight,
       });
       
       const filename = `scene-${scene.id}-layer-${layer.name || layer.id}-${timestamp}.png`;
@@ -137,7 +142,7 @@ export const useSceneExport = (sceneWidth = 1920, sceneHeight = 1080) => {
       console.error('Error exporting layer:', error);
       alert(`Erreur lors de l'export de la couche: ${error.message}`);
     }
-  }, [sceneWidth, sceneHeight]);
+  }, [sceneWidth, sceneHeight, projectionScreenWidth, projectionScreenHeight]);
 
   const exportAllLayers = useCallback(async (scene: any) => {
     if (scene.layers.length === 0) {
@@ -174,6 +179,8 @@ export const useSceneExport = (sceneWidth = 1920, sceneHeight = 1080) => {
             background: '#FFFFFF',
             pixelRatio: 1,
             sceneBackgroundImage: scene.backgroundImage,
+            projectionScreenWidth,
+            projectionScreenHeight,
           });
           
           const filename = `scene-${scene.id}-layer-${layer.name || layer.id}-${timestamp}.png`;
@@ -190,7 +197,7 @@ export const useSceneExport = (sceneWidth = 1920, sceneHeight = 1080) => {
       console.error('Error during batch export:', error);
       alert(`Erreur lors de l'export: ${error.message}`);
     }
-  }, [sceneWidth, sceneHeight]);
+  }, [sceneWidth, sceneHeight, projectionScreenWidth, projectionScreenHeight]);
 
   const exportLayerFullScene = useCallback(async (scene: any, layerId: string) => {
     const layer = scene.layers.find((l: any) => l.id === layerId);

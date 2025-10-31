@@ -3,6 +3,7 @@ import { useSceneStore } from '../store';
 import { ScenePayload, Layer, Camera } from '../types';
 import scenesService from '../api/scenesService';
 import { scenesKeys } from '../config';
+import { updateLayerCameraPosition } from '../../../utils/cameraAnimator';
 
 export const useScenesActions = () => {
   const queryClient = useQueryClient();
@@ -215,11 +216,37 @@ export const useScenesActions = () => {
     },
     updateLayerProperty: (sceneId: string, layerId: string, property: string, value: any) => {
       updateLayerProperty(sceneId, layerId, property, value);
+      
+      // If position is being updated, also recalculate and send camera_position
+      let layerData: any = { [property]: value };
+      if (property === 'position' && value) {
+        const scenes = useSceneStore.getState().scenes;
+        const scene = scenes.find(s => s.id === sceneId);
+        if (scene) {
+          const layer = scene.layers?.find(l => l.id === layerId);
+          if (layer) {
+            // Create a temporary layer with the new position to calculate camera_position
+            const tempLayer = { ...layer, position: value };
+            const updatedLayer = updateLayerCameraPosition(
+              tempLayer, 
+              scene.sceneCameras as any[] || [],
+              scene.sceneWidth || 1920,
+              scene.sceneHeight || 1080
+            );
+            // Include the recalculated camera_position in the API update
+            layerData = {
+              position: value,
+              camera_position: updatedLayer.camera_position
+            };
+          }
+        }
+      }
+      
       // Also update backend
       updateLayerMutation.mutate({ 
         sceneId, 
         layerId, 
-        layerData: { [property]: value } 
+        layerData
       });
     },
     deleteLayer: async (params: { sceneId: string; layerId: string }) => {

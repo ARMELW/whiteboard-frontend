@@ -10,7 +10,7 @@ const labelVariants = cva(
     variants: {
       variant: {
         default: "",
-        handwritten: "font-['Kalam',_cursive] text-base",
+        handwritten: "text-base",
       },
     },
     defaultVariants: {
@@ -27,6 +27,7 @@ const Label = React.forwardRef<
   <LabelPrimitive.Root
     ref={ref}
     className={cn(labelVariants({ variant }), className)}
+    style={variant === "handwritten" ? { fontFamily: "var(--font-handwriting)" } : undefined}
     {...props}
   />
 ))

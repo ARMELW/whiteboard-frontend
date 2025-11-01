@@ -89,7 +89,11 @@ export const exportSceneImage = async (
           renderTextLayer(ctx, layer, cameraX, cameraY);
           break;
         case 'shape':
-          renderShapeLayer(ctx, layer, cameraX, cameraY);
+          if (layer.svg_path) {
+            await renderImageLayer(ctx, { ...layer, image_path: layer.svg_path }, cameraX, cameraY);
+          } else {
+            renderShapeLayer(ctx, layer, cameraX, cameraY);
+          }
           break;
         case 'whiteboard':
           renderWhiteboardLayer(ctx, layer, cameraX, cameraY);

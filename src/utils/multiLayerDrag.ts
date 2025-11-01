@@ -23,7 +23,7 @@ export const updateLayerPosition = (
   let updatedLayer: Layer;
   
   if (targetLayer.type === 'shape' && targetLayer.shape_config) {
-    // For shape layers
+    // For built-in shape layers (with shape_config)
     const newX = (targetLayer.shape_config.x || 0) + deltaX;
     const newY = (targetLayer.shape_config.y || 0) + deltaY;
     updatedLayer = {
@@ -39,7 +39,7 @@ export const updateLayerPosition = (
       }
     };
   } else {
-    // For image/text layers
+    // For image/text/SVG shape layers
     updatedLayer = {
       ...targetLayer,
       position: {

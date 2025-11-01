@@ -19,6 +19,7 @@ export interface PreviewScenePayload {
     image_path?: string;
     text_config?: any;
     shape_config?: any;
+    svg_path?: string;
     z_index: number;
   }>;
   cameras: Array<{
@@ -85,6 +86,7 @@ export const extractPreviewSceneData = (scene: Scene): PreviewScenePayload => {
       image_path: layer.image_path,
       text_config: layer.text_config,
       shape_config: layer.shape_config,
+      svg_path: (layer as any).svg_path,
       z_index: layer.z_index,
     })),
     cameras: (scene.sceneCameras || []).map(camera => ({

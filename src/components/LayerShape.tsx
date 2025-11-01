@@ -86,8 +86,17 @@ const LayerShape: React.FC<LayerShapeProps> = ({ layer, isSelected, onSelect, on
     onTransformEnd: handleTransformEnd,
   };
 
+  // Synchronize shape position with layer position to prevent rendering issues.
+  // Shape components use shape_config.x/y for positioning, but layer.position is the
+  // source of truth. This ensures shapes render at the correct location on canvas.
+  const adjustedShapeConfig = {
+    ...shapeConfig,
+    x: layer.position?.x ?? 0,
+    y: layer.position?.y ?? 0,
+  };
+
   const renderShape = () => {
-    const shapeProps = { shapeConfig, commonProps };
+    const shapeProps = { shapeConfig: adjustedShapeConfig, commonProps };
 
     switch (shapeType) {
       case ShapeType.RECTANGLE:

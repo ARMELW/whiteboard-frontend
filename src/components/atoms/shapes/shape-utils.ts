@@ -4,6 +4,7 @@ export interface ShapeCommonProps {
   onClick: () => void;
   onTap: () => void;
   opacity: number;
+  onDragStart: (e: any) => void;
   onDragEnd: (e: any) => void;
   onTransformEnd: () => void;
 }

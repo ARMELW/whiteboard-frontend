@@ -341,15 +341,27 @@ const ThumbnailMaker = ({ scene, onClose, onSave }: ThumbnailMakerProps) => {
                             />
                           );
                         } else if (layer.type === 'shape') {
-                          return (
-                            <ThumbnailShapeLayer
-                              key={layer.id}
-                              layer={layer}
-                              isSelected={layer.id === selectedLayerId}
-                              onSelect={() => setSelectedLayerId(layer.id)}
-                              onChange={handleLayerChange}
-                            />
-                          );
+                          if (layer.svg_path) {
+                            return (
+                              <ThumbnailImageLayer
+                                key={layer.id}
+                                layer={{ ...layer, src: layer.svg_path }}
+                                isSelected={layer.id === selectedLayerId}
+                                onSelect={() => setSelectedLayerId(layer.id)}
+                                onChange={handleLayerChange}
+                              />
+                            );
+                          } else {
+                            return (
+                              <ThumbnailShapeLayer
+                                key={layer.id}
+                                layer={layer}
+                                isSelected={layer.id === selectedLayerId}
+                                onSelect={() => setSelectedLayerId(layer.id)}
+                                onChange={handleLayerChange}
+                              />
+                            );
+                          }
                         }
                         return null;
                       })}

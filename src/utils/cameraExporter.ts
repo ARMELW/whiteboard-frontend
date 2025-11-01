@@ -53,7 +53,11 @@ export const exportCameraView = async (scene, camera, sceneWidth = 1920, sceneHe
     } else if (layer.type === 'text') {
       renderTextLayer(ctx, layer, cameraX, cameraY);
     } else if (layer.type === 'shape') {
-      renderShapeLayer(ctx, layer, cameraX, cameraY);
+      if (layer.svg_path) {
+        await renderImageLayer(ctx, { ...layer, image_path: layer.svg_path }, cameraX, cameraY);
+      } else {
+        renderShapeLayer(ctx, layer, cameraX, cameraY);
+      }
     }
   }
 
@@ -334,7 +338,11 @@ export const exportLayerAsImage = async (layer, canvasWidth = 800, canvasHeight 
   } else if (layer.type === 'text') {
     renderTextLayerCentered(ctx, layer, centerX, centerY);
   } else if (layer.type === 'shape') {
-    renderShapeLayerCentered(ctx, layer, centerX, centerY);
+    if (layer.svg_path) {
+      await renderImageLayerCentered(ctx, { ...layer, image_path: layer.svg_path }, centerX, centerY);
+    } else {
+      renderShapeLayerCentered(ctx, layer, centerX, centerY);
+    }
   }
 
   return canvas.toDataURL('image/png');

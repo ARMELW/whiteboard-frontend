@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sample Arrow SVG for testing the Path Editor -->
+  <defs>
+    <style>
+      .arrow { fill: none; stroke: #3b82f6; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  </defs>
+  
+  <!-- Arrow shaft -->
+  <path class="arrow" d="M 50 200 L 300 200" />
+  
+  <!-- Arrow head -->
+  <path class="arrow" d="M 260 160 L 300 200 L 260 240" />
+  
+  <!-- Circle decoration -->
+  <circle cx="50" cy="200" r="20" fill="none" stroke="#3b82f6" stroke-width="4"/>
+</svg>

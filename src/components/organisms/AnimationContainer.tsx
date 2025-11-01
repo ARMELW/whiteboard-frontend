@@ -5,6 +5,7 @@ import LayerEditor from './LayerEditor';
 import PropertiesPanel from './PropertiesPanel';
 import AssetLibrary from './AssetLibrary';
 import ShapeToolbar from './ShapeToolbar';
+import ShapeLibrary from './ShapeLibrary';
 import ScenePanel from './ScenePanel';
 import ContextTabs from './ContextTabs';
 import HistoryPanel from './HistoryPanel';
@@ -24,6 +25,7 @@ const AnimationContainer: React.FC = () => {
   const currentScene = useCurrentScene();
 
   const showShapeToolbar = useSceneStore((state: any) => state.showShapeToolbar);
+  const showShapeLibrary = useSceneStore((state: any) => state.showShapeLibrary);
   const showAssetLibrary = useSceneStore((state: any) => state.showAssetLibrary);
   const showHistoryPanel = useSceneStore((state: any) => state.showHistoryPanel);
   const setShowHistoryPanel = useSceneStore((state: any) => state.setShowHistoryPanel);
@@ -84,6 +86,7 @@ const AnimationContainer: React.FC = () => {
     <div className="animation-container flex flex-col h-screen">
       {showAssetLibrary && <AssetLibrary />}
       {showShapeToolbar && <ShapeToolbar />}
+      {showShapeLibrary && <ShapeLibrary />}
       {showTemplateLibrary && (
         <TemplateLibrary 
           isOpen={showTemplateLibrary} 

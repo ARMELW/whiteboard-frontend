@@ -19,6 +19,7 @@ interface SceneState {
   selectedLayerIds: string[]; // Multi-selection support
   showAssetLibrary: boolean;
   showShapeToolbar: boolean;
+  showShapeLibrary: boolean;
   showCropModal: boolean;
   showHistoryPanel: boolean;
   pendingImageData: any | null;
@@ -64,6 +65,7 @@ interface SceneState {
   clearSelection: () => void;
   setShowAssetLibrary: (show: boolean) => void;
   setShowShapeToolbar: (show: boolean) => void;
+  setShowShapeLibrary: (show: boolean) => void;
   setShowCropModal: (show: boolean) => void;
   setShowHistoryPanel: (show: boolean) => void;
   setPendingImageData: (data: any | null) => void;
@@ -91,6 +93,7 @@ const initialUIState = {
   selectedLayerIds: [],
   showAssetLibrary: false,
   showShapeToolbar: false,
+  showShapeLibrary: false,
   showCropModal: false,
   showHistoryPanel: false,
   pendingImageData: null,
@@ -463,6 +466,7 @@ export const useSceneStore = create<SceneState>((set) => ({
   clearSelection: () => set({ selectedLayerId: null, selectedLayerIds: [] }),
   setShowAssetLibrary: (show) => set({ showAssetLibrary: show }),
   setShowShapeToolbar: (show) => set({ showShapeToolbar: show }),
+  setShowShapeLibrary: (show) => set({ showShapeLibrary: show }),
   setShowCropModal: (show) => set({ showCropModal: show }),
   setShowHistoryPanel: (show) => set({ showHistoryPanel: show }),
   setPendingImageData: (data) => set({ pendingImageData: data }),

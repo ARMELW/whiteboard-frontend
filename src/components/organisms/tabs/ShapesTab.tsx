@@ -3,7 +3,7 @@
  * Tab for managing SVG shapes in the context panel
  */
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef } from 'react';
 import { Upload, Trash2, Search, Shapes as ShapesIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';

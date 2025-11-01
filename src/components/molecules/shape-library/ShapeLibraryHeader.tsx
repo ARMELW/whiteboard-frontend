@@ -25,7 +25,7 @@ export const ShapeLibraryHeader: React.FC<ShapeLibraryHeaderProps> = ({
   return (
     <div className="bg-white px-6 py-4 border-b border-border flex items-center justify-between">
       <div className="flex items-center gap-6">
-        <h2 className="text-xl font-bold text-white">Bibliothèque de Formes</h2>
+        <h2 className="text-xl font-bold text-gray-900">Bibliothèque de Formes</h2>
         {stats && (
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span>

@@ -86,8 +86,15 @@ const LayerShape: React.FC<LayerShapeProps> = ({ layer, isSelected, onSelect, on
     onTransformEnd: handleTransformEnd,
   };
 
+  // Adjust shape config to use layer position instead of shape config position
+  const adjustedShapeConfig = {
+    ...shapeConfig,
+    x: layer.position?.x || 0,
+    y: layer.position?.y || 0,
+  };
+
   const renderShape = () => {
-    const shapeProps = { shapeConfig, commonProps };
+    const shapeProps = { shapeConfig: adjustedShapeConfig, commonProps };
 
     switch (shapeType) {
       case ShapeType.RECTANGLE:

@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Stage, Layer as KonvaLayer } from 'react-konva';
-import { KonvaCamera, LayerImage, LayerText, FloatingToolbar } from '../molecules';
+import { KonvaCamera, LayerImage, LayerText, LayerSvg, FloatingToolbar } from '../molecules';
 import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import { createDefaultCamera } from '../../utils/cameraAnimator';
 import LayerShape from '../LayerShape';
@@ -442,18 +442,33 @@ const SceneCanvas: React.FC<SceneCanvasProps> = ({
                         />
                       );
                     } else if (layer.type === 'shape') {
-                      return (
-                        <LayerShape
-                          key={layer.id}
-                          layer={layer as any}
-                          isSelected={isLayerSelected}
-                          onSelect={handleLayerSelect}
-                          onChange={onUpdateLayer as (layer: any) => void}
-                          selectedLayerIds={selectedLayerIds}
-                          allLayers={sortedLayers}
-                          sceneCameras={sceneCameras}
-                        />
-                      );
+                      if ((layer as any).svg_path) {
+                        return (
+                          <LayerSvg
+                            key={layer.id}
+                            layer={layer}
+                            isSelected={isLayerSelected}
+                            onSelect={handleLayerSelect}
+                            onChange={onUpdateLayer as (layer: any) => void}
+                            selectedLayerIds={selectedLayerIds}
+                            allLayers={sortedLayers}
+                            sceneCameras={sceneCameras}
+                          />
+                        );
+                      } else {
+                        return (
+                          <LayerShape
+                            key={layer.id}
+                            layer={layer as any}
+                            isSelected={isLayerSelected}
+                            onSelect={handleLayerSelect}
+                            onChange={onUpdateLayer as (layer: any) => void}
+                            selectedLayerIds={selectedLayerIds}
+                            allLayers={sortedLayers}
+                            sceneCameras={sceneCameras}
+                          />
+                        );
+                      }
                     } else {
                       return (
                         <LayerImage

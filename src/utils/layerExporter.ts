@@ -698,8 +698,8 @@ export const validateLayerJSON = (layer) => {
     errors.push('Text layer missing required field: text_config');
   }
 
-  if (layer.type === 'shape' && !layer.shape_config) {
-    errors.push('Shape layer missing required field: shape_config');
+  if (layer.type === 'shape' && !layer.shape_config && !layer.svg_path) {
+    errors.push('Shape layer missing required field: shape_config or svg_path');
   }
 
   if (layer.type === 'whiteboard' && !layer.strokes) {

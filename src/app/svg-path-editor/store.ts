@@ -13,6 +13,7 @@ interface PathEditorStore {
   setSvgData: (svgData: SvgData | null) => void;
   addPoint: (point: Point) => void;
   updatePoint: (id: string, x: number, y: number) => void;
+  savePointsToHistory: () => void;
   deletePoint: (id: string) => void;
   selectPoint: (id: string | null) => void;
   clearPoints: () => void;
@@ -66,6 +67,24 @@ export const usePathEditorStore = create<PathEditorStore>((set, get) => ({
       p.id === id ? { ...p, x, y } : p
     );
     return { points: newPoints };
+  }),
+  
+  savePointsToHistory: () => set((state) => {
+    const newHistory = state.history.slice(0, state.historyIndex + 1);
+    newHistory.push([...state.points]);
+    
+    if (newHistory.length > SVG_PATH_EDITOR_CONFIG.maxHistorySize) {
+      newHistory.shift();
+      return {
+        history: newHistory,
+        historyIndex: newHistory.length - 1,
+      };
+    }
+    
+    return {
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+    };
   }),
 
   deletePoint: (id) => set((state) => {

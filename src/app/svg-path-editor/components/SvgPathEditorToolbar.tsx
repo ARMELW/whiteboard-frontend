@@ -35,14 +35,44 @@ export const SvgPathEditorToolbar: React.FC = () => {
     try {
       const text = await file.text();
       
+      // Security: Parse as XML (not HTML) and sanitize before use
+      // The SVG content is never inserted into DOM directly - only used as base64 image source
       const parser = new DOMParser();
-      const svgDoc = parser.parseFromString(text, 'image/svg+xml');
+      const svgDoc = parser.parseFromString(text, 'text/xml');
+      
+      // Check for parsing errors
+      const parserError = svgDoc.querySelector('parsererror');
+      if (parserError) {
+        alert('Invalid SVG file: parsing error');
+        return;
+      }
+      
       const svgElement = svgDoc.documentElement;
 
       if (svgElement.nodeName !== 'svg') {
-        alert('Invalid SVG file');
+        alert('Invalid SVG file: not an SVG document');
         return;
       }
+      
+      // Remove potentially dangerous elements and attributes
+      const dangerousElements = ['script', 'object', 'embed', 'iframe', 'link'];
+      dangerousElements.forEach(tagName => {
+        const elements = svgElement.getElementsByTagName(tagName);
+        Array.from(elements).forEach(el => el.remove());
+      });
+      
+      // Remove event handlers
+      const allElements = svgElement.getElementsByTagName('*');
+      Array.from(allElements).forEach(el => {
+        Array.from(el.attributes).forEach(attr => {
+          if (attr.name.startsWith('on')) {
+            el.removeAttribute(attr.name);
+          }
+        });
+      });
+      
+      // Serialize the sanitized SVG
+      const sanitizedText = new XMLSerializer().serializeToString(svgElement);
 
       let width = 800;
       let height = 600;
@@ -53,17 +83,19 @@ export const SvgPathEditorToolbar: React.FC = () => {
       const viewBoxAttr = svgElement.getAttribute('viewBox');
 
       if (viewBoxAttr) {
-        const [, , vbWidth, vbHeight] = viewBoxAttr.split(' ').map(Number);
-        width = vbWidth;
-        height = vbHeight;
-        viewBox = viewBoxAttr;
+        const viewBoxValues = viewBoxAttr.trim().split(/[\s,]+/).map(Number);
+        if (viewBoxValues.length >= 4 && viewBoxValues.every(v => !isNaN(v))) {
+          width = viewBoxValues[2];
+          height = viewBoxValues[3];
+          viewBox = viewBoxAttr;
+        }
       } else if (widthAttr && heightAttr) {
         width = parseFloat(widthAttr);
         height = parseFloat(heightAttr);
       }
 
       const svgData: SvgData = {
-        content: text,
+        content: sanitizedText,
         width,
         height,
         viewBox,

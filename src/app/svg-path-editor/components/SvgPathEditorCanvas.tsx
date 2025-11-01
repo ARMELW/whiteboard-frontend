@@ -13,6 +13,7 @@ export const SvgPathEditorCanvas: React.FC = () => {
     canvasState,
     addPoint,
     updatePoint,
+    savePointsToHistory,
     selectPoint,
     deletePoint,
     setCanvasState,
@@ -97,6 +98,7 @@ export const SvgPathEditorCanvas: React.FC = () => {
 
   const handlePointDragEnd = () => {
     setDraggingPointId(null);
+    savePointsToHistory();
   };
 
   const handlePointClick = (pointId: string) => {

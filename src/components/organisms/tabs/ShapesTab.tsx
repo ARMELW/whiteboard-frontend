@@ -108,7 +108,7 @@ const ShapesTab: React.FC = () => {
       locked: false,
     };
     
-    addLayer(currentScene.id, newLayer);
+    addLayer({ sceneId: currentScene.id, layer: newLayer });
     toast.success(`Forme "${shape.name}" ajoutée à la scène`);
   };
   

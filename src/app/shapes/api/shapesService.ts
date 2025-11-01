@@ -191,6 +191,29 @@ class ShapesService extends BaseService<ShapeAsset> {
     return response.data;
   }
 
+  private isUserIdValidationError(error: any): boolean {
+    return error.response?.data?.error?.issues?.some((issue: any) => 
+      issue.path?.includes('id') && (issue.code === 'invalid_string' || issue.validation === 'uuid')
+    );
+  }
+
+  private getEmptyStats(): ShapeStats {
+    return {
+      totalShapes: 0,
+      totalSize: 0,
+      totalSizeMB: '0.00',
+      shapesByCategory: {
+        basic: 0,
+        arrow: 0,
+        callout: 0,
+        banner: 0,
+        icon: 0,
+        decorative: 0,
+        other: 0
+      }
+    };
+  }
+
   async getStats(userId?: string): Promise<ShapeStats> {
     try {
       let url = API_ENDPOINTS.shapes.stats;
@@ -207,36 +230,20 @@ class ShapesService extends BaseService<ShapeAsset> {
       const response = await httpClient.get<ShapeStatsResponse>(url);
       return response.data.data;
     } catch (error: any) {
-      if (error.response?.data?.error?.issues?.some((issue: any) => 
-        issue.path?.includes('id') && (issue.code === 'invalid_string' || issue.validation === 'uuid')
-      )) {
-        console.warn('[ShapesService] Backend requires valid user UUID for stats:', error.response?.data?.error);
-        return {
-          totalShapes: 0,
-          totalSize: 0,
-          totalSizeMB: '0.00',
-          shapesByCategory: {
-            basic: 0,
-            arrow: 0,
-            callout: 0,
-            banner: 0,
-            icon: 0,
-            decorative: 0,
-            other: 0
-          }
-        };
+      if (this.isUserIdValidationError(error)) {
+        return this.getEmptyStats();
       }
       throw error;
     }
   }
 
-  async getByCategory(category: ShapeCategory): Promise<ShapeAsset[]> {
-    const result = await this.list({ category, page: 1, limit: 1000 });
+  async getByCategory(category: ShapeCategory, limit: number = 100): Promise<ShapeAsset[]> {
+    const result = await this.list({ category, page: 1, limit });
     return result.data;
   }
 
-  async search(query: string): Promise<ShapeAsset[]> {
-    const result = await this.list({ filter: query, page: 1, limit: 1000 });
+  async search(query: string, limit: number = 100): Promise<ShapeAsset[]> {
+    const result = await this.list({ filter: query, page: 1, limit });
     return result.data;
   }
 }

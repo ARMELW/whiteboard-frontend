@@ -71,14 +71,14 @@ export const useShapesActions = () => {
   };
 
   return {
-    uploadShape: async (file: File, metadata?: UploadShapeData): Promise<ShapeAsset> => {
-      return await uploadMutation.mutateAsync({ file, metadata });
+    uploadShape: (file: File, metadata?: UploadShapeData): Promise<ShapeAsset> => {
+      return uploadMutation.mutateAsync({ file, metadata });
     },
-    updateShape: async (id: string, updates: UpdateShapeData): Promise<ShapeAsset> => {
-      return await updateMutation.mutateAsync({ id, updates });
+    updateShape: (id: string, updates: UpdateShapeData): Promise<ShapeAsset> => {
+      return updateMutation.mutateAsync({ id, updates });
     },
-    deleteShape: async (id: string): Promise<void> => {
-      await deleteMutation.mutateAsync(id);
+    deleteShape: (id: string): Promise<void> => {
+      return deleteMutation.mutateAsync(id);
     },
     getShapeStats: (): ShapeStats | undefined => statsQuery.data,
     isUploading: uploadMutation.isPending,

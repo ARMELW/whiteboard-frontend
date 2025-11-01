@@ -1,0 +1,1 @@
+export { SvgPathEditorPage } from './SvgPathEditorPage';

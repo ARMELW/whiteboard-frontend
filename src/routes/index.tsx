@@ -13,6 +13,7 @@ import { ProtectedRoute } from '@/app/auth/components';
 import { SubscriptionFeaturesDemo } from '@/pages/demo/SubscriptionFeaturesDemo';
 import MultiCameraDemo from '@/pages/demo/MultiCameraDemo';
 import { ProjectionTestPageStandalone } from '@/pages/ProjectionTestPageStandalone';
+import { SvgPathEditorPage } from '@/pages/svg-path-editor/SvgPathEditorPage';
 
 export const router = createBrowserRouter([
   {
@@ -42,6 +43,10 @@ export const router = createBrowserRouter([
   {
     path: '/test/projection',
     element: <ProjectionTestPageStandalone />,
+  },
+  {
+    path: '/svg-path-editor',
+    element: <SvgPathEditorPage />,
   },
   {
     path: '/dashboard',

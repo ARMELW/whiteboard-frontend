@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Sparkles, Layers as LayersIcon, Type, Music, Hand } from 'lucide-react';
+import { Sparkles, Layers as LayersIcon, Type, Music, Hand, Shapes } from 'lucide-react';
 import MediaTab from './tabs/MediaTab';
 import LayersTab from './tabs/LayersTab';
 import TextTab from './tabs/TextTab';
 import AudioTab from './tabs/AudioTab';
 import HandTab from './tabs/HandTab';
+import ShapesTab from './tabs/ShapesTab';
 
-type TabType = 'media' | 'layers' | 'text' | 'audio' | 'hand';
+type TabType = 'media' | 'layers' | 'shapes' | 'text' | 'audio' | 'hand';
 
 const ContextTabs: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('layers');
@@ -14,6 +15,7 @@ const ContextTabs: React.FC = () => {
   const tabs = [
     { id: 'media' as TabType, label: 'Media', icon: Sparkles },
     { id: 'layers' as TabType, label: 'Layers', icon: LayersIcon },
+    { id: 'shapes' as TabType, label: 'Shapes', icon: Shapes },
     { id: 'text' as TabType, label: 'Text', icon: Type },
     { id: 'audio' as TabType, label: 'Audio', icon: Music },
     { id: 'hand' as TabType, label: 'Hand', icon: Hand },
@@ -47,6 +49,7 @@ const ContextTabs: React.FC = () => {
       <div className="flex-1 overflow-hidden">
         {activeTab === 'media' && <MediaTab />}
         {activeTab === 'layers' && <LayersTab />}
+        {activeTab === 'shapes' && <ShapesTab />}
         {activeTab === 'text' && <TextTab />}
         {activeTab === 'audio' && <AudioTab />}
         {activeTab === 'hand' && <HandTab />}

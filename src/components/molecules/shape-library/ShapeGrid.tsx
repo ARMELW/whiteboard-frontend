@@ -8,9 +8,10 @@ import { toast } from 'sonner';
 interface ShapeGridProps {
   shapes: ShapeAsset[];
   onShapeChanged?: () => void;
+  onAddShapeToScene?: (shape: ShapeAsset) => void;
 }
 
-export const ShapeGrid: React.FC<ShapeGridProps> = ({ shapes, onShapeChanged }) => {
+export const ShapeGrid: React.FC<ShapeGridProps> = ({ shapes, onShapeChanged, onAddShapeToScene }) => {
   const {
     selectedShapeId,
     editingShapeId,
@@ -69,6 +70,14 @@ export const ShapeGrid: React.FC<ShapeGridProps> = ({ shapes, onShapeChanged }) 
     );
   }
 
+  const handleShapeSelect = (shape: ShapeAsset) => {
+    handleSelectShape(shape);
+    // If onAddShapeToScene is provided, add the shape to the scene
+    if (onAddShapeToScene) {
+      onAddShapeToScene(shape);
+    }
+  };
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 p-4">
       {shapes.map((shape) => (
@@ -80,7 +89,7 @@ export const ShapeGrid: React.FC<ShapeGridProps> = ({ shapes, onShapeChanged }) 
           editName={editName}
           editTags={editTags}
           editCategory={editCategory}
-          onSelect={() => handleSelectShape(shape)}
+          onSelect={() => handleShapeSelect(shape)}
           onEdit={(e) => handleEditShape(shape, e)}
           onDelete={(e) => handleDelete(shape.id, e)}
           onSaveEdit={(e) => handleSave(shape.id, e)}

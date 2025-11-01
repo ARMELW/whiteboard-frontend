@@ -298,6 +298,8 @@ export const ImagePropertiesForm: React.FC<ImagePropertiesFormProps> = React.mem
                   <SelectItem value="slide">Slide</SelectItem>
                   <SelectItem value="zoom">Zoom</SelectItem>
                   <SelectItem value="bounce">Bounce</SelectItem>
+                  <SelectItem value="coloriage">Coloriage</SelectItem>
+                  <SelectItem value="flood_fill">Flood Fill</SelectItem>
                 </SelectContent>
               </Select>
             </div>

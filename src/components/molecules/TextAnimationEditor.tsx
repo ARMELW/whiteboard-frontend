@@ -140,6 +140,7 @@ const TextAnimationEditor: React.FC<TextAnimationEditorProps> = ({
     { id: 'fadeIn', name: 'Fade In', icon: '🌫️', description: 'Smooth fade' },
     { id: 'scaleIn', name: 'Scale In', icon: '📏', description: 'Scale from small' },
     { id: 'slideIn', name: 'Slide In', icon: '➡️', description: 'Slide from side' }
+
   ];
 
   const effectTypes = [

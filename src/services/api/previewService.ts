@@ -86,7 +86,7 @@ export const extractPreviewSceneData = (scene: Scene): PreviewScenePayload => {
       image_path: layer.image_path,
       text_config: layer.text_config,
       shape_config: layer.shape_config,
-      svg_path: (layer as any).svg_path,
+      svg_path: layer.svg_path,
       z_index: layer.z_index,
     })),
     cameras: (scene.sceneCameras || []).map(camera => ({

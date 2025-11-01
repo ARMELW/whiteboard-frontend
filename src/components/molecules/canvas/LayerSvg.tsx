@@ -38,14 +38,8 @@ const LayerSvgComponent: React.FC<LayerSvgProps> = ({
 
   if (!img) return null;
 
-  const defaultCamera = sceneCameras?.find((cam: any) => cam.isDefault);
-  const cameraPixelX = defaultCamera ? (defaultCamera.position?.x ?? 0.5) * (defaultCamera.width ?? 1920) : 0;
-  const cameraPixelY = defaultCamera ? (defaultCamera.position?.y ?? 0.5) * (defaultCamera.height ?? 1080) : 0;
-
-  const cameraPosition = {
-    x: (layer.position?.x ?? 0) - cameraPixelX,
-    y: (layer.position?.y ?? 0) - cameraPixelY
-  };
+  const STAGE_WIDTH = 1920;
+  const STAGE_HEIGHT = 1080;
 
   const dragBoundFunc = (pos: { x: number; y: number }) => {
     const node = svgRef.current;
@@ -57,14 +51,12 @@ const LayerSvgComponent: React.FC<LayerSvgProps> = ({
 
     let newX = pos.x;
     let newY = pos.y;
-    const stageWidth = 1920;
-    const stageHeight = 1080;
 
     if (newX < 0) newX = 0;
-    if (newX + width > stageWidth) newX = stageWidth - width;
+    if (newX + width > STAGE_WIDTH) newX = STAGE_WIDTH - width;
 
     if (newY < 0) newY = 0;
-    if (newY + height > stageHeight) newY = stageHeight - height;
+    if (newY + height > STAGE_HEIGHT) newY = STAGE_HEIGHT - height;
 
     return { x: newX, y: newY };
   };
@@ -163,8 +155,8 @@ const LayerSvgComponent: React.FC<LayerSvgProps> = ({
             }
 
             if (newBox.x < 0 || newBox.y < 0 ||
-              newBox.x + newBox.width > 1920 ||
-              newBox.y + newBox.height > 1080) {
+              newBox.x + newBox.width > STAGE_WIDTH ||
+              newBox.y + newBox.height > STAGE_HEIGHT) {
               return oldBox;
             }
 

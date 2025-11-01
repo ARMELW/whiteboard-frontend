@@ -146,6 +146,15 @@ export const API_ENDPOINTS = {
     duplicate: (id: string) => `${prefix}/v1/projects/${id}/duplicate`,
     autosave: (id: string) => `${prefix}/v1/projects/${id}/autosave`,
   },
+  shapes: {
+    base: `${prefix}/v1/shapes`,
+    list: `${prefix}/v1/shapes`,
+    upload: `${prefix}/v1/shapes/upload`,
+    detail: (id: string) => `${prefix}/v1/shapes/${id}`,
+    update: (id: string) => `${prefix}/v1/shapes/${id}`,
+    delete: (id: string) => `${prefix}/v1/shapes/${id}`,
+    stats: `${prefix}/v1/shapes/stats`,
+  },
 };
 
 export default API_ENDPOINTS;

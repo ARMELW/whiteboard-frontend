@@ -12,10 +12,9 @@ import { ShapeAsset, ShapeCategory } from '@/app/shapes/api/shapesService';
 import { useCurrentScene } from '@/app/scenes/hooks/useCurrentScene';
 import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
 import { useSceneStore } from '@/app/scenes';
-import { LayerType, LayerMode } from '@/app/scenes/types';
+import { createLayerFromShapeAsset } from '@/utils/svgShapeLayerUtils';
 import { toast } from 'sonner';
 import { useDebounce } from 'use-debounce';
-import { v4 as uuidv4 } from 'uuid';
 
 const ShapesTab: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -80,35 +79,9 @@ const ShapesTab: React.FC = () => {
       return;
     }
     
-    const newLayer = {
-      id: uuidv4(),
-      type: LayerType.SHAPE,
-      name: shape.name,
-      mode: LayerMode.DRAW,
-      svg_path: shape.url,
-      svg_sampling_rate: 1,
-      svg_reverse: false,
-      position: {
-        x: 200,
-        y: 150,
-      },
-      width: shape.width || 200,
-      height: shape.height || 200,
-      scale: 1,
-      opacity: 1,
-      rotation: 0,
-      shape_config: {
-        color: '#222222',
-        fill_color: '#222222',
-        stroke_width: 5,
-      },
-      z_index: currentScene.layers.length,
-      skip_rate: 5,
-      visible: true,
-      locked: false,
-    };
+    const newLayer = createLayerFromShapeAsset(shape, currentScene.layers.length);
     
-    addLayer(currentScene.id, newLayer);
+    addLayer({ sceneId: currentScene.id, layer: newLayer });
     toast.success(`Forme "${shape.name}" ajoutée à la scène`);
   };
   

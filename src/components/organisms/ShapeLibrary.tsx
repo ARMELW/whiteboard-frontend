@@ -10,6 +10,9 @@ import {
 import { useSceneStore } from '@/app/scenes';
 import { useShapes, useShapesActions } from '@/app/shapes';
 import { ShapeAsset, ShapeCategory } from '@/app/shapes/api/shapesService';
+import { useCurrentScene } from '@/app/scenes/hooks/useCurrentScene';
+import { useScenesActionsWithHistory } from '@/app/hooks/useScenesActionsWithHistory';
+import { createLayerFromShapeAsset } from '@/utils/svgShapeLayerUtils';
 import { toast } from 'sonner';
 
 const ShapeLibrary: React.FC = () => {
@@ -28,6 +31,10 @@ const ShapeLibrary: React.FC = () => {
   } = useShapeLibraryStore();
 
   const { uploadShape, getShapeStats, isUploading } = useShapesActions();
+  
+  // Scene integration for adding shapes as layers
+  const currentScene = useCurrentScene();
+  const { addLayer } = useScenesActionsWithHistory();
 
   // Load shapes with filters
   const { shapes, loading, refetch } = useShapes({
@@ -76,6 +83,18 @@ const ShapeLibrary: React.FC = () => {
 
   const handleSortByChange = (newSortBy: 'name' | 'uploadDate' | 'size' | 'usageCount') => {
     useShapeLibraryStore.setState({ sortBy: newSortBy });
+  };
+
+  const handleAddShapeToScene = (shape: ShapeAsset) => {
+    if (!currentScene) {
+      toast.error('Aucune scène sélectionnée');
+      return;
+    }
+    
+    const newLayer = createLayerFromShapeAsset(shape, currentScene.layers.length);
+    
+    addLayer({ sceneId: currentScene.id, layer: newLayer });
+    toast.success(`Forme "${shape.name}" ajoutée à la scène`);
   };
 
   useEffect(() => {
@@ -134,7 +153,8 @@ const ShapeLibrary: React.FC = () => {
               ) : (
                 <ShapeGrid 
                   shapes={shapes} 
-                  onShapeChanged={() => refetch()} 
+                  onShapeChanged={() => refetch()}
+                  onAddShapeToScene={handleAddShapeToScene}
                 />
               )}
             </div>

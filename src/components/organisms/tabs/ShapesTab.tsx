@@ -92,6 +92,11 @@ const ShapesTab: React.FC = () => {
         x: 200,
         y: 150,
       },
+      width: shape.width || 200,
+      height: shape.height || 200,
+      scale: 1,
+      opacity: 1,
+      rotation: 0,
       shape_config: {
         color: '#222222',
         fill_color: '#222222',

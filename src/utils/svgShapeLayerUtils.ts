@@ -17,14 +17,11 @@ export function createLayerFromShapeAsset(
   shape: ShapeAsset,
   currentLayersCount: number = 0
 ): Layer {
-  return {
+  const layer: Layer = {
     id: uuidv4(),
     type: LayerType.SHAPE,
     name: shape.name,
     mode: LayerMode.DRAW,
-    svg_path: shape.url,
-    svg_sampling_rate: 1,
-    svg_reverse: false,
     position: {
       x: 200,
       y: 150,
@@ -43,5 +40,11 @@ export function createLayerFromShapeAsset(
     skip_rate: 5,
     visible: true,
     locked: false,
-  } as Layer;
+    // SVG-specific properties (supported via Layer's index signature)
+    svg_path: shape.url,
+    svg_sampling_rate: 1,
+    svg_reverse: false,
+  };
+  
+  return layer;
 }

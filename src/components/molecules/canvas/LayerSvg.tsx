@@ -30,8 +30,6 @@ const LayerSvgComponent: React.FC<LayerSvgProps> = ({
   allLayers = [],
   sceneCameras = []
 }) => {
-  console.log('svg', layer);
-  
   const [paths, setPaths] = useState<ParsedPath[]>([]);
   const [svgSize, setSvgSize] = useState({ width: 100, height: 100 });
   const [loading, setLoading] = useState(true);

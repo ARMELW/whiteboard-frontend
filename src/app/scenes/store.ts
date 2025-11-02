@@ -181,13 +181,30 @@ export const useSceneStore = create<SceneState>((set) => ({
   },
   addLayer: (sceneId: string, layer: Layer) => {
     set(state => ({
-      scenes: state.scenes.map(s => s.id === sceneId ? { ...s, layers: [...(s.layers || []), layer] } : s)
+      scenes: state.scenes.map(s => {
+        if (s.id !== sceneId) return s;
+        let newLayer = { ...layer };
+        // Centrage automatique pour SVG
+        if (newLayer.type === 'shape' && newLayer.svg_path && s.sceneCameras) {
+          const defaultCamera = s.sceneCameras.find((cam: any) => cam.isDefault);
+          if (defaultCamera) {
+            const cameraPixelX = (defaultCamera.position?.x ?? 0.5) * (defaultCamera.width ?? 1920);
+            const cameraPixelY = (defaultCamera.position?.y ?? 0.5) * (defaultCamera.height ?? 1080);
+            // Utilise width/height du layer ou valeurs par défaut
+            const svgWidth = newLayer.width || 100;
+            const svgHeight = newLayer.height || 100;
+            newLayer.position = {
+              x: cameraPixelX - svgWidth / 2,
+              y: cameraPixelY - svgHeight / 2
+            };
+          }
+        }
+        return { ...s, layers: [...(s.layers || []), newLayer] };
+      })
     }));
-    
     // Generate layer snapshot in background with scene context
     const state = useSceneStore.getState();
     const scene = state.scenes.find(s => s.id === sceneId);
-    
     if (scene) {
       generateLayerSnapshotDebounced(layer, (cachedImage) => {
         if (cachedImage) {
@@ -204,7 +221,6 @@ export const useSceneStore = create<SceneState>((set) => ({
         sceneBackgroundImage: scene.backgroundImage || null,
       });
     }
-    
     // If it's an image layer, wait for the image to load before updating the thumbnail
     if (layer.type === 'image' && layer.image_path) {
       const img = new window.Image();

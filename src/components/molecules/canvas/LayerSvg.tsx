@@ -69,11 +69,19 @@ const LayerSvgComponent: React.FC<LayerSvgProps> = ({
           pathElements.forEach((pathElement) => {
             const d = pathElement.getAttribute('d');
             if (d) {
+              // Use shape_config colors if available, otherwise use SVG defaults
+              const shapeConfig = layer.shape_config || {};
+              const fill = shapeConfig.fill_color || pathElement.getAttribute('fill') || '#000000';
+              const stroke = shapeConfig.color || pathElement.getAttribute('stroke') || undefined;
+              const strokeWidth = shapeConfig.stroke_width !== undefined 
+                ? shapeConfig.stroke_width 
+                : parseFloat(pathElement.getAttribute('stroke-width') || '0');
+              
               parsedPaths.push({
                 data: d,
-                fill: pathElement.getAttribute('fill') || '#000000',
-                stroke: pathElement.getAttribute('stroke') || undefined,
-                strokeWidth: parseFloat(pathElement.getAttribute('stroke-width') || '0')
+                fill,
+                stroke,
+                strokeWidth
               });
             }
           });
@@ -94,7 +102,7 @@ const LayerSvgComponent: React.FC<LayerSvgProps> = ({
     if (layer.svg_path) {
       loadSvg(layer.svg_path);
     }
-  }, [layer.svg_path]);
+  }, [layer.svg_path, layer.shape_config]);
 
   React.useEffect(() => {
     if (isSelected && transformerRef.current && groupRef.current && paths.length > 0) {
@@ -258,6 +266,10 @@ const LayerSvgComponent: React.FC<LayerSvgProps> = ({
 function areEqual(prevProps: LayerSvgProps, nextProps: LayerSvgProps) {
   const l1 = prevProps.layer;
   const l2 = nextProps.layer;
+  
+  // Deep compare shape_config
+  const shapeConfigEqual = JSON.stringify(l1.shape_config) === JSON.stringify(l2.shape_config);
+  
   return (
     l1.id === l2.id &&
     l1.svg_path === l2.svg_path &&
@@ -268,6 +280,7 @@ function areEqual(prevProps: LayerSvgProps, nextProps: LayerSvgProps) {
     l1.height === l2.height &&
     l1.rotation === l2.rotation &&
     l1.locked === l2.locked &&
+    shapeConfigEqual &&
     prevProps.isSelected === nextProps.isSelected
   );
 }

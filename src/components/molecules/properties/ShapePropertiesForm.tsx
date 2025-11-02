@@ -209,9 +209,122 @@ export const ShapePropertiesForm: React.FC<ShapePropertiesFormProps> = React.mem
                 Plus la valeur est faible, plus l'animation est fluide (mais plus lente à générer)
               </p>
             </div>
+            {isSvgShape && (
+              <>
+                <div>
+                  <label className="block text-foreground text-xs mb-1.5">
+                    Taux d'échantillonnage SVG: <span className="font-mono">{(layer as any).svg_sampling_rate || 1}</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    step="1"
+                    value={(layer as any).svg_sampling_rate || 1}
+                    onChange={(e) => onPropertyChange(layer.id, 'svg_sampling_rate', parseInt(e.target.value))}
+                    className="w-full accent-primary"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Contrôle la fréquence d'échantillonnage du chemin SVG lors de l'animation
+                  </p>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-foreground text-xs">Inverser le sens du dessin</span>
+                  <Button
+                    onClick={() => onPropertyChange(layer.id, 'svg_reverse', !(layer as any).svg_reverse)}
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-3"
+                  >
+                    {(layer as any).svg_reverse ? 'Activé' : 'Désactivé'}
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </AccordionContent>
       </AccordionItem>
+
+      {/* SVG Style Properties */}
+      {isSvgShape && (
+        <AccordionItem value="style">
+          <AccordionTrigger>
+            <div className="flex items-center gap-2">
+              <Sliders className="w-4 h-4" />
+              <span>Style SVG</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-foreground text-xs mb-1.5">Couleur du trait</label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={layer.shape_config?.color || '#222222'}
+                    onChange={(e) => {
+                      const newConfig = { ...layer.shape_config, color: e.target.value };
+                      onPropertyChange(layer.id, 'shape_config', newConfig);
+                    }}
+                    className="w-12 h-10 rounded border border-border cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={layer.shape_config?.color || '#222222'}
+                    onChange={(e) => {
+                      const newConfig = { ...layer.shape_config, color: e.target.value };
+                      onPropertyChange(layer.id, 'shape_config', newConfig);
+                    }}
+                    className="flex-1 bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono"
+                    placeholder="#222222"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-foreground text-xs mb-1.5">Couleur de remplissage</label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={layer.shape_config?.fill_color || '#222222'}
+                    onChange={(e) => {
+                      const newConfig = { ...layer.shape_config, fill_color: e.target.value };
+                      onPropertyChange(layer.id, 'shape_config', newConfig);
+                    }}
+                    className="w-12 h-10 rounded border border-border cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={layer.shape_config?.fill_color || '#222222'}
+                    onChange={(e) => {
+                      const newConfig = { ...layer.shape_config, fill_color: e.target.value };
+                      onPropertyChange(layer.id, 'shape_config', newConfig);
+                    }}
+                    className="flex-1 bg-secondary text-foreground border border-border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary font-mono"
+                    placeholder="#222222"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-foreground text-xs mb-1.5">
+                  Épaisseur du trait: <span className="font-mono">{layer.shape_config?.stroke_width || 5}</span>
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="20"
+                  step="0.5"
+                  value={layer.shape_config?.stroke_width || 5}
+                  onChange={(e) => {
+                    const newConfig = { ...layer.shape_config, stroke_width: parseFloat(e.target.value) };
+                    onPropertyChange(layer.id, 'shape_config', newConfig);
+                  }}
+                  className="w-full accent-primary"
+                />
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      )}
     </Accordion>
   );
 });

@@ -21,8 +21,8 @@ export function createLayerFromShapeAsset(
   options?: {
     sceneWidth?: number;
     sceneHeight?: number;
-    selectedCamera?: any;
-    sceneCameras?: any[];
+    selectedCamera?: Camera;
+    sceneCameras?: Camera[];
   }
 ): Layer {
   const sceneWidth = options?.sceneWidth || 1920;
@@ -79,12 +79,12 @@ export function createLayerFromShapeAsset(
       stroke_width: 5,
     },
     z_index: currentLayersCount,
-    skip_rate: 5,
+    skip_rate: 6,
     visible: true,
     locked: false,
     // SVG-specific properties (supported via Layer's index signature)
     svg_path: shape.url,
-    svg_sampling_rate: 1,
+    svg_sampling_rate: 8,
     svg_reverse: false,
   };
   

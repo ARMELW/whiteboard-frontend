@@ -1,6 +1,7 @@
 import React from 'react';
 import { TextPropertiesForm } from './TextPropertiesForm';
 import { ImagePropertiesForm } from './ImagePropertiesForm';
+import { ShapePropertiesForm } from './ShapePropertiesForm';
 
 export interface LayerPropertiesFormProps {
   layer: any;
@@ -15,7 +16,9 @@ export const LayerPropertiesForm: React.FC<LayerPropertiesFormProps> = React.mem
   if (layer.type === 'image') {
     return <ImagePropertiesForm layer={layer} onPropertyChange={onPropertyChange} />;
   }
-  // TODO: Ajouter ShapePropertiesForm ou autres types ici
+  if (layer.type === 'shape') {
+    return <ShapePropertiesForm layer={layer} onPropertyChange={onPropertyChange} />;
+  }
   return (
     <div className="bg-secondary/30 rounded-lg p-4 border border-border">
       <h3 className="text-foreground font-semibold mb-3 text-sm">

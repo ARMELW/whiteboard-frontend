@@ -12,6 +12,7 @@ import {
   ThumbnailTextProperties,
   ThumbnailTemplates
 } from '../molecules';
+import { ThumbnailSvgLayer } from '../molecules/thumbnail/ThumbnailSvgLayer';
 import type { ThumbnailTemplate } from '../molecules';
 
 // Types for layers
@@ -343,9 +344,9 @@ const ThumbnailMaker = ({ scene, onClose, onSave }: ThumbnailMakerProps) => {
                         } else if (layer.type === 'shape') {
                           if (layer.svg_path) {
                             return (
-                              <ThumbnailImageLayer
+                              <ThumbnailSvgLayer
                                 key={layer.id}
-                                layer={{ ...layer, src: layer.svg_path }}
+                                layer={layer}
                                 isSelected={layer.id === selectedLayerId}
                                 onSelect={() => setSelectedLayerId(layer.id)}
                                 onChange={handleLayerChange}

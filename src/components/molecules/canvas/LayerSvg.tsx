@@ -30,8 +30,6 @@ const LayerSvgComponent: React.FC<LayerSvgProps> = ({
   allLayers = [],
   sceneCameras = []
 }) => {
-  console.log('svg', layer);
-  
   const [paths, setPaths] = useState<ParsedPath[]>([]);
   const [svgSize, setSvgSize] = useState({ width: 100, height: 100 });
   const [loading, setLoading] = useState(true);
@@ -71,11 +69,19 @@ const LayerSvgComponent: React.FC<LayerSvgProps> = ({
           pathElements.forEach((pathElement) => {
             const d = pathElement.getAttribute('d');
             if (d) {
+              // Use shape_config colors if available, otherwise use SVG defaults
+              const shapeConfig = layer.shape_config || {};
+              const fill = shapeConfig.fill_color || pathElement.getAttribute('fill') || '#000000';
+              const stroke = shapeConfig.color || pathElement.getAttribute('stroke') || undefined;
+              const strokeWidth = shapeConfig.stroke_width !== undefined 
+                ? shapeConfig.stroke_width 
+                : parseFloat(pathElement.getAttribute('stroke-width') || '0');
+              
               parsedPaths.push({
                 data: d,
-                fill: pathElement.getAttribute('fill') || '#000000',
-                stroke: pathElement.getAttribute('stroke') || undefined,
-                strokeWidth: parseFloat(pathElement.getAttribute('stroke-width') || '0')
+                fill,
+                stroke,
+                strokeWidth
               });
             }
           });
@@ -96,7 +102,7 @@ const LayerSvgComponent: React.FC<LayerSvgProps> = ({
     if (layer.svg_path) {
       loadSvg(layer.svg_path);
     }
-  }, [layer.svg_path]);
+  }, [layer.svg_path, layer.shape_config]);
 
   React.useEffect(() => {
     if (isSelected && transformerRef.current && groupRef.current && paths.length > 0) {
@@ -125,17 +131,14 @@ const LayerSvgComponent: React.FC<LayerSvgProps> = ({
   const width = layer.width || (svgSize.width * currentScale);
   const height = layer.height || (svgSize.height * currentScale);
 
+  // Soft bounds margin to prevent mouse desync during dragging
+  const DRAG_MARGIN = 500;
+  
+  // Allow dragging without strict bounds to prevent mouse desync issues
   const dragBoundFunc = (pos: { x: number; y: number }) => {
-    let newX = pos.x;
-    let newY = pos.y;
-
-    // Limites en X
-    if (newX < 0) newX = 0;
-    if (newX + width > STAGE_WIDTH) newX = STAGE_WIDTH - width;
-
-    // Limites en Y
-    if (newY < 0) newY = 0;
-    if (newY + height > STAGE_HEIGHT) newY = STAGE_HEIGHT - height;
+    // Only apply soft bounds - allow some overflow to maintain mouse tracking
+    let newX = Math.max(-DRAG_MARGIN, Math.min(STAGE_WIDTH + DRAG_MARGIN, pos.x));
+    let newY = Math.max(-DRAG_MARGIN, Math.min(STAGE_HEIGHT + DRAG_MARGIN, pos.y));
 
     return { x: newX, y: newY };
   };
@@ -265,6 +268,15 @@ const LayerSvgComponent: React.FC<LayerSvgProps> = ({
 function areEqual(prevProps: LayerSvgProps, nextProps: LayerSvgProps) {
   const l1 = prevProps.layer;
   const l2 = nextProps.layer;
+  
+  // Compare shape_config properties individually for better performance
+  const config1 = l1.shape_config || {};
+  const config2 = l2.shape_config || {};
+  const shapeConfigEqual = 
+    config1.color === config2.color &&
+    config1.fill_color === config2.fill_color &&
+    config1.stroke_width === config2.stroke_width;
+  
   return (
     l1.id === l2.id &&
     l1.svg_path === l2.svg_path &&
@@ -275,6 +287,7 @@ function areEqual(prevProps: LayerSvgProps, nextProps: LayerSvgProps) {
     l1.height === l2.height &&
     l1.rotation === l2.rotation &&
     l1.locked === l2.locked &&
+    shapeConfigEqual &&
     prevProps.isSelected === nextProps.isSelected
   );
 }

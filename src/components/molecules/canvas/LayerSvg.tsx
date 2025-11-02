@@ -125,17 +125,12 @@ const LayerSvgComponent: React.FC<LayerSvgProps> = ({
   const width = layer.width || (svgSize.width * currentScale);
   const height = layer.height || (svgSize.height * currentScale);
 
+  // Allow dragging without strict bounds to prevent mouse desync issues
   const dragBoundFunc = (pos: { x: number; y: number }) => {
-    let newX = pos.x;
-    let newY = pos.y;
-
-    // Limites en X
-    if (newX < 0) newX = 0;
-    if (newX + width > STAGE_WIDTH) newX = STAGE_WIDTH - width;
-
-    // Limites en Y
-    if (newY < 0) newY = 0;
-    if (newY + height > STAGE_HEIGHT) newY = STAGE_HEIGHT - height;
+    // Only apply soft bounds - allow some overflow to maintain mouse tracking
+    const margin = 500; // Allow dragging 500px outside the stage
+    let newX = Math.max(-margin, Math.min(STAGE_WIDTH + margin, pos.x));
+    let newY = Math.max(-margin, Math.min(STAGE_HEIGHT + margin, pos.y));
 
     return { x: newX, y: newY };
   };

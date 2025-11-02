@@ -79,7 +79,16 @@ const ShapesTab: React.FC = () => {
       return;
     }
     
-    const newLayer = createLayerFromShapeAsset(shape, currentScene.layers.length);
+    // Get the selected camera or default camera from scene
+    const sceneCameras = currentScene.sceneCameras || [];
+    const selectedCamera = sceneCameras.find((cam: any) => cam.isDefault) || sceneCameras[0];
+    
+    const newLayer = createLayerFromShapeAsset(shape, currentScene.layers.length, {
+      sceneWidth: currentScene.sceneWidth || 1920,
+      sceneHeight: currentScene.sceneHeight || 1080,
+      selectedCamera,
+      sceneCameras,
+    });
     
     addLayer({ sceneId: currentScene.id, layer: newLayer });
     toast.success(`Forme "${shape.name}" ajoutée à la scène`);

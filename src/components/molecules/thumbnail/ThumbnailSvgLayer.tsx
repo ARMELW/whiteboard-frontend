@@ -60,9 +60,7 @@ export const ThumbnailSvgLayer: React.FC<ThumbnailSvgLayerProps> = ({
               const shapeConfig = layer.shape_config || {};
               const fill = shapeConfig.fill_color || pathElement.getAttribute('fill') || '#000000';
               const stroke = shapeConfig.color || pathElement.getAttribute('stroke') || undefined;
-              const strokeWidth = shapeConfig.stroke_width !== undefined 
-                ? shapeConfig.stroke_width 
-                : parseFloat(pathElement.getAttribute('stroke-width') || '0');
+              const strokeWidth = shapeConfig.stroke_width ?? parseFloat(pathElement.getAttribute('stroke-width') || '0');
               
               parsedPaths.push({
                 data: d,

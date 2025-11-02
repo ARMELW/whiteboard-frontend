@@ -131,12 +131,14 @@ const LayerSvgComponent: React.FC<LayerSvgProps> = ({
   const width = layer.width || (svgSize.width * currentScale);
   const height = layer.height || (svgSize.height * currentScale);
 
+  // Soft bounds margin to prevent mouse desync during dragging
+  const DRAG_MARGIN = 500;
+  
   // Allow dragging without strict bounds to prevent mouse desync issues
   const dragBoundFunc = (pos: { x: number; y: number }) => {
     // Only apply soft bounds - allow some overflow to maintain mouse tracking
-    const margin = 500; // Allow dragging 500px outside the stage
-    let newX = Math.max(-margin, Math.min(STAGE_WIDTH + margin, pos.x));
-    let newY = Math.max(-margin, Math.min(STAGE_HEIGHT + margin, pos.y));
+    let newX = Math.max(-DRAG_MARGIN, Math.min(STAGE_WIDTH + DRAG_MARGIN, pos.x));
+    let newY = Math.max(-DRAG_MARGIN, Math.min(STAGE_HEIGHT + DRAG_MARGIN, pos.y));
 
     return { x: newX, y: newY };
   };
@@ -267,8 +269,13 @@ function areEqual(prevProps: LayerSvgProps, nextProps: LayerSvgProps) {
   const l1 = prevProps.layer;
   const l2 = nextProps.layer;
   
-  // Deep compare shape_config
-  const shapeConfigEqual = JSON.stringify(l1.shape_config) === JSON.stringify(l2.shape_config);
+  // Compare shape_config properties individually for better performance
+  const config1 = l1.shape_config || {};
+  const config2 = l2.shape_config || {};
+  const shapeConfigEqual = 
+    config1.color === config2.color &&
+    config1.fill_color === config2.fill_color &&
+    config1.stroke_width === config2.stroke_width;
   
   return (
     l1.id === l2.id &&
